@@ -11,7 +11,7 @@ public class Team {
     private int current_fm;
 
     @Column
-    private int current_dm;
+    private int current_bm;
 
     @Column
     private String detail;
@@ -23,7 +23,7 @@ public class Team {
     private int wanted_fm;
 
     @Column
-    private int wanted_dm;
+    private int wanted_bm;
 
     public Long getTeamid() {
         return teamid;
@@ -41,12 +41,12 @@ public class Team {
         this.current_fm = current_fm;
     }
 
-    public int getCurrent_dm() {
-        return current_dm;
+    public int getCurrent_bm() {
+        return current_bm;
     }
 
-    public void setCurrent_dm(int current_dm) {
-        this.current_dm = current_dm;
+    public void setCurrent_bm(int current_dm) {
+        this.current_bm = current_dm;
     }
 
     public String getDetail() {
@@ -73,11 +73,11 @@ public class Team {
         this.wanted_fm = wanted_fm;
     }
 
-    public int getWanted_dm() {
-        return wanted_dm;
+    public int getWanted_bm() {
+        return wanted_bm;
     }
 
-    public void setWanted_dm(int wanted_dm) {
-        this.wanted_dm = wanted_dm;
+    public void setWanted_bm(int wanted_dm) {
+        this.wanted_bm = wanted_dm;
     }
 }
