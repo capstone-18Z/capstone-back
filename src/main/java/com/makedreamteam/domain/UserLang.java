@@ -46,7 +46,7 @@ public class UserLang {
 
     @Column
     @ColumnDefault("0")
-    private int sql;
+    private int sql_lang;
 
     public Long getUserid() {
         return userid;
@@ -128,11 +128,12 @@ public class UserLang {
         this.php = php;
     }
 
-    public int getSql() {
-        return sql;
+
+    public int getSql_lang() {
+        return sql_lang;
     }
 
-    public void setSql(int sql) {
-        this.sql = sql;
+    public void setSql_lang(int sql_lang) {
+        this.sql_lang = sql_lang;
     }
 }

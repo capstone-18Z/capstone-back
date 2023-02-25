@@ -47,93 +47,96 @@ public class TeamLang {
 
     @Column
     @ColumnDefault("0")
-    private int sql;
+    private int sql_lang;
 
-    public Long getUserid() {
+
+    public Long getTeamid() {
         return teamid;
-    }
-
-    public void setUserid(Long userid) {
-        this.teamid = userid;
     }
 
     public int getPython() {
         return python;
     }
 
-    public void setPython(int python) {
-        this.python = python;
-    }
-
     public int getC() {
         return c;
-    }
-
-    public void setC(int c) {
-        this.c = c;
     }
 
     public int getJava() {
         return java;
     }
 
-    public void setJava(int java) {
-        this.java = java;
-    }
-
     public int getCpp() {
         return cpp;
-    }
-
-    public void setCpp(int cpp) {
-        this.cpp = cpp;
     }
 
     public int getCs() {
         return cs;
     }
 
-    public void setCs(int cs) {
-        this.cs = cs;
-    }
-
     public int getVb() {
         return vb;
-    }
-
-    public void setVb(int vb) {
-        this.vb = vb;
     }
 
     public int getJavascript() {
         return javascript;
     }
 
-    public void setJavascript(int javascript) {
-        this.javascript = javascript;
-    }
-
     public int getAssembly() {
         return assembly;
-    }
-
-    public void setAssembly(int assembly) {
-        this.assembly = assembly;
     }
 
     public int getPhp() {
         return php;
     }
 
+
+    public void setTeamid(Long teamid) {
+        this.teamid = teamid;
+    }
+
+    public void setPython(int python) {
+        this.python = python;
+    }
+
+    public void setC(int c) {
+        this.c = c;
+    }
+
+    public void setJava(int java) {
+        this.java = java;
+    }
+
+    public void setCpp(int cpp) {
+        this.cpp = cpp;
+    }
+
+    public void setCs(int cs) {
+        this.cs = cs;
+    }
+
+    public void setVb(int vb) {
+        this.vb = vb;
+    }
+
+    public void setJavascript(int javascript) {
+        this.javascript = javascript;
+    }
+
+    public void setAssembly(int assembly) {
+        this.assembly = assembly;
+    }
+
     public void setPhp(int php) {
         this.php = php;
     }
 
-    public int getSql() {
-        return sql;
+
+    public int getSql_lang() {
+        return sql_lang;
     }
 
-    public void setSql(int sql) {
-        this.sql = sql;
+    public void setSql_lang(int sql_lang) {
+        this.sql_lang = sql_lang;
     }
 }
