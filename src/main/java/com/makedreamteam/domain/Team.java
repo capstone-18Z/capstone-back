@@ -14,12 +14,6 @@ public class Team {
     private int current_bm;
 
     @Column
-    private String detail;
-
-    @Column
-    private int period;
-
-    @Column
     private int wanted_fm;
 
     @Column
@@ -47,22 +41,6 @@ public class Team {
 
     public void setCurrent_bm(int current_dm) {
         this.current_bm = current_dm;
-    }
-
-    public String getDetail() {
-        return detail;
-    }
-
-    public void setDetail(String detail) {
-        this.detail = detail;
-    }
-
-    public int getPeriod() {
-        return period;
-    }
-
-    public void setPeriod(int period) {
-        this.period = period;
     }
 
     public int getWanted_fm() {
