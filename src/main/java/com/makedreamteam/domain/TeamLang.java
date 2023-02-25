@@ -47,7 +47,7 @@ public class TeamLang {
 
     @Column
     @ColumnDefault("0")
-    private int sql;
+    private int sqllang;
 
     public Long getUserid() {
         return teamid;
@@ -129,11 +129,11 @@ public class TeamLang {
         this.php = php;
     }
 
-    public int getSql() {
-        return sql;
+    public int getSqllang() {
+        return sqllang;
     }
 
-    public void setSql(int sql) {
-        this.sql = sql;
+    public void setSqllang(int sqllang) {
+        this.sqllang = sqllang;
     }
 }
