@@ -1,4 +1,4 @@
-package com.makedreamteam.domain;
+package com.makedreamteam.capstoneback.domain;
 
 import jakarta.persistence.*;
 import org.hibernate.annotations.ColumnDefault;

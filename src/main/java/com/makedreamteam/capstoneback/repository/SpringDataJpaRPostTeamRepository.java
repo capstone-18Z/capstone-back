@@ -1,10 +1,9 @@
-package com.makedreamteam.repository;
+package com.makedreamteam.capstoneback.repository;
 
-import com.makedreamteam.domain.PostTeam;
+import com.makedreamteam.capstoneback.domain.PostTeam;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;
-import java.util.Optional;
 
 public interface SpringDataJpaRPostTeamRepository extends JpaRepository<PostTeam,Long>,PostTeamRepository {
     List<PostTeam> findByTitle(String title);
