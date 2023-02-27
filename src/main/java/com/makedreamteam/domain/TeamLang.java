@@ -47,96 +47,93 @@ public class TeamLang {
 
     @Column
     @ColumnDefault("0")
-    private int sql_lang;
+    private int sqllang;
 
-
-    public Long getTeamid() {
+    public Long getUserid() {
         return teamid;
+    }
+
+    public void setUserid(Long userid) {
+        this.teamid = userid;
     }
 
     public int getPython() {
         return python;
     }
 
-    public int getC() {
-        return c;
-    }
-
-    public int getJava() {
-        return java;
-    }
-
-    public int getCpp() {
-        return cpp;
-    }
-
-    public int getCs() {
-        return cs;
-    }
-
-    public int getVb() {
-        return vb;
-    }
-
-    public int getJavascript() {
-        return javascript;
-    }
-
-    public int getAssembly() {
-        return assembly;
-    }
-
-    public int getPhp() {
-        return php;
-    }
-
-
-    public void setTeamid(Long teamid) {
-        this.teamid = teamid;
-    }
-
     public void setPython(int python) {
         this.python = python;
+    }
+
+    public int getC() {
+        return c;
     }
 
     public void setC(int c) {
         this.c = c;
     }
 
+    public int getJava() {
+        return java;
+    }
+
     public void setJava(int java) {
         this.java = java;
+    }
+
+    public int getCpp() {
+        return cpp;
     }
 
     public void setCpp(int cpp) {
         this.cpp = cpp;
     }
 
+    public int getCs() {
+        return cs;
+    }
+
     public void setCs(int cs) {
         this.cs = cs;
+    }
+
+    public int getVb() {
+        return vb;
     }
 
     public void setVb(int vb) {
         this.vb = vb;
     }
 
+    public int getJavascript() {
+        return javascript;
+    }
+
     public void setJavascript(int javascript) {
         this.javascript = javascript;
+    }
+
+    public int getAssembly() {
+        return assembly;
     }
 
     public void setAssembly(int assembly) {
         this.assembly = assembly;
     }
 
+    public int getPhp() {
+        return php;
+    }
+
     public void setPhp(int php) {
         this.php = php;
     }
 
-
-    public int getSql_lang() {
-        return sql_lang;
+    public int getSqllang() {
+        return sqllang;
     }
 
-    public void setSql_lang(int sql_lang) {
-        this.sql_lang = sql_lang;
+    public void setSqllang(int sqllang) {
+        this.sqllang = sqllang;
     }
 }
