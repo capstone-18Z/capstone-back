@@ -8,13 +8,15 @@ public class PostTeam {
     private Long teamid; // 외래키 설정
 
     @Column
+    private String title;
+    @Column
     private Long userid; // 외래키 설정
 
     @Column
-    private String createdat;
+    private String createdate;
 
     @Column
-    private String updatedat;
+    private String updatedate;
 
     @Column
     private String detail;
@@ -38,21 +40,7 @@ public class PostTeam {
         this.userid = userid;
     }
 
-    public String getCreatedat() {
-        return createdat;
-    }
 
-    public void setCreatedat(String createdat) {
-        this.createdat = createdat;
-    }
-
-    public String getUpdatedat() {
-        return updatedat;
-    }
-
-    public void setUpdatedat(String updatedat) {
-        this.updatedat = updatedat;
-    }
 
     public String getDetail() {
         return detail;
@@ -68,5 +56,29 @@ public class PostTeam {
 
     public void setPeriod(int period) {
         this.period = period;
+    }
+
+    public String getCreatedate() {
+        return createdate;
+    }
+
+    public String getUpdatedate() {
+        return updatedate;
+    }
+
+    public void setUpdatedate(String updatedate) {
+        this.updatedate = updatedate;
+    }
+
+    public String getTitle() {
+        return title;
+    }
+
+    public void setTitle(String title) {
+        this.title = title;
+    }
+
+    public void setCreatedate(String createdate) {
+        this.createdate = createdate;
     }
 }
