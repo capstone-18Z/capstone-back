@@ -1,6 +1,6 @@
-package com.makedreamteam.repository;
+package com.makedreamteam.capstoneback.repository;
 
-import com.makedreamteam.domain.User;
+import com.makedreamteam.capstoneback.domain.User;
 
 import java.util.List;
 import java.util.Optional;
