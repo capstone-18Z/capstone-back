@@ -18,13 +18,19 @@ public class UserController {
     public UserController(UserService userService){ this.userService = userService; }
 
 
-    @GetMapping("/users/signin")
+    @GetMapping("/users/signup")
     public String createForm() { return "users/createUserForm"; }
 
-    @PostMapping("/users/signin")
+    @PostMapping("/users/signup")
     public String create(User user){
+        // 암호화 기능 추가 필요 (bCryptPasswordEncoder 사용)
         userService.join(user);
         return "redirect:/";
+    }
+
+    @GetMapping("/users/signin")
+    public String signinForm(){
+        return "users/signinForm";
     }
 
     @GetMapping("/users")
