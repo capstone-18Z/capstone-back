@@ -6,7 +6,6 @@ import org.hibernate.annotations.ColumnDefault;
 @Entity
 public class TeamLang {
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long teamid;
 
     @Column
@@ -135,5 +134,9 @@ public class TeamLang {
 
     public void setSqllang(int sqllang) {
         this.sqllang = sqllang;
+    }
+
+    public void setTeamid(Long teamid) {
+        this.teamid = teamid;
     }
 }
