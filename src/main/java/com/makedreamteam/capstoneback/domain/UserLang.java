@@ -1,4 +1,4 @@
-package com.makedreamteam.capstoneback.domain;
+package com.makedreamteam.domain;
 
 import jakarta.persistence.*;
 import org.hibernate.annotations.ColumnDefault;
@@ -46,7 +46,7 @@ public class UserLang {
 
     @Column
     @ColumnDefault("0")
-    private int sql_lang;
+    private int sqllang;
 
     public Long getUserid() {
         return userid;
@@ -128,12 +128,11 @@ public class UserLang {
         this.php = php;
     }
 
-
-    public int getSql_lang() {
-        return sql_lang;
+    public int getSqllang() {
+        return sqllang;
     }
 
-    public void setSql_lang(int sql_lang) {
-        this.sql_lang = sql_lang;
+    public void setSqllang(int sqllang) {
+        this.sqllang = sqllang;
     }
 }

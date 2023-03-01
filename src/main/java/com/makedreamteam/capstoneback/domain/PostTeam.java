@@ -1,10 +1,12 @@
 package com.makedreamteam.capstoneback.domain;
 
 import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
 
 @Entity
+
 public class PostTeam {
-    @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Id
     private Long teamid; // 외래키 설정
 
     @Column

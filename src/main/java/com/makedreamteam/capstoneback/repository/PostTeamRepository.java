@@ -8,6 +8,8 @@ import java.util.Optional;
 public interface PostTeamRepository {
     PostTeam save(PostTeam postTeam);
     Optional<PostTeam> findById(Long teamid);
-    List<PostTeam> findByTitle(String title);
+
     List<PostTeam> findAll();
+
+    List<PostTeam> findByTitleContaining(String title);
 }

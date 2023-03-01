@@ -47,7 +47,7 @@ public class TeamLang {
 
     @Column
     @ColumnDefault("0")
-    private int sql_lang;
+    private int sqllang;
 
     public Long getUserid() {
         return teamid;
@@ -73,40 +73,20 @@ public class TeamLang {
         this.c = c;
     }
 
-    public int getJava() {
-        return java;
-    }
-
     public void setJava(int java) {
         this.java = java;
-    }
-
-    public int getCpp() {
-        return cpp;
     }
 
     public void setCpp(int cpp) {
         this.cpp = cpp;
     }
 
-    public int getCs() {
-        return cs;
-    }
-
     public void setCs(int cs) {
         this.cs = cs;
     }
 
-    public int getVb() {
-        return vb;
-    }
-
     public void setVb(int vb) {
         this.vb = vb;
-    }
-
-    public int getJavascript() {
-        return javascript;
     }
 
     public void setJavascript(int javascript) {
@@ -129,12 +109,15 @@ public class TeamLang {
         this.php = php;
     }
 
-
-    public int getSql_lang() {
-        return sql_lang;
+    public int getSqllang() {
+        return sqllang;
     }
 
-    public void setSql_lang(int sql_lang) {
-        this.sql_lang = sql_lang;
+    public void setSqllang(int sqllang) {
+        this.sqllang = sqllang;
+    }
+
+    public void setTeamid(Long teamid) {
+        this.teamid = teamid;
     }
 }

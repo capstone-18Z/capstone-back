@@ -1,10 +1,13 @@
 package com.makedreamteam.capstoneback.domain;
 
 import jakarta.persistence.*;
+import lombok.Builder;
 
 @Entity
-public class Team {
-    @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
+@Builder
+public class Team{
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long teamid;
 
     @Column
@@ -18,6 +21,9 @@ public class Team {
 
     @Column
     private int wanted_bm;
+
+
+
 
     public Long getTeamid() {
         return teamid;

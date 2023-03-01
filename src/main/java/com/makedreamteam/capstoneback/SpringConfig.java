@@ -1,7 +1,10 @@
 package com.makedreamteam.capstoneback;
 
-import com.makedreamteam.capstoneback.repository.UserRepository;
-import com.makedreamteam.capstoneback.service.UserService;
+
+import com.makedreamteam.capstoneback.repository.SpringDataJpaPostTeamRepository;
+import com.makedreamteam.capstoneback.repository.SpringDataJpaTeamLangRepository;
+import com.makedreamteam.capstoneback.repository.SpringDataTeamRepository;
+import com.makedreamteam.capstoneback.service.TeamService;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -11,4 +14,23 @@ public class SpringConfig {
     public SpringConfig(UserRepository userRepository){ this.userRepository = userRepository; }
     @Bean
     public UserService userService() {return new UserService(userRepository);}
+
+    private final SpringDataJpaPostTeamRepository springDataJpaPostTeamRepository;
+    private final SpringDataJpaTeamLangRepository springDataJpaTeamLangRepository;
+    private final SpringDataTeamRepository springDataTeamRepository;
+
+    public SpringConfig(SpringDataJpaPostTeamRepository springDataJpaPostTeamRepository, SpringDataJpaTeamLangRepository springDataJpaTeamLangRepository, SpringDataTeamRepository springDataTeamRepository) {
+        this.springDataJpaPostTeamRepository = springDataJpaPostTeamRepository;
+        this.springDataJpaTeamLangRepository = springDataJpaTeamLangRepository;
+        this.springDataTeamRepository = springDataTeamRepository;
+    }
+
+
+    @Bean
+    public TeamService TeamService(){
+        return new TeamService(springDataJpaPostTeamRepository, springDataJpaTeamLangRepository, springDataTeamRepository);
+    }
+
+
+
 }
