@@ -1,8 +1,10 @@
 package com.makedreamteam.capstoneback.controller;
 
 import jakarta.persistence.Column;
+import lombok.AllArgsConstructor;
 import org.hibernate.annotations.ColumnDefault;
 
+@AllArgsConstructor
 public class PostTeamForm {
     //현재 모집된 멤버 수
     private int currentFrontMember;

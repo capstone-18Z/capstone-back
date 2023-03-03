@@ -1,9 +1,8 @@
 package com.makedreamteam.capstoneback.controller;
 
+import com.makedreamteam.capstoneback.domain.Team;
 import com.makedreamteam.capstoneback.service.TeamService;
-import com.makedreamteam.capstoneback.domain.PostTeam;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -18,17 +17,24 @@ public class TeamController {
         this.teamService = postTeamService;
     }
     @GetMapping("/teams")
-    public List<PostTeam> allPost(){
-        return teamService.findAll();
+    public ResponseFormForTeamInfo allPost(){
+
+
+        return teamService.allPost();
     }
 
-    @GetMapping("/teams/search/{title}")
-    public List<PostTeam> searchPostByTitle(@PathVariable String title){
+    @PostMapping("/teams/search/{title}")
+    public ResponseFormForTeamInfo searchPostByTitle(@PathVariable String title){
         return teamService.findByTitleContaining(title);
     }
 
+    @PostMapping("/teams/{id}")
+    public ResponseFormForTeamInfo findById(@PathVariable Long id){
+        return teamService.findById(id);
+    }
+
     @PostMapping("/team/new")
-    public PostTeam savePostTeam(@RequestBody PostTeamForm postTeamForm){
+    public Team savePostTeam(@RequestBody PostTeamForm postTeamForm){
         System.out.println(postTeamForm.toString());
         return teamService.addPostTeam(postTeamForm);
     }
