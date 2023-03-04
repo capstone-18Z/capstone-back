@@ -52,13 +52,9 @@ public class TeamLang {
     @ColumnDefault("0")
     private int sqllang;
 
-    public Long getUserid() {
-        return teamid;
-    }
 
-    public void setUserid(Long userid) {
-        this.teamid = userid;
-    }
+
+
 
     public int getPython() {
         return python;
@@ -142,5 +138,26 @@ public class TeamLang {
 
     public void setTeamid(Long teamid) {
         this.teamid = teamid;
+    }
+
+    @Override
+    public String toString() {
+        return "TeamLang{" +
+                "teamid=" + teamid +
+                ", python=" + python +
+                ", c=" + c +
+                ", java=" + java +
+                ", cpp=" + cpp +
+                ", cs=" + cs +
+                ", vb=" + vb +
+                ", javascript=" + javascript +
+                ", assembly=" + assembly +
+                ", php=" + php +
+                ", sqllang=" + sqllang +
+                '}';
+    }
+
+    public Long getTeamid() {
+        return teamid;
     }
 }

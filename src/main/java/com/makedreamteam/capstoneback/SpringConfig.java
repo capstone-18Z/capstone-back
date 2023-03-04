@@ -2,11 +2,11 @@ package com.makedreamteam.capstoneback;
 
 
 import com.makedreamteam.capstoneback.repository.SpringDataJpaTeamLangRepository;
+import com.makedreamteam.capstoneback.repository.SpringDataJpaUserLangRepository;
 import com.makedreamteam.capstoneback.repository.SpringDataTeamRepository;
 import com.makedreamteam.capstoneback.service.TeamService;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.http.HttpMethod;
 import org.springframework.web.servlet.config.annotation.CorsRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
@@ -23,17 +23,22 @@ public class SpringConfig implements WebMvcConfigurer {
     }*/
     private final SpringDataJpaTeamLangRepository springDataJpaTeamLangRepository;
     private final SpringDataTeamRepository springDataTeamRepository;
+    private final SpringDataJpaUserLangRepository springDataJpaUserLangRepository;
 
-    public SpringConfig( SpringDataJpaTeamLangRepository springDataJpaTeamLangRepository, SpringDataTeamRepository springDataTeamRepository) {
+
+    public SpringConfig(SpringDataJpaTeamLangRepository springDataJpaTeamLangRepository, SpringDataTeamRepository springDataTeamRepository, SpringDataJpaUserLangRepository springDataJpaUserLangRepository) {
         this.springDataJpaTeamLangRepository = springDataJpaTeamLangRepository;
         this.springDataTeamRepository = springDataTeamRepository;
+
+        this.springDataJpaUserLangRepository = springDataJpaUserLangRepository;
     }
 
 
     @Bean
     public TeamService TeamService(){
-        return new TeamService(springDataJpaTeamLangRepository, springDataTeamRepository);
+        return new TeamService(springDataJpaTeamLangRepository, springDataTeamRepository, springDataJpaUserLangRepository);
     }
+
 
     @Override
     public void addCorsMappings(final CorsRegistry registry) {

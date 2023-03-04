@@ -2,10 +2,12 @@ package com.makedreamteam.capstoneback.controller;
 
 import com.makedreamteam.capstoneback.domain.Team;
 import com.makedreamteam.capstoneback.service.TeamService;
+import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
+import java.io.IOException;
+import java.security.Principal;
 
 @RestController
 @CrossOrigin
@@ -17,13 +19,12 @@ public class TeamController {
         this.teamService = postTeamService;
     }
     @GetMapping("/teams")
-    public ResponseFormForTeamInfo allPost(){
-
-
-        return teamService.allPost();
+    public ResponseFormForTeamInfo allPost(Principal principal){
+        String userName=principal!=null ? principal.getName() : "";
+        return teamService.allPosts(principal);
     }
 
-    @PostMapping("/teams/search/{title}")
+    @GetMapping("/teams/search/{title}")
     public ResponseFormForTeamInfo searchPostByTitle(@PathVariable String title){
         return teamService.findByTitleContaining(title);
     }
@@ -35,8 +36,13 @@ public class TeamController {
 
     @PostMapping("/team/new")
     public Team savePostTeam(@RequestBody PostTeamForm postTeamForm){
-        System.out.println(postTeamForm.toString());
         return teamService.addPostTeam(postTeamForm);
     }
+
+    @PostMapping("/login")
+    public void login(HttpServletResponse response) throws IOException {
+        response.sendRedirect("/teams");
+    }
+
 
 }
