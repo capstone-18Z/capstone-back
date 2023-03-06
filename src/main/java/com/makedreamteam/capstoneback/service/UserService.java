@@ -12,11 +12,11 @@ public class UserService {
     private final UserRepository userRepository;
 
     public UserService(UserRepository userRepository) {this.userRepository = userRepository;}
-    public Long join(User user){
+    public User join(User user){
         // 중복제거 포함
         validateDuplicateUser(user);
         userRepository.save(user);
-        return user.getUserid();
+        return user;
     }
 
     private void validateDuplicateUser(User user) {

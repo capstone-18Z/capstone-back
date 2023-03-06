@@ -10,5 +10,12 @@ public class HomeController {
         System.out.println("hello world!");
         return "home";
     }
+    @GetMapping("/users/signup")
+    public String createForm() { return "users/createUserForm"; }
+
+    @GetMapping("/users/signin")
+    public String login(){
+        return "users/signinForm";
+    }
 }
 

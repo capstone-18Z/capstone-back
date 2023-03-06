@@ -3,41 +3,44 @@ package com.makedreamteam.capstoneback.controller;
 import com.makedreamteam.capstoneback.domain.User;
 import com.makedreamteam.capstoneback.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Controller;
-import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Optional;
 
-@Controller
+@RestController
+@CrossOrigin
 public class UserController {
     private final UserService userService;
+    private final BCryptPasswordEncoder bCryptPasswordEncoder;
 
     @Autowired
-    public UserController(UserService userService){ this.userService = userService; }
-
-
-    @GetMapping("/users/signup")
-    public String createForm() { return "users/createUserForm"; }
-
-    @PostMapping("/users/signup")
-    public String create(User user){
-        // 암호화 기능 추가 필요 (bCryptPasswordEncoder 사용)
-        userService.join(user);
-        return "redirect:/";
+    public UserController(UserService userService, BCryptPasswordEncoder bCryptPasswordEncoder){
+        this.userService = userService;
+        this.bCryptPasswordEncoder = bCryptPasswordEncoder;
     }
 
-    @GetMapping("/users/signin")
-    public String signinForm(){
-        return "users/signinForm";
+    @PostMapping("/users/signup")
+    public User createUser(UserForm userForm){
+        // 암호화 기능 추가 필요 (bCryptPasswordEncoder 사용)
+        User user = new User();
+        String rawPass = userForm.getPassword();
+        String encPass = bCryptPasswordEncoder.encode(rawPass);
+        Long userid = userForm.getUserid();
+        String name = userForm.getName();
+        user.setUserid(userid);
+        user.setPassword(encPass);
+        user.setName(name);
+        userService.join(user);
+        return user;
     }
 
     @GetMapping("/users")
-    public String list(Model model){
-        List<User> members = userService.findMembers();
-        model.addAttribute("users", members);
-        System.out.println(members);
-        return "users/userList";
+    public List<User> alluser(){return userService.findMembers();}
+
+    @GetMapping("/users/{userid}")
+    public Optional<User> findUser(@PathVariable Long userid){
+        return userService.findOne(userid);
     }
 }
