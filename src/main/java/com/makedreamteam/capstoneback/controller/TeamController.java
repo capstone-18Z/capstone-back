@@ -35,14 +35,12 @@ public class TeamController {
     }
 
     @PostMapping("/team/new")
-    public Team savePostTeam(@RequestBody PostTeamForm postTeamForm){
+    public ResponseFormForTeamInfo savePostTeam(@RequestBody PostTeamForm postTeamForm){
+        System.out.println(postTeamForm.toString());
         return teamService.addPostTeam(postTeamForm);
     }
+    //팀 정보 수정
 
-    @PostMapping("/login")
-    public void login(HttpServletResponse response) throws IOException {
-        response.sendRedirect("/teams");
-    }
 
 
 }

@@ -14,6 +14,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.security.Principal;
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Transactional
 public class TeamService{
@@ -35,36 +36,43 @@ public class TeamService{
 
 
 
-    public Team addPostTeam(PostTeamForm postTeamForm){
-
-        Team team=Team.builder()
-                .current_bm(postTeamForm.getCurrentBackMember())
-                .current_fm(postTeamForm.getCurrentFrontMember())
-                .wanted_bm(postTeamForm.getWantedBackEndMember())
-                .wanted_fm(postTeamForm.getWantedFrontMember())
-                .updatedate(postTeamForm.getUpdateDate())
-                .createdate(postTeamForm.getCreateDate())
-                .detail(postTeamForm.getDetail())
-                .period(postTeamForm.getPeriod())
-                .title(postTeamForm.getTitle())
-                .build();
-        springDataTeamRepository.save(team);
-
-
-        TeamLang teamLang=new TeamLang();
-        teamLang.setTeamid(team.getTeamid());
-        teamLang.setAssembly(postTeamForm.getAssembly());
-        teamLang.setC(postTeamForm.getC());
-        teamLang.setCpp(postTeamForm.getCpp());
-        teamLang.setJava(postTeamForm.getJava());
-        teamLang.setPhp(postTeamForm.getPhp());
-        teamLang.setJavascript(postTeamForm.getJavascript());
-        teamLang.setSqllang(postTeamForm.getSqlLang());
-        teamLang.setCs(postTeamForm.getCs());
-        springDataJpaTeamLangRepository.save(teamLang);
+    public ResponseFormForTeamInfo addPostTeam(PostTeamForm postTeamForm){
+        try {
+            Team team = Team.builder()
+                    .current_bm(postTeamForm.getCurrentBackMember())
+                    .current_fm(postTeamForm.getCurrentFrontMember())
+                    .wanted_bm(postTeamForm.getWantedBackEndMember())
+                    .wanted_fm(postTeamForm.getWantedFrontMember())
+                    .updatedate(postTeamForm.getUpdateDate())
+                    .createdate(postTeamForm.getCreateDate())
+                    .detail(postTeamForm.getDetail())
+                    .period(postTeamForm.getPeriod())
+                    .title(postTeamForm.getTitle())
+                    .build();
+            springDataTeamRepository.save(team);
 
 
-        return team;
+            TeamLang teamLang = new TeamLang();
+            teamLang.setTeamid(team.getTeamid());
+            teamLang.setAssembly(postTeamForm.getAssembly());
+            teamLang.setC(postTeamForm.getC());
+            teamLang.setCpp(postTeamForm.getCpp());
+            teamLang.setJava(postTeamForm.getJava());
+            teamLang.setPhp(postTeamForm.getPhp());
+            teamLang.setJavascript(postTeamForm.getJavascript());
+            teamLang.setSqllang(postTeamForm.getSqlLang());
+            teamLang.setCs(postTeamForm.getCs());
+            springDataJpaTeamLangRepository.save(teamLang);
+            return ResponseFormForTeamInfo.builder().message("팀을 추가했습니다").data(TeamData.builder().dataWithLogin(team).build()).build();
+        }
+        catch (Exception e){
+            return ResponseFormForTeamInfo.builder().message("오류발생!! 팀을 추가할수없습니다 ").build();
+        }
+
+
+
+
+
     }
     public ResponseFormForTeamInfo findByTitleContaining(String title){
         List<Team> byTitleContaining = springDataTeamRepository.findByTitleContaining(title);
@@ -118,22 +126,36 @@ public class TeamService{
         HashMap<Double,Long> map=new HashMap<>();
         for(TeamLang teamlang : allTeams){
             double a=(teamlang.getAssembly()*user.getAssembly()+ teamlang.getC()*user.getC()+ teamlang.getCs()*user.getCs()+ teamlang.getVb()*user.getVb()+ teamlang.getCpp()*user.getCpp()+ teamlang.getJava()*user.getJava()+ teamlang.getJavascript()*user.getJavascript()+ teamlang.getPhp()*user.getPhp()+ teamlang.getPython()*user.getPython()+ teamlang.getSqllang()*user.getSqllang());
-            double b=(teamlang.getAssembly()+ teamlang.getC()+ teamlang.getCs()+ teamlang.getVb()+ teamlang.getCpp()+ teamlang.getJava()+ teamlang.getJavascript()+ teamlang.getPhp()+ teamlang.getPython()+ teamlang.getSqllang());
-            double result=a/b;
-            System.out.println("result = " + result);
-            map.put(result, teamlang.getTeamid());
-            list.add(result);
+            map.put(a, teamlang.getTeamid());
+            list.add(a);
         }
         Collections.sort(list);
         for(int i=0;i<5 && list.size() > i ;i++){
             resultList.add(map.get(list.get(i)));
         }
-        for (Long a : resultList){
-            System.out.println("a = " + a);
-        }
         return resultList;
     }
+    public List<Team> recommandTeams(Long userid,int count){
+        List<TeamLang> teamLangs=springDataJpaTeamLangRepository.findAll();
+        UserLang userLang=springDataJpaUserLangRepository.findById(userid).get();
+        HashMap<Team,Integer> weight=new HashMap<>();
+        for(TeamLang lang : teamLangs){
+            Optional<Team> team = springDataTeamRepository.findById(lang.getTeamid());
+            if(team.isPresent()) {
+                weight.put(team.get(), lang.getC() * userLang.getC() + lang.getSqllang() * userLang.getSqllang() + lang.getCpp() * userLang.getCpp() + lang.getVb() * userLang.getVb() + lang.getCs() * userLang.getCs() + lang.getPhp() * userLang.getPhp() + lang.getPython() * userLang.getPython() + lang.getAssembly() * userLang.getAssembly() + lang.getJavascript() * userLang.getJavascript() + lang.getJava() * userLang.getJava());
+            }
+            else
+                System.out.println("springDataTeamRepository.findById(lang.getTeamid()) is null");
+        }
+        List<Map.Entry<Team, Integer>> sortedList = new ArrayList<>(weight.entrySet());
+        sortedList.sort(Comparator.comparing(Map.Entry::getValue));
 
+        List<Team> result= sortedList.stream()
+                .map(map->map.getKey()).limit(count).collect(Collectors.toList());
+
+
+        return result;
+    }
 
 
 }
