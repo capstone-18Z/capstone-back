@@ -1,12 +1,10 @@
 package com.makedreamteam.capstoneback.controller;
 
-import com.makedreamteam.capstoneback.domain.Team;
+
 import com.makedreamteam.capstoneback.service.TeamService;
-import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
-import java.io.IOException;
 import java.security.Principal;
 
 @RestController
@@ -35,7 +33,7 @@ public class TeamController {
     }
 
     @PostMapping("/team/new")
-    public ResponseFormForTeamInfo savePostTeam(@RequestBody PostTeamForm postTeamForm){
+    public ResponseFormForTeamInfo savePostTeam(PostTeamForm postTeamForm){
         System.out.println(postTeamForm.toString());
         return teamService.addPostTeam(postTeamForm);
     }

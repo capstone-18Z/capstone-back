@@ -33,46 +33,64 @@ public class TeamService{
         this.springDataJpaUserLangRepository = springDataJpaUserLangRepository;
     }
 
-
-
-
     public ResponseFormForTeamInfo addPostTeam(PostTeamForm postTeamForm){
         try {
-            Team team = Team.builder()
-                    .current_bm(postTeamForm.getCurrentBackMember())
-                    .current_fm(postTeamForm.getCurrentFrontMember())
-                    .wanted_bm(postTeamForm.getWantedBackEndMember())
-                    .wanted_fm(postTeamForm.getWantedFrontMember())
-                    .updatedate(postTeamForm.getUpdateDate())
-                    .createdate(postTeamForm.getCreateDate())
-                    .detail(postTeamForm.getDetail())
-                    .period(postTeamForm.getPeriod())
-                    .title(postTeamForm.getTitle())
-                    .build();
+            Team team=newTeam(postTeamForm);
+            TeamLang teamLang=newTeamLang(postTeamForm, team.getTeamid());
             springDataTeamRepository.save(team);
-
-
-            TeamLang teamLang = new TeamLang();
-            teamLang.setTeamid(team.getTeamid());
-            teamLang.setAssembly(postTeamForm.getAssembly());
-            teamLang.setC(postTeamForm.getC());
-            teamLang.setCpp(postTeamForm.getCpp());
-            teamLang.setJava(postTeamForm.getJava());
-            teamLang.setPhp(postTeamForm.getPhp());
-            teamLang.setJavascript(postTeamForm.getJavascript());
-            teamLang.setSqllang(postTeamForm.getSqlLang());
-            teamLang.setCs(postTeamForm.getCs());
             springDataJpaTeamLangRepository.save(teamLang);
             return ResponseFormForTeamInfo.builder().message("팀을 추가했습니다").data(TeamData.builder().dataWithLogin(team).build()).build();
         }
         catch (Exception e){
             return ResponseFormForTeamInfo.builder().message("오류발생!! 팀을 추가할수없습니다 ").build();
         }
+    }
+    public TeamLang newTeamLang(PostTeamForm postTeamForm,Long teamId){
+        TeamLang teamLang = TeamLang.builder()
+                .teamid(teamId)
+                .assembly(postTeamForm.getAssembly())
+                .c(postTeamForm.getC())
+                .cpp(postTeamForm.getCpp())
+                .cs(postTeamForm.getCs())
+                .php(postTeamForm.getPhp())
+                .vb(postTeamForm.getVb())
+                .java(postTeamForm.getJava())
+                .python(postTeamForm.getPython())
+                .javascript(postTeamForm.getJavascript())
+                .sqllang(postTeamForm.getSqlLang())
+                .build();
+
+        return teamLang;
+    }
+    public Team newTeam(PostTeamForm postTeamForm){
+        Team team = Team.builder()
+                .current_bm(postTeamForm.getCurrentBackMember())
+                .current_fm(postTeamForm.getCurrentFrontMember())
+                .wanted_bm(postTeamForm.getWantedBackEndMember())
+                .wanted_fm(postTeamForm.getWantedFrontMember())
+                .updatedate(postTeamForm.getUpdateDate())
+                .createdate(postTeamForm.getCreateDate())
+                .detail(postTeamForm.getDetail())
+                .period(postTeamForm.getPeriod())
+                .title(postTeamForm.getTitle())
+                .build();
+        return team;
+    }
 
 
 
-
-
+    public ResponseFormForTeamInfo updatePostTeam(Team team,TeamLang teamLang,PostTeamForm postTeamForm){
+        try {
+            Team newTeam=newTeam(postTeamForm);
+            newTeam.setTeamid(team.getTeamid());
+            springDataTeamRepository.save(newTeam);
+            TeamLang newTeamLang=newTeamLang(postTeamForm,teamLang.getTeamid());
+            springDataJpaTeamLangRepository.save(newTeamLang);
+            return ResponseFormForTeamInfo.builder().message("팀을 수정했습니다").data(TeamData.builder().dataWithLogin(team).build()).build();
+        }
+        catch (Exception e){
+            return ResponseFormForTeamInfo.builder().message("오류발생!! 팀을 수정할수없습니다 ").build();
+        }
     }
     public ResponseFormForTeamInfo findByTitleContaining(String title){
         List<Team> byTitleContaining = springDataTeamRepository.findByTitleContaining(title);
@@ -81,7 +99,6 @@ public class TeamService{
                     .state(401)
                     .message(title+" 검색 결과 없음")
                     .build();
-
         return ResponseFormForTeamInfo.builder().message(title+" 검색 결과를 반환").state(201).data(TeamData.builder().dataWithoutLogin(byTitleContaining).build()).build();
     }
     public ResponseFormForTeamInfo findById(Long id){
@@ -157,5 +174,15 @@ public class TeamService{
         return result;
     }
 
+    public void  update(Long teamId,PostTeamForm form){
+        Optional<Team> team = springDataTeamRepository.findById(teamId);
+        Optional<TeamLang> teamLang = springDataJpaTeamLangRepository.findById(teamId);
+        if(team.isPresent()){
+            updatePostTeam(team.get(),teamLang.get(),form);
+        }
+        else{
+            System.out.println("존재하는 팀이 없습니다.");
+        }
 
+    }
 }
