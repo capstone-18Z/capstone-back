@@ -1,15 +1,18 @@
 package com.makedreamteam.capstoneback.service;
 
-import com.makedreamteam.capstoneback.controller.TeamData;
 import com.makedreamteam.capstoneback.controller.PostTeamForm;
-import com.makedreamteam.capstoneback.controller.ResponseFormForTeamInfo;
-import com.makedreamteam.capstoneback.domain.Team;
-import com.makedreamteam.capstoneback.domain.TeamLang;
-import com.makedreamteam.capstoneback.domain.UserLang;
+import com.makedreamteam.capstoneback.domain.*;
 import com.makedreamteam.capstoneback.repository.SpringDataJpaTeamLangRepository;
 import com.makedreamteam.capstoneback.repository.SpringDataJpaUserLangRepository;
 import com.makedreamteam.capstoneback.repository.SpringDataTeamRepository;
+import com.makedreamteam.capstoneback.repository.TeamMemberRepository;
+import jakarta.persistence.EntityNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DataAccessException;
+import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.dao.EmptyResultDataAccessException;
+import org.springframework.orm.jpa.JpaSystemException;
+import org.springframework.transaction.TransactionSystemException;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.security.Principal;
@@ -25,29 +28,40 @@ public class TeamService{
 
     @Autowired
     private final SpringDataJpaUserLangRepository springDataJpaUserLangRepository;
+    @Autowired
+    private final TeamMemberRepository teamMemberRepository;
 
 
-    public TeamService(SpringDataJpaTeamLangRepository springDataJpaTeamLangRepository, SpringDataTeamRepository springDataTeamRepository, SpringDataJpaUserLangRepository springDataJpaUserLangRepository) {
+    public TeamService(SpringDataJpaTeamLangRepository springDataJpaTeamLangRepository, SpringDataTeamRepository springDataTeamRepository, SpringDataJpaUserLangRepository springDataJpaUserLangRepository, TeamMemberRepository teamMemberRepository) {
         this.springDataJpaTeamLangRepository = springDataJpaTeamLangRepository;
         this.springDataTeamRepository = springDataTeamRepository;
         this.springDataJpaUserLangRepository = springDataJpaUserLangRepository;
+        this.teamMemberRepository = teamMemberRepository;
     }
 
-    public ResponseFormForTeamInfo addPostTeam(PostTeamForm postTeamForm){
+    public Team addPostTeam(PostTeamForm postTeamForm){
         try {
-            Team team=newTeam(postTeamForm);
-            TeamLang teamLang=newTeamLang(postTeamForm, team.getTeamid());
-            springDataTeamRepository.save(team);
+            Team team = newTeam(postTeamForm);
+            Team save = springDataTeamRepository.save(team);
+            TeamLang teamLang = newTeamLang(postTeamForm);
+            teamLang.setTeamid(save.getTeamid());
             springDataJpaTeamLangRepository.save(teamLang);
-            return ResponseFormForTeamInfo.builder().message("팀을 추가했습니다").data(TeamData.builder().dataWithLogin(team).build()).build();
-        }
-        catch (Exception e){
-            return ResponseFormForTeamInfo.builder().message("오류발생!! 팀을 추가할수없습니다 ").build();
+            return team;
+        } catch (NullPointerException | DataIntegrityViolationException | JpaSystemException |
+                 TransactionSystemException e) {
+            System.out.println(e);
+            /*NullPointerException: postTeamForm이 null인 경우 newTeam 및 newTeamLang 메서드에서 NullPointerException이 발생
+              DataIntegrityViolationException: Team 엔티티 또는 TeamLang 엔티티의 제약 조건을 위반하여 데이터베이스에 저장할 수 없는 경우 DataIntegrityViolationException이 발생
+              JpaSystemException: Team 엔티티 또는 TeamLang 엔티티의 속성값에 유효하지 않은 값이 포함되어 있거나, Team 엔티티와 TeamLang 엔티티의 관계 설정이 잘못된 경우 JpaSystemException이 발생
+              TransactionSystemException: 트랜잭션 처리 중 예외가 발생하는 경우 TransactionSystemException이 발생*/
+            // 예외 발생 시 처리할 코드 작성
+            // 예를 들어, 로깅 등의 작업을 수행할 수 있습니다.
+            // 예외 처리 후, 예외 발생을 호출자에게 알리기 위해 RuntimeException을 던질 수 있습니다.
+            throw new RuntimeException("Failed to add team and team language.", e);
         }
     }
-    public TeamLang newTeamLang(PostTeamForm postTeamForm,Long teamId){
+    public TeamLang newTeamLang(PostTeamForm postTeamForm){
         TeamLang teamLang = TeamLang.builder()
-                .teamid(teamId)
                 .assembly(postTeamForm.getAssembly())
                 .c(postTeamForm.getC())
                 .cpp(postTeamForm.getCpp())
@@ -79,61 +93,66 @@ public class TeamService{
 
 
 
-    public ResponseFormForTeamInfo updatePostTeam(Team team,TeamLang teamLang,PostTeamForm postTeamForm){
+    public Team update(Long teamId,PostTeamForm postTeamForm){
+        Optional<Team> optionalTeam = springDataTeamRepository.findById(teamId);
+        Optional<TeamLang> optionalTeamLang = springDataJpaTeamLangRepository.findById(teamId);
+
+        if (optionalTeam.isEmpty()) {
+            throw new RuntimeException("Failed to update team: team not found");
+        }
+
+        if (optionalTeamLang.isEmpty()) {
+            throw new RuntimeException("Failed to update team: teamLang not found");
+        }
+
+        Team team = optionalTeam.get();
+        TeamLang teamLang = optionalTeamLang.get();
+
+        Team updatedTeam = newTeam(postTeamForm);
+        updatedTeam.setTeamid(team.getTeamid());
+        springDataTeamRepository.save(updatedTeam);
+
+        TeamLang updatedTeamLang = newTeamLang(postTeamForm);
+        updatedTeamLang.setTeamid(teamLang.getTeamid());
+        springDataJpaTeamLangRepository.save(updatedTeamLang);
+
+        return updatedTeam;
+    }
+    public List<Team> findByTitleContaining(String title){
+        if (title == null) {
+            return new ArrayList<>();
+        }
         try {
-            Team newTeam=newTeam(postTeamForm);
-            newTeam.setTeamid(team.getTeamid());
-            springDataTeamRepository.save(newTeam);
-            TeamLang newTeamLang=newTeamLang(postTeamForm,teamLang.getTeamid());
-            springDataJpaTeamLangRepository.save(newTeamLang);
-            return ResponseFormForTeamInfo.builder().message("팀을 수정했습니다").data(TeamData.builder().dataWithLogin(team).build()).build();
-        }
-        catch (Exception e){
-            return ResponseFormForTeamInfo.builder().message("오류발생!! 팀을 수정할수없습니다 ").build();
+            return springDataTeamRepository.findByTitleContaining(title);
+        } catch (DataAccessException e) {
+            throw new RuntimeException("Failed to retrieve teams by title containing '" + title + "'", e);
         }
     }
-    public ResponseFormForTeamInfo findByTitleContaining(String title){
-        List<Team> byTitleContaining = springDataTeamRepository.findByTitleContaining(title);
-        if(byTitleContaining.size()<1)
-            return ResponseFormForTeamInfo.builder()
-                    .state(401)
-                    .message(title+" 검색 결과 없음")
-                    .build();
-        return ResponseFormForTeamInfo.builder().message(title+" 검색 결과를 반환").state(201).data(TeamData.builder().dataWithoutLogin(byTitleContaining).build()).build();
-    }
-    public ResponseFormForTeamInfo findById(Long id){
-        Team team = springDataTeamRepository.findById(id).get();
-
-        if(team==null)
-            return ResponseFormForTeamInfo.builder()
-                    .message("일치하는 팀이 없습니다")
-                    .state(401)
-                    .build();
-        return ResponseFormForTeamInfo.builder()
-                .message("id와 일치하는 팀을 반환합니다")
-                .state(201)
-                .data(TeamData.builder().dataWithoutLogin(team).build())
-                .build();
+    public Optional<Team> findById(Long id){
+        return springDataTeamRepository.findById(id);
+        //optional은 이미 null값을 처리하는데 안전한 방법을 제공하기때문에 if문으 ㄹ사용하지 않아도된다
     }
 
-    public ResponseFormForTeamInfo allPosts(Principal principal) {
-        List<Team> allPost = springDataTeamRepository.findAll();
-
-        if(allPost.size()<=0){
-            ResponseFormForTeamInfo result= ResponseFormForTeamInfo.builder()
-                    .state(401)
-                    .message("현재 만들어진 팀이 업습니다.")
-                    .build();
-            return result;
+    public List<Team> allPosts(Principal principal) {
+        try {
+            List<Team> allPost = springDataTeamRepository.findAll();
+            for (Team team : allPost) {
+                Optional<TeamLang> byId = springDataJpaTeamLangRepository.findById(team.getTeamid());
+                if (byId.isEmpty())
+                    throw new RuntimeException("Failed to retrieve TeamLang information for Team: " + team.getTeamid());
+            }
+            return allPost;
+        } catch (EmptyResultDataAccessException e) {
+            throw new RuntimeException("Failed to retrieve Team information from the database", e);
         }
-        if(principal==null)
-            return  ResponseFormForTeamInfo.builder()
-                    .state(201)
-                    .data(TeamData.builder().dataWithoutLogin(allPost).build())
-                    .message("모든 팀 리스트를 반환합니다.")
-                    .build();
-        return null;
     }
+
+
+
+
+
+
+
 
     public List<Long> calculateWeightOfLang(Long userid){
         List<TeamLang> allTeams=springDataJpaTeamLangRepository.findAll();
@@ -174,15 +193,25 @@ public class TeamService{
         return result;
     }
 
-    public void  update(Long teamId,PostTeamForm form){
-        Optional<Team> team = springDataTeamRepository.findById(teamId);
-        Optional<TeamLang> teamLang = springDataJpaTeamLangRepository.findById(teamId);
-        if(team.isPresent()){
-            updatePostTeam(team.get(),teamLang.get(),form);
-        }
-        else{
-            System.out.println("존재하는 팀이 없습니다.");
-        }
+
+    public void delete(Long teamId) {
+        Optional<Team> teamOptional = springDataTeamRepository.findById(teamId);
+        Optional<TeamLang> teamLangOptional = springDataJpaTeamLangRepository.findById(teamId);
+        if(teamOptional.isEmpty())
+            throw new EntityNotFoundException("fail to find team with "+teamId);
+        if(teamLangOptional.isEmpty())
+            throw new EntityNotFoundException("fail to find teamLang with"+ teamId);
+        Team team=teamOptional.get();
+        TeamLang teamLang=teamLangOptional.get();
+        springDataTeamRepository.delete(team);
+        springDataJpaTeamLangRepository.delete(teamLang);
+    }
+
+    public void addTeamMember(Long teamId,Long userId){
+
+            TeamMember teamMember=new TeamMember(teamId,userId);
+            teamMemberRepository.save(teamMember);
+
 
     }
 }

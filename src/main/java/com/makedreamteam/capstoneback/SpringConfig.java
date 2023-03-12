@@ -4,6 +4,7 @@ package com.makedreamteam.capstoneback;
 import com.makedreamteam.capstoneback.repository.SpringDataJpaTeamLangRepository;
 import com.makedreamteam.capstoneback.repository.SpringDataJpaUserLangRepository;
 import com.makedreamteam.capstoneback.repository.SpringDataTeamRepository;
+import com.makedreamteam.capstoneback.repository.TeamMemberRepository;
 import com.makedreamteam.capstoneback.service.TeamService;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -24,19 +25,21 @@ public class SpringConfig implements WebMvcConfigurer {
     private final SpringDataJpaTeamLangRepository springDataJpaTeamLangRepository;
     private final SpringDataTeamRepository springDataTeamRepository;
     private final SpringDataJpaUserLangRepository springDataJpaUserLangRepository;
+    private final TeamMemberRepository teamMemberRepository;
 
 
-    public SpringConfig(SpringDataJpaTeamLangRepository springDataJpaTeamLangRepository, SpringDataTeamRepository springDataTeamRepository, SpringDataJpaUserLangRepository springDataJpaUserLangRepository) {
+    public SpringConfig(SpringDataJpaTeamLangRepository springDataJpaTeamLangRepository, SpringDataTeamRepository springDataTeamRepository, SpringDataJpaUserLangRepository springDataJpaUserLangRepository, TeamMemberRepository teamMemberRepository) {
         this.springDataJpaTeamLangRepository = springDataJpaTeamLangRepository;
         this.springDataTeamRepository = springDataTeamRepository;
 
         this.springDataJpaUserLangRepository = springDataJpaUserLangRepository;
+        this.teamMemberRepository = teamMemberRepository;
     }
 
 
     @Bean
     public TeamService TeamService(){
-        return new TeamService(springDataJpaTeamLangRepository, springDataTeamRepository, springDataJpaUserLangRepository);
+        return new TeamService(springDataJpaTeamLangRepository, springDataTeamRepository, springDataJpaUserLangRepository,teamMemberRepository);
     }
 
 

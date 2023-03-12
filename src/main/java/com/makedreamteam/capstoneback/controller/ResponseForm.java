@@ -5,7 +5,7 @@ import lombok.Data;
 
 @Builder
 @Data
-public class ResponseFormForTeamInfo {
+public class ResponseForm {
     private int state;
     private String message;
     private TeamData data;
