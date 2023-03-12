@@ -41,7 +41,7 @@ public class TeamMember {
     }
 
 
-        static class  TeamMemberId implements Serializable {
+        public static class  TeamMemberId implements Serializable {
 
         private Long teamId;
 

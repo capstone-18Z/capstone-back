@@ -209,8 +209,21 @@ public class TeamService{
 
     public void addTeamMember(Long teamId,Long userId){
 
+        TeamMember byIdTeamIdAndIdUserId = teamMemberRepository.findByTeamIdAndUserId(teamId, userId);
+        if(byIdTeamIdAndIdUserId!=null) {
+            System.out.println("이미 존재하는 팀입니다");
+            return;
+        }
+        else{
             TeamMember teamMember=new TeamMember(teamId,userId);
             teamMemberRepository.save(teamMember);
+            System.out.println("유저:" +userId+"가 팀:"+teamId+"에 참가했습니다.");
+        }
+
+
+            //teamMemberRepository.save(teamMember);
+
+
 
 
     }
