@@ -1,52 +1,26 @@
-package com.makedreamteam.domain;
+package com.makedreamteam.capstoneback.controller;
 
-import jakarta.persistence.*;
-import org.hibernate.annotations.ColumnDefault;
+import jakarta.persistence.Column;
 
-@Entity
-public class UserLang {
-    @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
+public class UserForm {
     private Long userid;
 
-    @Column
-    @ColumnDefault("0")
+    private String password;
+
+    private String name;
+
+    private String detail;
+
     private int python;
-
-    @Column
-    @ColumnDefault("0")
     private int c;
-
-    @Column
-    @ColumnDefault("0")
     private int java;
-
-    @Column
-    @ColumnDefault("0")
     private int cpp;
-
-    @Column
-    @ColumnDefault("0")
     private int cs;
-
-    @Column
-    @ColumnDefault("0")
     private int vb;
-
-    @Column
-    @ColumnDefault("0")
     private int javascript;
-
-    @Column
-    @ColumnDefault("0")
     private int assembly;
-
-    @Column
-    @ColumnDefault("0")
     private int php;
-
-    @Column
-    @ColumnDefault("0")
-    private int sqllang;
+    private int sqlLang;
 
     public Long getUserid() {
         return userid;
@@ -54,6 +28,30 @@ public class UserLang {
 
     public void setUserid(Long userid) {
         this.userid = userid;
+    }
+
+    public String getPassword() {
+        return password;
+    }
+
+    public void setPassword(String password) {
+        this.password = password;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public String getDetail() {
+        return detail;
+    }
+
+    public void setDetail(String detail) {
+        this.detail = detail;
     }
 
     public int getPython() {
@@ -128,28 +126,11 @@ public class UserLang {
         this.php = php;
     }
 
-    public int getSqllang() {
-        return sqllang;
+    public int getSqlLang() {
+        return sqlLang;
     }
 
-    public void setSqllang(int sqllang) {
-        this.sqllang = sqllang;
-    }
-
-    @Override
-    public String toString() {
-        return "UserLang{" +
-                "userid=" + userid +
-                ", python=" + python +
-                ", c=" + c +
-                ", java=" + java +
-                ", cpp=" + cpp +
-                ", cs=" + cs +
-                ", vb=" + vb +
-                ", javascript=" + javascript +
-                ", assembly=" + assembly +
-                ", php=" + php +
-                ", sqllang=" + sqllang +
-                '}';
+    public void setSqlLang(int sqlLang) {
+        this.sqlLang = sqlLang;
     }
 }

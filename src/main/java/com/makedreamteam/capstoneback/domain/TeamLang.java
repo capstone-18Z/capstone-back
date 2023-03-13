@@ -12,6 +12,7 @@ import org.hibernate.annotations.ColumnDefault;
 @Builder
 public class TeamLang {
     @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long teamId;
 
     @Column
@@ -54,9 +55,13 @@ public class TeamLang {
     @ColumnDefault("0")
     private int sqllang;
 
+    public Long getUserid() {
+        return teamid;
+    }
 
-
-
+    public void setUserid(Long userid) {
+        this.teamid = userid;
+    }
 
     public int getPython() {
         return python;
