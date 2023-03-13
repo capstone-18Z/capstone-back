@@ -1,6 +1,7 @@
 package com.makedreamteam.capstoneback.controller;
 
 import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 
 import com.makedreamteam.capstoneback.JwtTokenProvider;
@@ -8,10 +9,7 @@ import com.makedreamteam.capstoneback.domain.Member;
 import com.makedreamteam.capstoneback.domain.Role;
 import com.makedreamteam.capstoneback.repository.MemberRepository;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import lombok.RequiredArgsConstructor;
 
@@ -43,9 +41,12 @@ public class MemberController {
         if (!passwordEncoder.matches(user.get("password"), member.getPassword())) {
             throw new IllegalArgumentException("이메일 또는 비밀번호가 맞지 않습니다.");
         }
-
-        return jwtTokenProvider.createToken(member.getEmail(), member.getRole());
+        return jwtTokenProvider.createToken(member.getEmail(), member.getRole(), member.getNickname());
     }
 
+    @GetMapping("/search/{email}")
+    public Optional<Member> SearchMemberbyEmail(@PathVariable String email){
+        return memberRepository.findByEmail(email);
+    }
 
 }
