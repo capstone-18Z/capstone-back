@@ -9,15 +9,15 @@ public class HomeController {
     public String home(){
         return "home";
     }
-    @GetMapping("/users/signup")
+    @GetMapping("/users/register")
     public String createForm() { return "users/createUserForm"; }
 
-    @GetMapping("/users/signin")
+    @GetMapping("/users/login")
     public String login(){
         return "users/signinForm";
     }
 
-    @GetMapping("/user/login")
+    @GetMapping("/user/logincheck")
     public String logincheck(){
         return "securitycheck";
     }
