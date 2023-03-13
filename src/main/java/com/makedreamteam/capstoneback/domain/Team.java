@@ -1,67 +1,154 @@
 package com.makedreamteam.capstoneback.domain;
 
 import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
+import lombok.NoArgsConstructor;
+import org.hibernate.annotations.ColumnDefault;
 
 @Entity
 @Builder
+@AllArgsConstructor
+@NoArgsConstructor
 public class Team{
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long teamid;
+    private Long teamId;
 
     @Column
-    private int current_fm;
+    @ColumnDefault("0")
+    private int currentFrontMember;
 
     @Column
-    private int current_bm;
+    @ColumnDefault("0")
+    private int currentBackMember;
 
     @Column
-    private int wanted_fm;
+    @ColumnDefault("0")
+    private int wantedFrontMember;
 
     @Column
-    private int wanted_bm;
+    @ColumnDefault("0")
+    private int wantedBackEndMember;
+
+    @Column
+    private String title;
+    @Column
+    private Long userId; // 외래키 설정
+
+    @Column
+    private String createDate;
+
+    @Column
+    private String updateDate;
+
+    @Column
+    private String detail;
+
+    @Column
+    private int period;
+
+    @Column
+    private Long teamLeader;
 
 
 
 
-    public Long getTeamid() {
-        return teamid;
+    public Long getTeamId() {
+        return teamId;
     }
 
-    public void setTeamid(Long teamid) {
-        this.teamid = teamid;
+    public void setTeamId(Long teamid) {
+        this.teamId = teamid;
     }
 
-    public int getCurrent_fm() {
-        return current_fm;
+
+
+    public void setDetail(String detail) {
+        this.detail = detail;
     }
 
-    public void setCurrent_fm(int current_fm) {
-        this.current_fm = current_fm;
+    public void setPeriod(int period) {
+        this.period = period;
     }
 
-    public int getCurrent_bm() {
-        return current_bm;
+    public int getCurrentFrontMember() {
+        return currentFrontMember;
     }
 
-    public void setCurrent_bm(int current_dm) {
-        this.current_bm = current_dm;
+    public int getCurrentBackMember() {
+        return currentBackMember;
     }
 
-    public int getWanted_fm() {
-        return wanted_fm;
+    public int getWantedFrontMember() {
+        return wantedFrontMember;
     }
 
-    public void setWanted_fm(int wanted_fm) {
-        this.wanted_fm = wanted_fm;
+    public int getWantedBackEndMember() {
+        return wantedBackEndMember;
     }
 
-    public int getWanted_bm() {
-        return wanted_bm;
+    public String getTitle() {
+        return title;
     }
 
-    public void setWanted_bm(int wanted_dm) {
-        this.wanted_bm = wanted_dm;
+    public Long getUserId() {
+        return userId;
+    }
+
+    public String getCreateDate() {
+        return createDate;
+    }
+
+    public String getUpdateDate() {
+        return updateDate;
+    }
+
+    public String getDetail() {
+        return detail;
+    }
+
+    public int getPeriod() {
+        return period;
+    }
+
+    public Long getTeamLeader() {
+        return teamLeader;
+    }
+
+    public void setCurrentFrontMember(int currentFrontMember) {
+        this.currentFrontMember = currentFrontMember;
+    }
+
+    public void setCurrentBackMember(int currentBackMember) {
+        this.currentBackMember = currentBackMember;
+    }
+
+    public void setWantedFrontMember(int wantedFrontMember) {
+        this.wantedFrontMember = wantedFrontMember;
+    }
+
+    public void setWantedBackEndMember(int wantedBackEndMember) {
+        this.wantedBackEndMember = wantedBackEndMember;
+    }
+
+    public void setTitle(String title) {
+        this.title = title;
+    }
+
+    public void setUserId(Long userId) {
+        this.userId = userId;
+    }
+
+    public void setCreateDate(String createDate) {
+        this.createDate = createDate;
+    }
+
+    public void setUpdateDate(String updateDate) {
+        this.updateDate = updateDate;
+    }
+
+    public void setTeamLeader(Long teamLeader) {
+        this.teamLeader = teamLeader;
     }
 }

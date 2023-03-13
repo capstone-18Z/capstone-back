@@ -1,4 +1,4 @@
-package com.makedreamteam.domain;
+package com.makedreamteam.capstoneback.domain;
 
 import jakarta.persistence.*;
 import org.hibernate.annotations.ColumnDefault;
@@ -134,5 +134,22 @@ public class UserLang {
 
     public void setSqllang(int sqllang) {
         this.sqllang = sqllang;
+    }
+
+    @Override
+    public String toString() {
+        return "UserLang{" +
+                "userid=" + userid +
+                ", python=" + python +
+                ", c=" + c +
+                ", java=" + java +
+                ", cpp=" + cpp +
+                ", cs=" + cs +
+                ", vb=" + vb +
+                ", javascript=" + javascript +
+                ", assembly=" + assembly +
+                ", php=" + php +
+                ", sqllang=" + sqllang +
+                '}';
     }
 }
