@@ -12,7 +12,7 @@ import org.hibernate.annotations.ColumnDefault;
 @Builder
 public class TeamLang {
     @Id
-    private Long teamid;
+    private Long teamId;
 
     @Column
     @ColumnDefault("0")
@@ -138,14 +138,14 @@ public class TeamLang {
         this.sqllang = sqllang;
     }
 
-    public void setTeamid(Long teamid) {
-        this.teamid = teamid;
+    public void setTeamId(Long teamid) {
+        this.teamId = teamid;
     }
 
     @Override
     public String toString() {
         return "TeamLang{" +
-                "teamid=" + teamid +
+                "teamid=" + teamId +
                 ", python=" + python +
                 ", c=" + c +
                 ", java=" + java +
@@ -159,7 +159,7 @@ public class TeamLang {
                 '}';
     }
 
-    public Long getTeamid() {
-        return teamid;
+    public Long getTeamId() {
+        return teamId;
     }
 }

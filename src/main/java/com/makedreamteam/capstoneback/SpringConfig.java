@@ -1,10 +1,12 @@
 package com.makedreamteam.capstoneback;
 
 
+
 import com.makedreamteam.capstoneback.repository.SpringDataJpaTeamLangRepository;
 import com.makedreamteam.capstoneback.repository.SpringDataJpaUserLangRepository;
 import com.makedreamteam.capstoneback.repository.SpringDataTeamRepository;
 import com.makedreamteam.capstoneback.repository.TeamMemberRepository;
+import com.makedreamteam.capstoneback.service.TeamMemberService;
 import com.makedreamteam.capstoneback.service.TeamService;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -39,9 +41,12 @@ public class SpringConfig implements WebMvcConfigurer {
 
     @Bean
     public TeamService TeamService(){
-        return new TeamService(springDataJpaTeamLangRepository, springDataTeamRepository, springDataJpaUserLangRepository,teamMemberRepository);
+        return new TeamService(springDataJpaTeamLangRepository, springDataTeamRepository, springDataJpaUserLangRepository);
     }
-
+    @Bean
+    public TeamMemberService TeamMemberService(){
+        return new TeamMemberService(teamMemberRepository);
+    }
 
     @Override
     public void addCorsMappings(final CorsRegistry registry) {

@@ -2,27 +2,36 @@ package com.makedreamteam.capstoneback.domain;
 
 
 import jakarta.persistence.*;
+import lombok.Builder;
 
-import java.io.Serializable;
 
 @Entity
-@IdClass(TeamMember.TeamMemberId.class)
+@Builder
 public class TeamMember {
     @Id
+    @GeneratedValue(strategy =GenerationType.IDENTITY)
+    private Long teamMemberId;
 
+    @Column
+    private Long teamLeader;
+
+    @Column
     private Long teamId;
 
-    @Id
-
+    @Column
     private Long userId;
 
-    public TeamMember(Long teamId, Long userId) {
+    public TeamMember(Long teamMemberId, Long teamLeader, Long teamId, Long userId) {
+        this.teamMemberId = teamMemberId;
+        this.teamLeader = teamLeader;
         this.teamId = teamId;
         this.userId = userId;
     }
 
     public TeamMember() {
+
     }
+
 
     public Long getTeamId() {
         return teamId;
@@ -41,33 +50,20 @@ public class TeamMember {
     }
 
 
-        public static class  TeamMemberId implements Serializable {
+    public Long getTeamMemberId() {
+        return teamMemberId;
+    }
 
-        private Long teamId;
+    public Long getTeamLeader() {
+        return teamLeader;
+    }
 
-        private Long userId;
+    public void setTeamMemberId(Long teamMemberId) {
+        this.teamMemberId = teamMemberId;
+    }
 
-        public TeamMemberId(Long teamId, Long userId) {
-            this.teamId = teamId;
-            this.userId = userId;
-        }
-        public TeamMemberId(){}
-
-        public Long getTeamId() {
-            return teamId;
-        }
-
-        public Long getUserId() {
-            return userId;
-        }
-
-        public void setTeamId(Long teamId) {
-            this.teamId = teamId;
-        }
-
-        public void setUserId(Long userId) {
-            this.userId = userId;
-        }
+    public void setTeamLeader(Long teamLeader) {
+        this.teamLeader = teamLeader;
     }
 }
 

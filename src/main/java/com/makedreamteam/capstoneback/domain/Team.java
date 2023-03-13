@@ -13,34 +13,34 @@ import org.hibernate.annotations.ColumnDefault;
 public class Team{
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long teamid;
+    private Long teamId;
 
     @Column
     @ColumnDefault("0")
-    private int current_fm;
+    private int currentFrontMember;
 
     @Column
     @ColumnDefault("0")
-    private int current_bm;
+    private int currentBackMember;
 
     @Column
     @ColumnDefault("0")
-    private int wanted_fm;
+    private int wantedFrontMember;
 
     @Column
     @ColumnDefault("0")
-    private int wanted_bm;
+    private int wantedBackEndMember;
 
     @Column
     private String title;
     @Column
-    private Long userid; // 외래키 설정
+    private Long userId; // 외래키 설정
 
     @Column
-    private String createdate;
+    private String createDate;
 
     @Column
-    private String updatedate;
+    private String updateDate;
 
     @Column
     private String detail;
@@ -48,63 +48,60 @@ public class Team{
     @Column
     private int period;
 
+    @Column
+    private Long teamLeader;
 
 
 
-    public Long getTeamid() {
-        return teamid;
+
+    public Long getTeamId() {
+        return teamId;
     }
 
-    public void setTeamid(Long teamid) {
-        this.teamid = teamid;
+    public void setTeamId(Long teamid) {
+        this.teamId = teamid;
     }
 
-    public int getCurrent_fm() {
-        return current_fm;
+
+
+    public void setDetail(String detail) {
+        this.detail = detail;
     }
 
-    public void setCurrent_fm(int current_fm) {
-        this.current_fm = current_fm;
+    public void setPeriod(int period) {
+        this.period = period;
     }
 
-    public int getCurrent_bm() {
-        return current_bm;
+    public int getCurrentFrontMember() {
+        return currentFrontMember;
     }
 
-    public void setCurrent_bm(int current_dm) {
-        this.current_bm = current_dm;
+    public int getCurrentBackMember() {
+        return currentBackMember;
     }
 
-    public int getWanted_fm() {
-        return wanted_fm;
+    public int getWantedFrontMember() {
+        return wantedFrontMember;
     }
 
-    public void setWanted_fm(int wanted_fm) {
-        this.wanted_fm = wanted_fm;
-    }
-
-    public int getWanted_bm() {
-        return wanted_bm;
-    }
-
-    public void setWanted_bm(int wanted_dm) {
-        this.wanted_bm = wanted_dm;
+    public int getWantedBackEndMember() {
+        return wantedBackEndMember;
     }
 
     public String getTitle() {
         return title;
     }
 
-    public Long getUserid() {
-        return userid;
+    public Long getUserId() {
+        return userId;
     }
 
-    public String getCreatedate() {
-        return createdate;
+    public String getCreateDate() {
+        return createDate;
     }
 
-    public String getUpdatedate() {
-        return updatedate;
+    public String getUpdateDate() {
+        return updateDate;
     }
 
     public String getDetail() {
@@ -115,27 +112,43 @@ public class Team{
         return period;
     }
 
+    public Long getTeamLeader() {
+        return teamLeader;
+    }
+
+    public void setCurrentFrontMember(int currentFrontMember) {
+        this.currentFrontMember = currentFrontMember;
+    }
+
+    public void setCurrentBackMember(int currentBackMember) {
+        this.currentBackMember = currentBackMember;
+    }
+
+    public void setWantedFrontMember(int wantedFrontMember) {
+        this.wantedFrontMember = wantedFrontMember;
+    }
+
+    public void setWantedBackEndMember(int wantedBackEndMember) {
+        this.wantedBackEndMember = wantedBackEndMember;
+    }
+
     public void setTitle(String title) {
         this.title = title;
     }
 
-    public void setUserid(Long userid) {
-        this.userid = userid;
+    public void setUserId(Long userId) {
+        this.userId = userId;
     }
 
-    public void setCreatedate(String createdate) {
-        this.createdate = createdate;
+    public void setCreateDate(String createDate) {
+        this.createDate = createDate;
     }
 
-    public void setUpdatedate(String updatedate) {
-        this.updatedate = updatedate;
+    public void setUpdateDate(String updateDate) {
+        this.updateDate = updateDate;
     }
 
-    public void setDetail(String detail) {
-        this.detail = detail;
-    }
-
-    public void setPeriod(int period) {
-        this.period = period;
+    public void setTeamLeader(Long teamLeader) {
+        this.teamLeader = teamLeader;
     }
 }

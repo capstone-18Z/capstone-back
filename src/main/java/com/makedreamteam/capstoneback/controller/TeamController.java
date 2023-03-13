@@ -8,7 +8,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.*;
 import org.springframework.web.bind.annotation.*;
 
-import java.nio.charset.Charset;
+
 import java.security.Principal;
 import java.util.List;
 import java.util.Optional;
@@ -70,8 +70,10 @@ public class TeamController {
 
     }
 
+
+
     @PostMapping("/team/new")
-    public ResponseEntity<ResponseForm> addPostTeam(@RequestBody PostTeamForm postTeamForm){
+    public ResponseEntity<ResponseForm> addNewTeam(@RequestBody PostTeamForm postTeamForm){
         System.out.println(postTeamForm.toString());
         try{
             Team team = teamService.addPostTeam(postTeamForm);
@@ -93,7 +95,7 @@ public class TeamController {
 
     //팀 정보 수정
     @PostMapping("/teams/{teamid}/update")
-    public ResponseEntity<ResponseForm> update(@PathVariable Long teamid, @RequestBody PostTeamForm postTeamForm) {
+    public ResponseEntity<ResponseForm> updateTeamInfo(@PathVariable Long teamid, @RequestBody PostTeamForm postTeamForm) {
         try{
             Team updateTeam = teamService.update(teamid, postTeamForm);
             ResponseForm responseForm=ResponseForm.builder()
@@ -125,10 +127,5 @@ public class TeamController {
                     .message(e.getMessage()).state(HttpStatus.BAD_REQUEST.value()).build();
             return ResponseEntity.badRequest().body(errorResponseForm);
         }
-    }
-
-    @PostMapping("/test")
-    public void addTeamMember(){
-
     }
 }
