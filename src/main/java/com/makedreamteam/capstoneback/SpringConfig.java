@@ -1,7 +1,5 @@
 package com.makedreamteam.capstoneback;
 
-
-import com.makedreamteam.capstoneback.repository.SpringDataJpaPostTeamRepository;
 import com.makedreamteam.capstoneback.repository.SpringDataJpaTeamLangRepository;
 import com.makedreamteam.capstoneback.repository.SpringDataJpaUserLangRepository;
 import com.makedreamteam.capstoneback.repository.SpringDataTeamRepository;
