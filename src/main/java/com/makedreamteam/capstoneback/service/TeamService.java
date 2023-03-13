@@ -1,10 +1,8 @@
 package com.makedreamteam.capstoneback.service;
 
 import com.makedreamteam.capstoneback.controller.PostTeamForm;
-import com.makedreamteam.capstoneback.domain.PostTeam;
 import com.makedreamteam.capstoneback.domain.Team;
 import com.makedreamteam.capstoneback.domain.TeamLang;
-import com.makedreamteam.capstoneback.repository.SpringDataJpaPostTeamRepository;
 import com.makedreamteam.capstoneback.repository.SpringDataJpaTeamLangRepository;
 import com.makedreamteam.capstoneback.repository.SpringDataTeamRepository;
 import org.springframework.beans.factory.annotation.Autowired;

@@ -42,7 +42,7 @@ public class SecurityConfig {
                 .and()
                 .authorizeHttpRequests()  // 요청에 대한 사용 권한 체크
                 .requestMatchers("/admin/**").hasRole("ADMIN")
-                .requestMatchers("/api/post/**").authenticated()
+                .requestMatchers("/member/api/**").authenticated()
                 .anyRequest().permitAll() // 그외 나머지 요청은 누구나 접근 가능
                 .and()
                 .addFilterBefore(new JwtAuthenticationFilter(jwtTokenProvider), UsernamePasswordAuthenticationFilter.class);
