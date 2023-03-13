@@ -46,7 +46,6 @@ public class TeamService{
             return team;
         } catch (NullPointerException | DataIntegrityViolationException | JpaSystemException |
                  TransactionSystemException e) {
-            System.out.println(e);
             /*NullPointerException: postTeamForm이 null인 경우 newTeam 및 newTeamLang 메서드에서 NullPointerException이 발생
               DataIntegrityViolationException: Team 엔티티 또는 TeamLang 엔티티의 제약 조건을 위반하여 데이터베이스에 저장할 수 없는 경우 DataIntegrityViolationException이 발생
               JpaSystemException: Team 엔티티 또는 TeamLang 엔티티의 속성값에 유효하지 않은 값이 포함되어 있거나, Team 엔티티와 TeamLang 엔티티의 관계 설정이 잘못된 경우 JpaSystemException이 발생
@@ -129,7 +128,6 @@ public class TeamService{
         return springDataTeamRepository.findById(id);
         //optional은 이미 null값을 처리하는데 안전한 방법을 제공하기때문에 if문으 ㄹ사용하지 않아도된다
     }
-
     public List<Team> allPosts(Principal principal) {
         try {
             List<Team> allPost = springDataTeamRepository.findAll();
@@ -143,14 +141,6 @@ public class TeamService{
             throw new RuntimeException("Failed to retrieve Team information from the database", e);
         }
     }
-
-
-
-
-
-
-
-
     public List<Long> calculateWeightOfLang(Long userid){
         List<TeamLang> allTeams=springDataJpaTeamLangRepository.findAll();
         UserLang user=springDataJpaUserLangRepository.findById(userid).get();
@@ -189,7 +179,6 @@ public class TeamService{
 
         return result;
     }
-
 
     public void delete(Long teamId) {
         Optional<Team> teamOptional = springDataTeamRepository.findById(teamId);

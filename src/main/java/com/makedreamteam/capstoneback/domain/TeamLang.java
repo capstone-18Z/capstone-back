@@ -56,11 +56,11 @@ public class TeamLang {
     private int sqllang;
 
     public Long getUserid() {
-        return teamid;
+        return teamId;
     }
 
     public void setUserid(Long userid) {
-        this.teamid = userid;
+        this.teamId = userid;
     }
 
     public int getPython() {
