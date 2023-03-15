@@ -9,6 +9,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Optional;
+import java.util.UUID;
 
 @Service
 @Transactional
@@ -19,7 +20,7 @@ public class TeamMemberService {
         this.teamMemberRepository=teamMemberRepository;
     }
 
-    public void addTeamMember(Long teamId,Long userId){
+    public void addTeamMember(UUID teamId, UUID userId){
 
         Optional<TeamMember> byTeamIdAndUserId = teamMemberRepository.findByTeamIdAndUserId(teamId, userId);
         if(byTeamIdAndUserId.isPresent()) {
@@ -31,7 +32,7 @@ public class TeamMemberService {
         }
 
     }
-    public void deleteTeamMember(Long teamId, Long userId){
+    public void deleteTeamMember(UUID teamId, UUID userId){
         Optional<TeamMember> byTeamIdAndUserId = teamMemberRepository.findByTeamIdAndUserId(teamId, userId);
         if(byTeamIdAndUserId.isPresent()){
             teamMemberRepository.delete(byTeamIdAndUserId.get());

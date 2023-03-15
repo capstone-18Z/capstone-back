@@ -83,6 +83,7 @@ public class TeamService{
                 .detail(postTeamForm.getDetail())
                 .period(postTeamForm.getPeriod())
                 .title(postTeamForm.getTitle())
+                .teamLeader(postTeamForm.getTeamLeader())
                 .build();
         return team;
     }

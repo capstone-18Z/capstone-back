@@ -52,7 +52,7 @@ public class Team{
     private int period;
 
     @Column
-    private Long teamLeader;
+    private UUID teamLeader;
 
 
 
@@ -115,7 +115,7 @@ public class Team{
         return period;
     }
 
-    public Long getTeamLeader() {
+    public UUID getTeamLeader() {
         return teamLeader;
     }
 
@@ -151,7 +151,7 @@ public class Team{
         this.updateDate = updateDate;
     }
 
-    public void setTeamLeader(Long teamLeader) {
+    public void setTeamLeader(UUID teamLeader) {
         this.teamLeader = teamLeader;
     }
 }

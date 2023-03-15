@@ -48,7 +48,6 @@ public class TeamController {
             return ResponseEntity.badRequest().body(errorResponseForm);
         }
     }
-
     @PostMapping("/{id}")
     public ResponseEntity<ResponseForm> findById(@PathVariable UUID id){
         Optional<Team> team=teamService.findById(id);
@@ -67,7 +66,6 @@ public class TeamController {
                     .build();
             return ResponseEntity.badRequest().body(errorResponse);
         }
-
     }
 
 

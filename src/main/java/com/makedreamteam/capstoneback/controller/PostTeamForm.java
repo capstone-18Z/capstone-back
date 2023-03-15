@@ -5,6 +5,8 @@ import lombok.AllArgsConstructor;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.ColumnDefault;
 
+import java.util.UUID;
+
 @AllArgsConstructor
 @NoArgsConstructor
 public class PostTeamForm {
@@ -15,6 +17,8 @@ public class PostTeamForm {
     //모집 할 멤버  수
     private int wantedFrontMember;
     private int wantedBackEndMember;
+
+    private UUID teamLeader;
 
 
     private String title;
@@ -214,5 +218,13 @@ public class PostTeamForm {
 
     public void setCurrentBackMember(int currentBackMember) {
         this.currentBackMember = currentBackMember;
+    }
+
+    public UUID getTeamLeader() {
+        return teamLeader;
+    }
+
+    public void setTeamLeader(UUID teamLeader) {
+        this.teamLeader = teamLeader;
     }
 }
