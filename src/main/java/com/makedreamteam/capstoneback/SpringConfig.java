@@ -29,7 +29,6 @@ public class SpringConfig implements WebMvcConfigurer {
            this.springDataJpaUserLangRepository = springDataJpaUserLangRepository;
            this.teamMemberRepository = teamMemberRepository;
        }
-
        @Bean
     public TeamService TeamService(){
         return new TeamService(springDataJpaTeamLangRepository,springDataTeamRepository,springDataJpaUserLangRepository);

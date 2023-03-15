@@ -6,14 +6,15 @@ import lombok.Builder;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.ColumnDefault;
 
+import java.util.UUID;
+
 @Entity
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
 public class TeamLang {
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long teamId;
+    private UUID teamId;
 
     @Column
     @ColumnDefault("0")
@@ -55,11 +56,11 @@ public class TeamLang {
     @ColumnDefault("0")
     private int sqllang;
 
-    public Long getUserid() {
+    public UUID getUserid() {
         return teamId;
     }
 
-    public void setUserid(Long userid) {
+    public void setUserid(UUID userid) {
         this.teamId = userid;
     }
 
@@ -143,7 +144,7 @@ public class TeamLang {
         this.sqllang = sqllang;
     }
 
-    public void setTeamId(Long teamid) {
+    public void setTeamId(UUID teamid) {
         this.teamId = teamid;
     }
 
@@ -164,7 +165,7 @@ public class TeamLang {
                 '}';
     }
 
-    public Long getTeamId() {
+    public UUID getTeamId() {
         return teamId;
     }
 }

@@ -1,6 +1,5 @@
 package com.makedreamteam.capstoneback.controller;
 
-
 import com.makedreamteam.capstoneback.domain.Team;
 import com.makedreamteam.capstoneback.service.TeamService;
 import jakarta.persistence.EntityNotFoundException;
@@ -8,13 +7,14 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.*;
 import org.springframework.web.bind.annotation.*;
 
-
 import java.security.Principal;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 @RestController
 @CrossOrigin
+@RequestMapping("/teams")
 public class TeamController {
 
     private final TeamService teamService;
@@ -22,7 +22,7 @@ public class TeamController {
     public TeamController(TeamService postTeamService) {
         this.teamService = postTeamService;
     }
-    @GetMapping("/teams")
+    @GetMapping("")
     public ResponseEntity<ResponseForm> allPost(Principal principal){
         String userName=principal!=null ? principal.getName() : "";
         try{List<Team> teams=teamService.allPosts(principal);
@@ -36,7 +36,7 @@ public class TeamController {
 
     }
 
-    @GetMapping("/teams/search/{title}")
+    @GetMapping("/search/{title}")
     public ResponseEntity<ResponseForm> searchPostByTitle(@PathVariable String title){
         try{
             List<Team> byTitleContaining = teamService.findByTitleContaining(title);
@@ -49,8 +49,8 @@ public class TeamController {
         }
     }
 
-    @PostMapping("/teams/{id}")
-    public ResponseEntity<ResponseForm> findById(@PathVariable Long id){
+    @PostMapping("/{id}")
+    public ResponseEntity<ResponseForm> findById(@PathVariable UUID id){
         Optional<Team> team=teamService.findById(id);
         if(team.isPresent()){
             ResponseForm responseForm=ResponseForm.builder()
@@ -72,7 +72,7 @@ public class TeamController {
 
 
 
-    @PostMapping("/team/new")
+    @PostMapping("/new")
     public ResponseEntity<ResponseForm> addNewTeam(@RequestBody PostTeamForm postTeamForm){
         System.out.println(postTeamForm.toString());
         try{
@@ -93,9 +93,10 @@ public class TeamController {
     }
 
 
+
     //팀 정보 수정
-    @PostMapping("/teams/{teamid}/update")
-    public ResponseEntity<ResponseForm> updateTeamInfo(@PathVariable Long teamid, @RequestBody PostTeamForm postTeamForm) {
+    @PostMapping("/{teamid}/update")
+    public ResponseEntity<ResponseForm> updateTeamInfo(@PathVariable UUID teamid, @RequestBody PostTeamForm postTeamForm) {
         try{
             Team updateTeam = teamService.update(teamid, postTeamForm);
             ResponseForm responseForm=ResponseForm.builder()
@@ -114,8 +115,8 @@ public class TeamController {
         }
     }
 
-    @PostMapping("teams/{teamId}/delete")
-    public ResponseEntity<ResponseForm> deleteTeam(@PathVariable Long teamId){
+    @PostMapping("/{teamId}/delete")
+    public ResponseEntity<ResponseForm> deleteTeam(@PathVariable UUID teamId){
         try {
             teamService.delete(teamId);
             ResponseForm responseForm=ResponseForm.builder()

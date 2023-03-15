@@ -6,14 +6,17 @@ import lombok.Builder;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.ColumnDefault;
 
+import java.util.UUID;
+
 @Entity
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
 public class Team{
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long teamId;
+    @GeneratedValue
+    @Column(columnDefinition = "BINARY(16)")
+    private UUID teamId;
 
     @Column
     @ColumnDefault("0")
@@ -31,18 +34,18 @@ public class Team{
     @ColumnDefault("0")
     private int wantedBackEndMember;
 
-    @Column
+    @Column(columnDefinition = "VARCHAR(255) CHARACTER SET utf8 COLLATE utf8_general_ci")
     private String title;
     @Column
     private Long userId; // 외래키 설정
 
-    @Column
+    @Column(columnDefinition = "VARCHAR(255) CHARACTER SET utf8 COLLATE utf8_general_ci")
     private String createDate;
 
-    @Column
+    @Column(columnDefinition = "VARCHAR(255) CHARACTER SET utf8 COLLATE utf8_general_ci")
     private String updateDate;
 
-    @Column
+    @Column(columnDefinition = "VARCHAR(255) CHARACTER SET utf8 COLLATE utf8_general_ci")
     private String detail;
 
     @Column
@@ -54,11 +57,11 @@ public class Team{
 
 
 
-    public Long getTeamId() {
+    public UUID getTeamId() {
         return teamId;
     }
 
-    public void setTeamId(Long teamid) {
+    public void setTeamId(UUID teamid) {
         this.teamId = teamid;
     }
 

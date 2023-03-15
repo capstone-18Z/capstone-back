@@ -2,9 +2,11 @@ package com.makedreamteam.capstoneback.controller;
 
 import jakarta.persistence.Column;
 import lombok.AllArgsConstructor;
+import lombok.NoArgsConstructor;
 import org.hibernate.annotations.ColumnDefault;
 
 @AllArgsConstructor
+@NoArgsConstructor
 public class PostTeamForm {
     //현재 모집된 멤버 수
     private int currentFrontMember;
@@ -31,6 +33,7 @@ public class PostTeamForm {
     private int assembly;
     private int php;
     private int sqlLang;
+
 
 
 

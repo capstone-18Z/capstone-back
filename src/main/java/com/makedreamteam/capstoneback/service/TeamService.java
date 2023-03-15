@@ -89,7 +89,7 @@ public class TeamService{
 
 
 
-    public Team update(Long teamId,PostTeamForm postTeamForm){
+    public Team update(UUID teamId,PostTeamForm postTeamForm){
         Optional<Team> optionalTeam = springDataTeamRepository.findById(teamId);
         Optional<TeamLang> optionalTeamLang = springDataJpaTeamLangRepository.findById(teamId);
 
@@ -124,7 +124,7 @@ public class TeamService{
             throw new RuntimeException("Failed to retrieve teams by title containing '" + title + "'", e);
         }
     }
-    public Optional<Team> findById(Long id){
+    public Optional<Team> findById(UUID id){
         return springDataTeamRepository.findById(id);
         //optional은 이미 null값을 처리하는데 안전한 방법을 제공하기때문에 if문으 ㄹ사용하지 않아도된다
     }
@@ -141,12 +141,12 @@ public class TeamService{
             throw new RuntimeException("Failed to retrieve Team information from the database", e);
         }
     }
-    public List<Long> calculateWeightOfLang(Long userid){
+    public List<UUID> calculateWeightOfLang(Long userid){
         List<TeamLang> allTeams=springDataJpaTeamLangRepository.findAll();
         UserLang user=springDataJpaUserLangRepository.findById(userid).get();
         List<Double> list=new ArrayList<>();
-        List<Long> resultList=new ArrayList<>();
-        HashMap<Double,Long> map=new HashMap<>();
+        List<UUID> resultList=new ArrayList<>();
+        HashMap<Double,UUID> map=new HashMap<>();
         for(TeamLang teamlang : allTeams){
             double a=(teamlang.getAssembly()*user.getAssembly()+ teamlang.getC()*user.getC()+ teamlang.getCs()*user.getCs()+ teamlang.getVb()*user.getVb()+ teamlang.getCpp()*user.getCpp()+ teamlang.getJava()*user.getJava()+ teamlang.getJavascript()*user.getJavascript()+ teamlang.getPhp()*user.getPhp()+ teamlang.getPython()*user.getPython()+ teamlang.getSqllang()*user.getSqllang());
             map.put(a, teamlang.getTeamId());
@@ -180,7 +180,7 @@ public class TeamService{
         return result;
     }
 
-    public void delete(Long teamId) {
+    public void delete(UUID teamId) {
         Optional<Team> teamOptional = springDataTeamRepository.findById(teamId);
         Optional<TeamLang> teamLangOptional = springDataJpaTeamLangRepository.findById(teamId);
         if(teamOptional.isEmpty())
