@@ -11,8 +11,7 @@ import java.util.UUID;
 @NoArgsConstructor
 public class PostTeamForm {
 
-    public PostTeamForm(){
-    }
+
     //현재 모집된 멤버 수
     private int currentFrontMember;
     private int currentBackMember;
