@@ -2,6 +2,7 @@ package com.makedreamteam.capstoneback;
 
 import java.util.Base64;
 import java.util.Date;
+import java.util.UUID;
 
 import com.makedreamteam.capstoneback.domain.Role;
 import jakarta.servlet.http.HttpServletRequest;
@@ -34,8 +35,9 @@ public class JwtTokenProvider {
     }
 
     // JWT 토큰 생성
-    public String createToken(String userPK, Role roles, String nickname) {
-        Claims claims = Jwts.claims().setSubject(userPK); // JWT payload에 저장되는 정보 단위
+    public String createToken(UUID id, String userPK, Role roles, String nickname) {
+        Claims claims = Jwts.claims().setSubject(String.valueOf(id)); // JWT payload에 저장되는 정보 단위
+        claims.put("email", userPK);
         claims.put("nickname", nickname);
         claims.put("roles", roles); // 정보 저장 (key-value)
         Date now = new Date();
