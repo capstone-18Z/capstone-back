@@ -136,20 +136,5 @@ public class UserLang {
         this.sqllang = sqllang;
     }
 
-    @Override
-    public String toString() {
-        return "UserLang{" +
-                "userid=" + userid +
-                ", python=" + python +
-                ", c=" + c +
-                ", java=" + java +
-                ", cpp=" + cpp +
-                ", cs=" + cs +
-                ", vb=" + vb +
-                ", javascript=" + javascript +
-                ", assembly=" + assembly +
-                ", php=" + php +
-                ", sqllang=" + sqllang +
-                '}';
-    }
+
 }

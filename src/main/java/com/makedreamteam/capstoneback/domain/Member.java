@@ -20,15 +20,15 @@ import org.hibernate.annotations.ColumnDefault;
 @Builder
 public class Member {
     @Id
-    @Column(name = "member_id", columnDefinition = "BINARY(16)")
+    @Column(name = "member_id", columnDefinition = "BINARY(16) ")
     @GeneratedValue
     private UUID id;
 
-    @Column(length = 100, unique = true, nullable = false)
+    @Column(length = 100, unique = true, nullable = false, columnDefinition="VARCHAR(255) CHARACTER SET utf8 COLLATE utf8_general_ci")
     private String email;
     private String password;
 
-    @Column(unique = true, nullable = false)
+    @Column(unique = true, nullable = false , columnDefinition="VARCHAR(255) CHARACTER SET utf8 COLLATE utf8_general_ci")
     private String nickname;
 
     @Enumerated(EnumType.STRING)

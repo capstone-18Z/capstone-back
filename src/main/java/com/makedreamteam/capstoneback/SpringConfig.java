@@ -31,7 +31,7 @@ public class SpringConfig implements WebMvcConfigurer {
        }
        @Bean
     public TeamService TeamService(){
-        return new TeamService(springDataJpaTeamLangRepository,springDataTeamRepository,springDataJpaUserLangRepository);
+        return new TeamService(springDataJpaTeamLangRepository,springDataTeamRepository,springDataJpaUserLangRepository, teamMemberRepository);
     }
 
 

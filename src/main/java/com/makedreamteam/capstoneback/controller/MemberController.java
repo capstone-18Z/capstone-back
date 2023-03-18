@@ -1,5 +1,6 @@
 package com.makedreamteam.capstoneback.controller;
 
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
@@ -33,7 +34,8 @@ public class MemberController {
                 .password(passwordEncoder.encode(user.get("password")))
                 .nickname(user.get("nickname"))
                 .role(Role.ROLE_MEMBER)
-                .build()).getId();
+                .build())
+                .getId();
     }
 
     // 로그인
@@ -68,5 +70,10 @@ public class MemberController {
                 .field((Integer) post.get("field"))
                 .build()
         );
+    }
+
+    @GetMapping("/all")
+    public List<Member> allMember(){
+        return memberRepository.findAll();
     }
 }

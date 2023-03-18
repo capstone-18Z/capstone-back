@@ -3,10 +3,12 @@ package com.makedreamteam.capstoneback.controller;
 import com.makedreamteam.capstoneback.domain.Team;
 import com.makedreamteam.capstoneback.service.TeamService;
 import jakarta.persistence.EntityNotFoundException;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.*;
 import org.springframework.web.bind.annotation.*;
 
+import javax.naming.AuthenticationException;
 import java.security.Principal;
 import java.util.List;
 import java.util.Optional;
@@ -71,10 +73,10 @@ public class TeamController {
 
 
     @PostMapping("/new")
-    public ResponseEntity<ResponseForm> addNewTeam(@RequestBody PostTeamForm postTeamForm){
-        System.out.println(postTeamForm.toString());
+    public ResponseEntity<ResponseForm> addNewTeam(@RequestBody PostTeamForm postTeamForm,HttpServletRequest request){
         try{
-            Team team = teamService.addPostTeam(postTeamForm);
+            String authToken= request.getHeader("login-token");
+            Team team = teamService.addPostTeam(postTeamForm,authToken);
             ResponseForm responseForm=ResponseForm.builder()
                     .data(TeamData.builder().dataWithLogin(team).build())
                     .message("Team created successfully")
@@ -94,9 +96,10 @@ public class TeamController {
 
     //팀 정보 수정
     @PostMapping("/{teamid}/update")
-    public ResponseEntity<ResponseForm> updateTeamInfo(@PathVariable UUID teamid, @RequestBody PostTeamForm postTeamForm) {
+    public ResponseEntity<ResponseForm> updateTeamInfo(@PathVariable UUID teamid, @RequestBody PostTeamForm postTeamForm,HttpServletRequest request) {
         try{
-            Team updateTeam = teamService.update(teamid, postTeamForm);
+            String authToken= request.getHeader("login-token");
+            Team updateTeam = teamService.update(teamid, postTeamForm,authToken);
             ResponseForm responseForm=ResponseForm.builder()
                     .message("update team")
                     .data(TeamData.builder().dataWithLogin(updateTeam).build())
@@ -104,7 +107,7 @@ public class TeamController {
                     .build();
             return ResponseEntity.ok().body(responseForm);
         }
-        catch (RuntimeException e){
+        catch (RuntimeException | AuthenticationException e){
             ResponseForm errorResponseForm=ResponseForm.builder()
                     .message(e.getMessage())
                     .state(HttpStatus.BAD_REQUEST.value())
@@ -114,17 +117,20 @@ public class TeamController {
     }
 
     @PostMapping("/{teamId}/delete")
-    public ResponseEntity<ResponseForm> deleteTeam(@PathVariable UUID teamId){
+    public ResponseEntity<ResponseForm> deleteTeam(@PathVariable UUID teamId,HttpServletRequest request){
         try {
-            teamService.delete(teamId);
+            String authToken= request.getHeader("login-token");
+            teamService.delete(teamId,authToken);
             ResponseForm responseForm=ResponseForm.builder()
                     .message("팀을 삭제했습니다")
                     .state(HttpStatus.OK.value()).build();
             return ResponseEntity.ok().body(responseForm);
-        }catch (EntityNotFoundException e){
+        }catch (EntityNotFoundException |AuthenticationException  e){
             ResponseForm errorResponseForm=ResponseForm.builder()
                     .message(e.getMessage()).state(HttpStatus.BAD_REQUEST.value()).build();
             return ResponseEntity.badRequest().body(errorResponseForm);
         }
     }
+
+
 }
