@@ -4,6 +4,7 @@ import com.makedreamteam.capstoneback.repository.UserLangRepository;
 import jakarta.transaction.Transactional;
 
 @Transactional
+
 public class UserLangService {
     private final UserLangRepository userLangRepository;
 
