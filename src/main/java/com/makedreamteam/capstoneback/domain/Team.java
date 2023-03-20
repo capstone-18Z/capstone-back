@@ -22,9 +22,7 @@ public class Team{
     @ColumnDefault("0")
     private int currentFrontMember;
 
-    @Column
-    @ColumnDefault("0")
-    private int postNumber;
+
 
     @Column
     @ColumnDefault("0")
@@ -40,8 +38,8 @@ public class Team{
 
     @Column(columnDefinition = "VARCHAR(255) CHARACTER SET utf8 COLLATE utf8_general_ci")
     private String title;
-    @Column
-    private UUID userId; // 외래키 설정
+    @Column(columnDefinition = "VARCHAR(255) CHARACTER SET utf8 COLLATE utf8_general_ci")
+    private String writer;
 
     @Column(columnDefinition = "VARCHAR(255) CHARACTER SET utf8 COLLATE utf8_general_ci")
     private String createDate;

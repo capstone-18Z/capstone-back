@@ -21,7 +21,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import javax.naming.AuthenticationException;
 import java.security.Principal;
-import java.security.SignatureException;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -112,6 +111,7 @@ public class TeamService{
                 .period(postTeamForm.getPeriod())
                 .title(postTeamForm.getTitle())
                 .teamLeader(postTeamForm.getTeamLeader())
+                .writer(postTeamForm.getWriter())
                 .build();
         return team;
     }
