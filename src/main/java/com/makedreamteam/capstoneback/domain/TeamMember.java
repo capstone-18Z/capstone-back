@@ -4,24 +4,27 @@ package com.makedreamteam.capstoneback.domain;
 import jakarta.persistence.*;
 import lombok.Builder;
 
+import java.util.UUID;
+
 
 @Entity
 @Builder
 public class TeamMember {
     @Id
-    @GeneratedValue(strategy =GenerationType.IDENTITY)
-    private Long teamMemberId;
+    @GeneratedValue
+    @Column(columnDefinition = "BINARY(16)")
+    private UUID teamMemberId;
 
     @Column
-    private Long teamLeader;
+    private UUID teamLeader;
 
     @Column
-    private Long teamId;
+    private UUID teamId;
 
     @Column
-    private Long userId;
+    private UUID userId;
 
-    public TeamMember(Long teamMemberId, Long teamLeader, Long teamId, Long userId) {
+    public TeamMember(UUID teamMemberId, UUID teamLeader, UUID teamId, UUID userId) {
         this.teamMemberId = teamMemberId;
         this.teamLeader = teamLeader;
         this.teamId = teamId;
@@ -33,36 +36,36 @@ public class TeamMember {
     }
 
 
-    public Long getTeamId() {
+    public UUID getTeamId() {
         return teamId;
     }
 
-    public Long getUserId() {
+    public UUID getUserId() {
         return userId;
     }
 
-    public void setTeamId(Long teamId) {
+    public void setTeamId(UUID teamId) {
         this.teamId = teamId;
     }
 
-    public void setUserId(Long userId) {
+    public void setUserId(UUID userId) {
         this.userId = userId;
     }
 
 
-    public Long getTeamMemberId() {
+    public UUID getTeamMemberId() {
         return teamMemberId;
     }
 
-    public Long getTeamLeader() {
+    public UUID getTeamLeader() {
         return teamLeader;
     }
 
-    public void setTeamMemberId(Long teamMemberId) {
+    public void setTeamMemberId(UUID teamMemberId) {
         this.teamMemberId = teamMemberId;
     }
 
-    public void setTeamLeader(Long teamLeader) {
+    public void setTeamLeader(UUID teamLeader) {
         this.teamLeader = teamLeader;
     }
 }

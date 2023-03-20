@@ -7,8 +7,13 @@ import com.makedreamteam.capstoneback.repository.TeamMemberRepository;
 import com.makedreamteam.capstoneback.service.TeamService;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.converter.HttpMessageConverter;
+import org.springframework.http.converter.StringHttpMessageConverter;
 import org.springframework.web.servlet.config.annotation.CorsRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
+
+import java.nio.charset.StandardCharsets;
+import java.util.List;
 
 @Configuration
 public class SpringConfig implements WebMvcConfigurer {
@@ -29,10 +34,9 @@ public class SpringConfig implements WebMvcConfigurer {
            this.springDataJpaUserLangRepository = springDataJpaUserLangRepository;
            this.teamMemberRepository = teamMemberRepository;
        }
-
        @Bean
     public TeamService TeamService(){
-        return new TeamService(springDataJpaTeamLangRepository,springDataTeamRepository,springDataJpaUserLangRepository);
+        return new TeamService(springDataJpaTeamLangRepository,springDataTeamRepository,springDataJpaUserLangRepository, teamMemberRepository);
     }
 
 
@@ -41,5 +45,6 @@ public class SpringConfig implements WebMvcConfigurer {
         registry.addMapping("/**")
                 .allowedMethods(ALLOWED_METHOD_NAMES.split(","));
     }
+
 
 }

@@ -10,6 +10,8 @@ import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 
+import java.util.UUID;
+
 @Controller
 @CrossOrigin
 public class TeamMemberController {
@@ -21,7 +23,7 @@ public class TeamMemberController {
     }
 
     @PostMapping("/{teamId}/match/{userId}")
-    public ResponseEntity<ResponseForm> matchTeamMember(@PathVariable Long teamId, @PathVariable Long userId){
+    public ResponseEntity<ResponseForm> matchTeamMember(@PathVariable UUID teamId, @PathVariable UUID userId){
         try{
             teamMemberService.addTeamMember(teamId,userId);
             ResponseForm responseForm= ResponseForm.builder().message("매칭이 완료되었습니다.").state(HttpStatus.OK.value()).build();
@@ -32,7 +34,7 @@ public class TeamMemberController {
         }
     }
     @PostMapping("/{teamId}/match/{userId}/delete")
-    public ResponseEntity<ResponseForm> deleteTeamMember(@PathVariable Long teamId,@PathVariable Long userId){
+    public ResponseEntity<ResponseForm> deleteTeamMember(@PathVariable UUID teamId,@PathVariable UUID userId){
         try{
             teamMemberService.deleteTeamMember(teamId,userId);
             ResponseForm responseForm=ResponseForm.builder()

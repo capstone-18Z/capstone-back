@@ -1,23 +1,30 @@
 package com.makedreamteam.capstoneback.domain;
 
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.NoArgsConstructor;
+import lombok.*;
 import org.hibernate.annotations.ColumnDefault;
+
+import java.util.UUID;
 
 @Entity
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
+@Getter
+@Setter
 public class Team{
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long teamId;
+    @GeneratedValue
+    @Column(columnDefinition = "BINARY(16)")
+    private UUID teamId;
 
     @Column
     @ColumnDefault("0")
     private int currentFrontMember;
+
+    @Column
+    @ColumnDefault("0")
+    private int postNumber;
 
     @Column
     @ColumnDefault("0")
@@ -31,124 +38,23 @@ public class Team{
     @ColumnDefault("0")
     private int wantedBackEndMember;
 
-    @Column
+    @Column(columnDefinition = "VARCHAR(255) CHARACTER SET utf8 COLLATE utf8_general_ci")
     private String title;
     @Column
-    private Long userId; // 외래키 설정
+    private UUID userId; // 외래키 설정
 
-    @Column
+    @Column(columnDefinition = "VARCHAR(255) CHARACTER SET utf8 COLLATE utf8_general_ci")
     private String createDate;
 
-    @Column
+    @Column(columnDefinition = "VARCHAR(255) CHARACTER SET utf8 COLLATE utf8_general_ci")
     private String updateDate;
 
-    @Column
+    @Column(columnDefinition = "VARCHAR(255) CHARACTER SET utf8 COLLATE utf8_general_ci")
     private String detail;
 
     @Column
     private int period;
 
     @Column
-    private Long teamLeader;
-
-
-
-
-    public Long getTeamId() {
-        return teamId;
-    }
-
-    public void setTeamId(Long teamid) {
-        this.teamId = teamid;
-    }
-
-
-
-    public void setDetail(String detail) {
-        this.detail = detail;
-    }
-
-    public void setPeriod(int period) {
-        this.period = period;
-    }
-
-    public int getCurrentFrontMember() {
-        return currentFrontMember;
-    }
-
-    public int getCurrentBackMember() {
-        return currentBackMember;
-    }
-
-    public int getWantedFrontMember() {
-        return wantedFrontMember;
-    }
-
-    public int getWantedBackEndMember() {
-        return wantedBackEndMember;
-    }
-
-    public String getTitle() {
-        return title;
-    }
-
-    public Long getUserId() {
-        return userId;
-    }
-
-    public String getCreateDate() {
-        return createDate;
-    }
-
-    public String getUpdateDate() {
-        return updateDate;
-    }
-
-    public String getDetail() {
-        return detail;
-    }
-
-    public int getPeriod() {
-        return period;
-    }
-
-    public Long getTeamLeader() {
-        return teamLeader;
-    }
-
-    public void setCurrentFrontMember(int currentFrontMember) {
-        this.currentFrontMember = currentFrontMember;
-    }
-
-    public void setCurrentBackMember(int currentBackMember) {
-        this.currentBackMember = currentBackMember;
-    }
-
-    public void setWantedFrontMember(int wantedFrontMember) {
-        this.wantedFrontMember = wantedFrontMember;
-    }
-
-    public void setWantedBackEndMember(int wantedBackEndMember) {
-        this.wantedBackEndMember = wantedBackEndMember;
-    }
-
-    public void setTitle(String title) {
-        this.title = title;
-    }
-
-    public void setUserId(Long userId) {
-        this.userId = userId;
-    }
-
-    public void setCreateDate(String createDate) {
-        this.createDate = createDate;
-    }
-
-    public void setUpdateDate(String updateDate) {
-        this.updateDate = updateDate;
-    }
-
-    public void setTeamLeader(Long teamLeader) {
-        this.teamLeader = teamLeader;
-    }
+    private UUID teamLeader;
 }

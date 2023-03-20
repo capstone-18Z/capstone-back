@@ -2,13 +2,16 @@ package com.makedreamteam.capstoneback.controller;
 
 import jakarta.persistence.Column;
 import lombok.AllArgsConstructor;
+import lombok.NoArgsConstructor;
 import org.hibernate.annotations.ColumnDefault;
 
+import java.util.UUID;
+
 @AllArgsConstructor
+@NoArgsConstructor
 public class PostTeamForm {
 
-    public PostTeamForm(){
-    }
+
     //현재 모집된 멤버 수
     private int currentFrontMember;
     private int currentBackMember;
@@ -17,6 +20,7 @@ public class PostTeamForm {
     private int wantedFrontMember;
     private int wantedBackEndMember;
 
+    private UUID teamLeader;
 
     private String title;
     private String createDate;
@@ -34,6 +38,7 @@ public class PostTeamForm {
     private int assembly;
     private int php;
     private int sqlLang;
+
 
 
 
@@ -214,5 +219,13 @@ public class PostTeamForm {
 
     public void setCurrentBackMember(int currentBackMember) {
         this.currentBackMember = currentBackMember;
+    }
+
+    public UUID getTeamLeader() {
+        return teamLeader;
+    }
+
+    public void setTeamLeader(UUID teamLeader) {
+        this.teamLeader = teamLeader;
     }
 }
