@@ -16,7 +16,7 @@ import java.util.UUID;
 
 @RestController
 @CrossOrigin
-@RequestMapping("/teams")
+@RequestMapping(value = "/teams" , produces="application/json;charset=UTF-8")
 public class TeamController {
 
     private final TeamService teamService;
@@ -125,7 +125,7 @@ public class TeamController {
                     .message("팀을 삭제했습니다")
                     .state(HttpStatus.OK.value()).build();
             return ResponseEntity.ok().body(responseForm);
-        }catch (EntityNotFoundException |AuthenticationException  e){
+        } catch (AuthenticationException | RuntimeException e){
             ResponseForm errorResponseForm=ResponseForm.builder()
                     .message(e.getMessage()).state(HttpStatus.BAD_REQUEST.value()).build();
             return ResponseEntity.badRequest().body(errorResponseForm);

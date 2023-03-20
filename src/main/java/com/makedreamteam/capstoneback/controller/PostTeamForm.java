@@ -22,7 +22,6 @@ public class PostTeamForm {
 
     private UUID teamLeader;
 
-
     private String title;
     private String createDate;
     private String updateDate;

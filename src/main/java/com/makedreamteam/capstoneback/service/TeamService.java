@@ -225,8 +225,9 @@ public class TeamService{
             throw new EntityNotFoundException("fail to find team with "+teamId);
         if(teamLangOptional.isEmpty())
             throw new EntityNotFoundException("fail to find teamLang with"+ teamId);
-        if(!userId.equals(teamOptional.get().getTeamLeader()))
+        if(!userId.equals(teamOptional.get().getTeamLeader())) {
             throw new RuntimeException("팀 리더만 팀을 삭제할수있습니다.");
+        }
         Team team=teamOptional.get();
         TeamLang teamLang=teamLangOptional.get();
         List<TeamMember> teamMemberList=teamMemberRepository.findAllByTeamId(team.getTeamId());
