@@ -2,10 +2,7 @@ package com.makedreamteam.capstoneback.service;
 
 import com.makedreamteam.capstoneback.controller.PostTeamForm;
 import com.makedreamteam.capstoneback.domain.*;
-import com.makedreamteam.capstoneback.repository.SpringDataJpaTeamLangRepository;
-import com.makedreamteam.capstoneback.repository.SpringDataJpaUserLangRepository;
-import com.makedreamteam.capstoneback.repository.SpringDataTeamRepository;
-import com.makedreamteam.capstoneback.repository.TeamMemberRepository;
+import com.makedreamteam.capstoneback.repository.*;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jws;
 import io.jsonwebtoken.JwtException;
@@ -32,14 +29,16 @@ public class TeamService{
     private final SpringDataTeamRepository springDataTeamRepository;
     @Autowired
     private final SpringDataJpaUserLangRepository springDataJpaUserLangRepository;
-
     @Autowired
     private final TeamMemberRepository teamMemberRepository;
-    public TeamService(SpringDataJpaTeamLangRepository springDataJpaTeamLangRepository, SpringDataTeamRepository springDataTeamRepository, SpringDataJpaUserLangRepository springDataJpaUserLangRepository, TeamMemberRepository teamMemberRepository) {
+    @Autowired
+    private final MemberRepository memberRepository;
+    public TeamService(SpringDataJpaTeamLangRepository springDataJpaTeamLangRepository, SpringDataTeamRepository springDataTeamRepository, SpringDataJpaUserLangRepository springDataJpaUserLangRepository, TeamMemberRepository teamMemberRepository, MemberRepository memberRepository) {
         this.springDataJpaTeamLangRepository = springDataJpaTeamLangRepository;
         this.springDataTeamRepository = springDataTeamRepository;
         this.springDataJpaUserLangRepository = springDataJpaUserLangRepository;
         this.teamMemberRepository = teamMemberRepository;
+        this.memberRepository = memberRepository;
     }
 
     //순서
@@ -178,23 +177,7 @@ public class TeamService{
             throw new RuntimeException("Failed to retrieve Team information from the database", e);
         }
     }
-    public List<UUID> calculateWeightOfLang(Long userid){
-        List<TeamLang> allTeams=springDataJpaTeamLangRepository.findAll();
-        UserLang user=springDataJpaUserLangRepository.findById(userid).get();
-        List<Double> list=new ArrayList<>();
-        List<UUID> resultList=new ArrayList<>();
-        HashMap<Double,UUID> map=new HashMap<>();
-        for(TeamLang teamlang : allTeams){
-            double a=(teamlang.getAssembly()*user.getAssembly()+ teamlang.getC()*user.getC()+ teamlang.getCs()*user.getCs()+ teamlang.getVb()*user.getVb()+ teamlang.getCpp()*user.getCpp()+ teamlang.getJava()*user.getJava()+ teamlang.getJavascript()*user.getJavascript()+ teamlang.getPhp()*user.getPhp()+ teamlang.getPython()*user.getPython()+ teamlang.getSqllang()*user.getSqllang());
-            map.put(a, teamlang.getTeamId());
-            list.add(a);
-        }
-        Collections.sort(list);
-        for(int i=0;i<5 && list.size() > i ;i++){
-            resultList.add(map.get(list.get(i)));
-        }
-        return resultList;
-    }
+
     public List<Team> recommandTeams(Long userid,int count){
         List<TeamLang> teamLangs=springDataJpaTeamLangRepository.findAll();
         UserLang userLang=springDataJpaUserLangRepository.findById(userid).get();
@@ -208,9 +191,33 @@ public class TeamService{
                 System.out.println("springDataTeamRepository.findById(lang.getTeamid()) is null");
         }
         List<Map.Entry<Team, Integer>> sortedList = new ArrayList<>(weight.entrySet());
+
+
         sortedList.sort(Comparator.comparing(Map.Entry::getValue));
 
+
         List<Team> result= sortedList.stream()
+                .map(map->map.getKey()).limit(count).collect(Collectors.toList());
+
+
+        return result;
+    }
+    public List<Member> recommandUsers(UUID teamId,int count){
+        List<UserLang> userLangs=springDataJpaUserLangRepository.findAll();
+        TeamLang teamLang=springDataJpaTeamLangRepository.findById(teamId).get();
+        HashMap<Member,Integer> weight=new HashMap<>();
+        for(UserLang lang : userLangs){
+            Optional<Member> member = memberRepository.findById(lang.getUserid());
+            if(member.isPresent()) {
+                weight.put(member.get(), lang.getC() * teamLang.getC() + lang.getSqllang() * teamLang.getSqllang() + lang.getCpp() * teamLang.getCpp() + lang.getVb() * teamLang.getVb() + lang.getCs() * teamLang.getCs() + lang.getPhp() * teamLang.getPhp() + lang.getPython() * teamLang.getPython() + lang.getAssembly() * teamLang.getAssembly() + lang.getJavascript() * teamLang.getJavascript() + lang.getJava() * teamLang.getJava());
+            }
+            else
+                System.out.println("springDataTeamRepository.findById(lang.getTeamid()) is null");
+        }
+        List<Map.Entry<Member, Integer>> sortedList = new ArrayList<>(weight.entrySet());
+        sortedList.sort(Comparator.comparing(Map.Entry::getValue));
+
+        List<Member> result= sortedList.stream()
                 .map(map->map.getKey()).limit(count).collect(Collectors.toList());
 
 

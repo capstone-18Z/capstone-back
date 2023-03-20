@@ -1,19 +1,11 @@
 package com.makedreamteam.capstoneback;
 
-import com.makedreamteam.capstoneback.repository.SpringDataJpaTeamLangRepository;
-import com.makedreamteam.capstoneback.repository.SpringDataJpaUserLangRepository;
-import com.makedreamteam.capstoneback.repository.SpringDataTeamRepository;
-import com.makedreamteam.capstoneback.repository.TeamMemberRepository;
+import com.makedreamteam.capstoneback.repository.*;
 import com.makedreamteam.capstoneback.service.TeamService;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.http.converter.HttpMessageConverter;
-import org.springframework.http.converter.StringHttpMessageConverter;
 import org.springframework.web.servlet.config.annotation.CorsRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
-
-import java.nio.charset.StandardCharsets;
-import java.util.List;
 
 @Configuration
 public class SpringConfig implements WebMvcConfigurer {
@@ -27,16 +19,18 @@ public class SpringConfig implements WebMvcConfigurer {
     private final SpringDataTeamRepository springDataTeamRepository;
     private final SpringDataJpaUserLangRepository springDataJpaUserLangRepository;
     private final TeamMemberRepository teamMemberRepository;
+    private final MemberRepository memberRepository;
 
-       public SpringConfig(SpringDataJpaTeamLangRepository springDataJpaTeamLangRepository, SpringDataTeamRepository springDataTeamRepository, SpringDataJpaUserLangRepository springDataJpaUserLangRepository, TeamMemberRepository teamMemberRepository) {
+       public SpringConfig(SpringDataJpaTeamLangRepository springDataJpaTeamLangRepository, SpringDataTeamRepository springDataTeamRepository, SpringDataJpaUserLangRepository springDataJpaUserLangRepository, TeamMemberRepository teamMemberRepository, MemberRepository memberRepository) {
            this.springDataJpaTeamLangRepository = springDataJpaTeamLangRepository;
            this.springDataTeamRepository = springDataTeamRepository;
            this.springDataJpaUserLangRepository = springDataJpaUserLangRepository;
            this.teamMemberRepository = teamMemberRepository;
+           this.memberRepository = memberRepository;
        }
        @Bean
     public TeamService TeamService(){
-        return new TeamService(springDataJpaTeamLangRepository,springDataTeamRepository,springDataJpaUserLangRepository, teamMemberRepository);
+        return new TeamService(springDataJpaTeamLangRepository,springDataTeamRepository,springDataJpaUserLangRepository, teamMemberRepository, memberRepository);
     }
 
 
