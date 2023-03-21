@@ -50,7 +50,7 @@ public class TeamService{
             throw new RuntimeException("로그인 상태가 아닙니다.");
         try {
 
-            UUID teamLeader=getUserIdFromToken(authToken);
+            UUID teamLeader= checkUserIdAndToken(authToken,null);
 
             Team team = newTeam(postTeamForm);
             team.setTeamLeader(teamLeader);
@@ -120,17 +120,13 @@ public class TeamService{
     public Team update(UUID teamId,PostTeamForm postTeamForm,String authToken) throws AuthenticationException {
         Optional<Team> optionalTeam = springDataTeamRepository.findById(teamId);
         Optional<TeamLang> optionalTeamLang = springDataJpaTeamLangRepository.findById(teamId);
-        UUID userId=getUserIdFromToken(authToken);
         if (optionalTeam.isEmpty()) {
-            throw new RuntimeException("Failed to update team: team not found");
+            throw new RuntimeException("팀이 존재하지 않습니다");
         }
-
         if (optionalTeamLang.isEmpty()) {
-            throw new RuntimeException("Failed to update team: teamLang not found");
+            throw new RuntimeException("팀 언어가 존재하지 않습니다.");
         }
-        if(!userId.equals(optionalTeam.get().getTeamLeader())){
-            throw new RuntimeException("팀 리더만 수정할수있습니다.");
-        }
+        UUID userId= checkUserIdAndToken(authToken,optionalTeam);
         try {
             Team team = optionalTeam.get();
             TeamLang teamLang = optionalTeamLang.get();
@@ -193,7 +189,8 @@ public class TeamService{
         List<Map.Entry<Team, Integer>> sortedList = new ArrayList<>(weight.entrySet());
 
 
-        sortedList.sort(Comparator.comparing(Map.Entry::getValue));
+        //sortedList.sort(Comparator.comparing(Map.Entry::getValue));
+
 
 
         List<Team> result= sortedList.stream()
@@ -215,26 +212,35 @@ public class TeamService{
                 System.out.println("springDataTeamRepository.findById(lang.getTeamid()) is null");
         }
         List<Map.Entry<Member, Integer>> sortedList = new ArrayList<>(weight.entrySet());
-        sortedList.sort(Comparator.comparing(Map.Entry::getValue));
+
+
+        Collections.sort(sortedList, new Comparator<Map.Entry<Member, Integer>>() {
+            @Override
+            public int compare(Map.Entry<Member, Integer> o1, Map.Entry<Member, Integer> o2) {
+                return o2.getValue().compareTo(o1.getValue());
+            }
+        });
 
         List<Member> result= sortedList.stream()
                 .map(map->map.getKey()).limit(count).collect(Collectors.toList());
 
-
+        System.out.println("----정렬 결과---");
+        for (Member member: result){
+            System.out.println("member.getEmail() = " + member.getEmail());
+        }
+        System.out.println("-------------------");
         return result;
     }
 
     public void delete(UUID teamId,String authToken) throws AuthenticationException {
         Optional<Team> teamOptional = springDataTeamRepository.findById(teamId);
         Optional<TeamLang> teamLangOptional = springDataJpaTeamLangRepository.findById(teamId);
-        UUID userId=getUserIdFromToken(authToken);
+
         if(teamOptional.isEmpty())
             throw new EntityNotFoundException("fail to find team with "+teamId);
         if(teamLangOptional.isEmpty())
             throw new EntityNotFoundException("fail to find teamLang with"+ teamId);
-        if(!userId.equals(teamOptional.get().getTeamLeader())) {
-            throw new RuntimeException("팀 리더만 팀을 삭제할수있습니다.");
-        }
+        checkUserIdAndToken(authToken,teamOptional);
         Team team=teamOptional.get();
         TeamLang teamLang=teamLangOptional.get();
         List<TeamMember> teamMemberList=teamMemberRepository.findAllByTeamId(team.getTeamId());
@@ -242,7 +248,7 @@ public class TeamService{
         springDataTeamRepository.delete(team);
         springDataJpaTeamLangRepository.delete(teamLang);
     }
-    public UUID getUserIdFromToken(String token) throws AuthenticationException {
+    public UUID checkUserIdAndToken(String token, Optional<Team> team) throws AuthenticationException {
         if (token == null) {
             throw new AuthenticationException("Invalid Authorization header");
         }
@@ -257,6 +263,11 @@ public class TeamService{
         if (username == null || expirationDate == null || expirationDate.before(new Date())) {
             throw new AuthenticationException("Invalid JWT claims");
         }
+        if(team!=null)
+            if(!UUID.fromString((String)claims.get("sub")).equals(team.get().getTeamLeader()) && !claims.get("role").equals(Role.ROLE_ADMIN)) {
+                throw new RuntimeException("권한이 없습니다.");
+            }
+
 
         return UUID.fromString((String)claims.get("sub"));
     }

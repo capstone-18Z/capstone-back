@@ -13,7 +13,7 @@ public class PostMember {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long postId;
-    @Column
+    @Column(unique = true)
     private UUID userId;
     @Column
     private String nickname;
@@ -22,5 +22,5 @@ public class PostMember {
     @Column
     private String detail;
     @Column
-    private int field;//1 : 프론트 2 : 백 , 3 : 구분없음
+    private int field;//1 : 프론트  2 : 백 ,  3 : 구분없음
 }

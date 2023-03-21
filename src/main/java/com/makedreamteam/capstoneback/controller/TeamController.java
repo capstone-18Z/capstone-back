@@ -59,7 +59,6 @@ public class TeamController {
         List<Member> members=teamService.recommandUsers(id,5);
         if(team.isPresent()){
             ResponseForm responseForm=ResponseForm.builder()
-                    .data(TeamData.builder().allTeamList(team).build())
                     .message("search successfully")
                     .state(HttpStatus.OK.value())
                     .data(TeamData.builder().recommendTeamList(members).build())

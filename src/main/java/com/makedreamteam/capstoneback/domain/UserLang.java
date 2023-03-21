@@ -1,7 +1,9 @@
 package com.makedreamteam.capstoneback.domain;
 
 import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.hibernate.annotations.ColumnDefault;
 
@@ -10,10 +12,9 @@ import java.util.UUID;
 @Entity
 @Getter
 @Setter
+@NoArgsConstructor
 public class UserLang {
     @Id
-    @GeneratedValue
-    @Column(columnDefinition = "BINARY(16)")
     private UUID userid;
 
     @Column
@@ -57,6 +58,17 @@ public class UserLang {
     private int sqllang;
 
 
-
-
+    public UserLang(UUID userid, int python, int c, int java, int cpp, int cs, int vb, int javascript, int assembly, int php, int sqllang) {
+        this.userid = userid;
+        this.python = python;
+        this.c = c;
+        this.java = java;
+        this.cpp = cpp;
+        this.cs = cs;
+        this.vb = vb;
+        this.javascript = javascript;
+        this.assembly = assembly;
+        this.php = php;
+        this.sqllang = sqllang;
+    }
 }
