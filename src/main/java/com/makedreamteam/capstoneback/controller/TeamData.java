@@ -7,5 +7,6 @@ import lombok.Data;
 @Data
 public class TeamData {
     private Object allTeamList;
-    private Object recommendTeamList;
+    private Object recommendList;
+    private Object team;
 }

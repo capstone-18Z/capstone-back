@@ -109,7 +109,6 @@ public class TeamService{
                 .detail(postTeamForm.getDetail())
                 .period(postTeamForm.getPeriod())
                 .title(postTeamForm.getTitle())
-                .teamLeader(postTeamForm.getTeamLeader())
                 .writer(postTeamForm.getWriter())
                 .build();
         return team;
@@ -264,7 +263,7 @@ public class TeamService{
             throw new AuthenticationException("Invalid JWT claims");
         }
         if(team!=null)
-            if(!UUID.fromString((String)claims.get("sub")).equals(team.get().getTeamLeader()) && !claims.get("role").equals(Role.ROLE_ADMIN)) {
+            if(!UUID.fromString((String)claims.get("sub")).equals(team.get().getTeamLeader()) && !claims.get("roles").equals(Role.ROLE_ADMIN)) {
                 throw new RuntimeException("권한이 없습니다.");
             }
 

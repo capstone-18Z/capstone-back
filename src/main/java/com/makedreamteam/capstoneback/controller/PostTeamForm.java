@@ -24,7 +24,6 @@ public class PostTeamForm {
     private int wantedFrontMember;
     private int wantedBackEndMember;
 
-    private UUID teamLeader;
 
     private String title;
     private String createDate;
