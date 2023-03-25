@@ -1,6 +1,5 @@
 package com.makedreamteam.capstoneback.service;
 
-import com.makedreamteam.capstoneback.controller.PostTeamForm;
 import com.makedreamteam.capstoneback.domain.*;
 import com.makedreamteam.capstoneback.repository.*;
 import io.jsonwebtoken.Claims;
@@ -8,6 +7,7 @@ import io.jsonwebtoken.Jws;
 import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
 import jakarta.persistence.EntityNotFoundException;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataAccessException;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -22,13 +22,10 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 @Transactional
+@RequiredArgsConstructor
 public class TeamService{
-    // @Autowired
-    //private final SpringDataJpaTeamLangRepository springDataJpaTeamLangRepository;
     @Autowired
     private final SpringDataTeamRepository springDataTeamRepository;
-    @Autowired
-    private final SpringDataJpaUserLangRepository springDataJpaUserLangRepository;
     @Autowired
     private final TeamMemberRepository teamMemberRepository;
     @Autowired
@@ -36,14 +33,6 @@ public class TeamService{
     @Autowired
     private final PostMemberRepository postMemberRepository;
 
-
-    public TeamService(  SpringDataTeamRepository springDataTeamRepository, SpringDataJpaUserLangRepository springDataJpaUserLangRepository, TeamMemberRepository teamMemberRepository, MemberRepository memberRepository, PostMemberRepository postMemberRepository) {
-        this.springDataTeamRepository = springDataTeamRepository;
-        this.springDataJpaUserLangRepository = springDataJpaUserLangRepository;
-        this.teamMemberRepository = teamMemberRepository;
-        this.memberRepository = memberRepository;
-        this.postMemberRepository = postMemberRepository;
-    }
 
     //순서
     //로그인 된 userId를 팀리더로 team을 만든다
@@ -64,10 +53,6 @@ public class TeamService{
             team.setTeamLeader(teamLeader);
             Team savedTeam = springDataTeamRepository.save(team);
             UUID teamId=savedTeam.getTeamId();
-
-            TeamLang teamLang = newTeamLang(postTeamForm);
-            teamLang.setTeamId(teamId);
-            springDataJpaTeamLangRepository.save(teamLang);
 
             TeamMember teamMember=TeamMember.builder().teamId(teamId).teamLeader(teamLeader).userId(teamLeader).build();
             teamMemberRepository.save(teamMember);
@@ -178,15 +163,15 @@ public class TeamService{
         if(optionalTeam.isEmpty()){
             throw new RuntimeException("팀이 존재하지 않습니다.("+teamId+")");
         }
-        List<UserLang> users=new ArrayList<>();
+        List<Member> users = new ArrayList<>();
         List<PostMember> postMembers=postMemberRepository.findAll();
         for (PostMember postMember:postMembers){
-            users.add(springDataJpaUserLangRepository.findById(postMember.getUserId()).get());
+            users.add(memberRepository.findById(postMember.getUserId()).get());
         }
         Team team=optionalTeam.get();
         HashMap<Member,Integer> weight=new HashMap<>();
-        for(UserLang lang : users){
-            Optional<Member> member = memberRepository.findById(lang.getUserid());
+        for(Member lang : users){
+            Optional<Member> member = memberRepository.findById(lang.getId());
             if(member.isPresent()) {
                 weight.put(member.get(), lang.getC() * team.getC() + lang.getSqllang() * team.getSqllang() + lang.getCpp() * team.getCpp() + lang.getVb() * team.getVb() + lang.getCs() * team.getCs() + lang.getPhp() * team.getPhp() + lang.getPython() * team.getPython() + lang.getAssembly() * team.getAssembly() + lang.getJavascript() * team.getJavascript() + lang.getJava() * team.getJava());
             }
@@ -264,8 +249,6 @@ public class TeamService{
         if (username == null || expirationDate == null || expirationDate.before(new Date())) {
             throw new AuthenticationException("Invalid JWT claims");
         }
-
-
 
         return UUID.fromString((String)claims.get("sub"));
     }

@@ -7,9 +7,9 @@ import java.util.UUID;
 
 import com.makedreamteam.capstoneback.JwtTokenProvider;
 import com.makedreamteam.capstoneback.domain.*;
+import com.makedreamteam.capstoneback.form.ResponseForm;
 import com.makedreamteam.capstoneback.repository.MemberRepository;
 import com.makedreamteam.capstoneback.repository.PostMemberRepository;
-import com.makedreamteam.capstoneback.repository.SpringDataJpaUserLangRepository;
 import com.makedreamteam.capstoneback.service.MemberService;
 import com.makedreamteam.capstoneback.service.TeamService;
 import jakarta.servlet.http.HttpServletRequest;
@@ -32,7 +32,6 @@ public class MemberController {
     private final JwtTokenProvider jwtTokenProvider;
     private final MemberRepository memberRepository;
     private final PostMemberRepository postMemberRepository;
-    private final SpringDataJpaUserLangRepository userLangRepository;
     private final TeamService teamService;
 
     // 회원가입
@@ -83,33 +82,76 @@ public class MemberController {
     }
 
     @PostMapping("/new")
-    public PostMember addPostMember(@RequestBody Map<String, Object> post, HttpServletRequest request) throws AuthenticationException {
-        String authToken= request.getHeader("login-token");
-        if(authToken==null)
-            throw new RuntimeException("로그인 상태가 아닙니다.");
-        UUID memberid = memberService.checkUserIdAndToken(authToken);
-        Optional<Member> member = memberRepository.findById(memberid);
-        PostMember postman = PostMember.builder()
-                .userId(memberid)
-                .title((String) post.get("title"))
-                .nickname(member.get().getNickname())
-                .detail((String) post.get("detail"))
-                .field((Integer) post.get("field"))
-                .build();
-        UserLang userLang = userLangRepository.save(UserLang.builder()
-                .userid(memberid)
-                .c((Integer) post.get("c"))
-                .cs((Integer) post.get("cs"))
-                .php((Integer) post.get("php"))
-                .cpp((Integer) post.get("cpp"))
-                .vb((Integer) post.get("vb"))
-                .assembly((Integer) post.get("assembly"))
-                .java((Integer) post.get("java"))
-                .javascript((Integer) post.get("javascript"))
-                .python((Integer) post.get("python"))
-                .sqllang((Integer) post.get("sqllang"))
-                .build());
-        return memberService.PostJoin(postman);
+    public ResponseEntity<MemberResponseForm> addPostMember(@RequestBody Map<String, Object> post, HttpServletRequest request) throws AuthenticationException {
+        try {
+            String authToken= request.getHeader("login-token");
+            UUID memberid = memberService.checkUserIdAndToken(authToken);
+            Optional<Member> member = memberRepository.findById(memberid);
+            PostMember postman = PostMember.builder()
+                    .userId(memberid)
+                    .title((String) post.get("title"))
+                    .nickname(member.get().getNickname())
+                    .detail((String) post.get("detail"))
+                    .field((Integer) post.get("field"))
+                    .c((Integer) post.get("c"))
+                    .cs((Integer) post.get("cs"))
+                    .php((Integer) post.get("php"))
+                    .cpp((Integer) post.get("cpp"))
+                    .vb((Integer) post.get("vb"))
+                    .assembly((Integer) post.get("assembly"))
+                    .java((Integer) post.get("java"))
+                    .javascript((Integer) post.get("javascript"))
+                    .python((Integer) post.get("python"))
+                    .sqllang((Integer) post.get("sqllang"))
+                    .build();
+            PostMember result = memberService.PostJoin(postman, authToken);
+            MemberResponseForm successForm = MemberResponseForm.builder()
+                    .message("유저 포스트 입력 성공")
+                    .state(HttpStatus.OK.value())
+                    .data(MemberData.builder().PostMember(result)
+                            .Member(memberRepository.findById(memberid)).build()).build();
+            return ResponseEntity.ok().body(successForm);
+        } catch (AuthenticationException | RuntimeException e){
+            MemberResponseForm errorResponseForm = MemberResponseForm.builder()
+                    .message(e.getMessage()).state(HttpStatus.BAD_REQUEST.value()).build();
+            return ResponseEntity.badRequest().body(errorResponseForm);
+        }
+    }
+    @GetMapping("/userForm")
+    public ResponseEntity<MemberResponseForm> inquireMember(HttpServletRequest request) throws AuthenticationException {
+        try {
+            String authToken = request.getHeader("login-token");
+            UUID memberid = memberService.checkUserIdAndToken(authToken);
+            Member searchMember = memberRepository.findById(memberid).get();
+            MemberResponseForm successForm = MemberResponseForm.builder()
+                    .message("유저 포스트 입력 성공")
+                    .state(HttpStatus.OK.value())
+                    .data(MemberData.builder().Member(searchMember).build()).build();
+            return ResponseEntity.ok().body(successForm);
+        }catch (RuntimeException e){
+            MemberResponseForm errorResponseForm = MemberResponseForm.builder()
+                    .message(e.getMessage()).state(HttpStatus.BAD_REQUEST.value()).build();
+            return ResponseEntity.badRequest().body(errorResponseForm);
+        }
+
+    }
+
+    @PostMapping("/userForm/update")
+    public ResponseEntity<MemberResponseForm> updateUser(@RequestBody Member post, HttpServletRequest request) throws AuthenticationException {
+        try{
+            String authToken= request.getHeader("login-token");
+            UUID memberid = memberService.checkUserIdAndToken(authToken);
+            Member updateMember = memberService.update(memberid, post);
+            MemberResponseForm successForm = MemberResponseForm.builder()
+                    .message("유저 업데이트 성공")
+                    .state(HttpStatus.OK.value())
+                    .data(MemberData.builder().Member(memberRepository.findById(memberid)).build()).build();
+            return ResponseEntity.ok().body(successForm);
+        }catch (RuntimeException e){
+            MemberResponseForm errorResponseForm = MemberResponseForm.builder()
+                    .message(e.getMessage()).state(HttpStatus.BAD_REQUEST.value()).build();
+            return ResponseEntity.badRequest().body(errorResponseForm);
+        }
     }
 
     @GetMapping("/all")
@@ -126,8 +168,10 @@ public class MemberController {
         return ResponseEntity.ok(memberService.checkNicknameDuplicate(nickname));
     }
 
-    @GetMapping("/recommand/{uid}")
-    public List<Team> TeamRecommand(@PathVariable UUID uid){
-        return teamService.recommandTeams(uid, 2);
+    @GetMapping("/recommand")
+    public List<Team> TeamRecommand(HttpServletRequest request) throws AuthenticationException {
+        String authToken= request.getHeader("login-token");
+        UUID uid = memberService.checkUserIdAndToken(authToken);
+        return memberService.recommendTeams(uid, 2, authToken);
     }
 }
