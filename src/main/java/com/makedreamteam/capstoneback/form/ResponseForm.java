@@ -10,4 +10,5 @@ public class ResponseForm {
     private String message;
     private TeamData data;
     private boolean updatable;
+    private String newToken;
 }

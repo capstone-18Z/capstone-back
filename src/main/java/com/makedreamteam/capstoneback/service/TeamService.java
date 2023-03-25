@@ -75,13 +75,6 @@ public class TeamService{
             return ServiceReturn.builder().data(team).newToken(newToken).build();
         } catch (NullPointerException | DataIntegrityViolationException | JpaSystemException |
                  TransactionSystemException e) {
-            /*NullPointerException: postTeamForm이 null인 경우 newTeam 및 newTeamLang 메서드에서 NullPointerException이 발생
-              DataIntegrityViolationException: Team 엔티티 또는 TeamLang 엔티티의 제약 조건을 위반하여 데이터베이스에 저장할 수 없는 경우 DataIntegrityViolationException이 발생
-              JpaSystemException: Team 엔티티 또는 TeamLang 엔티티의 속성값에 유효하지 않은 값이 포함되어 있거나, Team 엔티티와 TeamLang 엔티티의 관계 설정이 잘못된 경우 JpaSystemException이 발생
-              TransactionSystemException: 트랜잭션 처리 중 예외가 발생하는 경우 TransactionSystemException이 발생*/
-            // 예외 발생 시 처리할 코드 작성
-            // 예를 들어, 로깅 등의 작업을 수행할 수 있습니다.
-            // 예외 처리 후, 예외 발생을 호출자에게 알리기 위해 RuntimeException을 던질 수 있습니다.
             throw new RuntimeException(e);
         }
         catch (JwtException ex) {
@@ -122,13 +115,16 @@ public class TeamService{
 
 
 
-    public Team update(UUID teamId,Team form,String authToken) throws AuthenticationException, NotTeamLeaderException {
+    public ServiceReturn update(UUID teamId,Team form,String authToken,String refreshToken) throws AuthenticationException, NotTeamLeaderException {
         Optional<Team> optionalTeam = springDataTeamRepository.findById(teamId);
         if (optionalTeam.isEmpty()) {
             throw new RuntimeException("팀이 존재하지 않습니다");
         }
-        UUID userId = checkUserIdAndToken(authToken,optionalTeam).getUserId();
+
         try {
+            checkTokenResponsForm checkTokenResponsForm = checkUserIdAndToken(authToken, refreshToken, optionalTeam);
+            UUID userId = checkTokenResponsForm.getUserId();
+            String newToken=checkTokenResponsForm.getNewToken();
             Team team = optionalTeam.get();
 
 
@@ -138,8 +134,10 @@ public class TeamService{
             springDataTeamRepository.save(updatedTeam);
 
 
-            return updatedTeam;
+            return ServiceReturn.builder().newToken(newToken).data(updatedTeam).build();
         }catch (RuntimeException e){
+            throw new RuntimeException(e);
+        }catch (NotTeamLeaderException e){
             throw new RuntimeException(e);
         }
 
@@ -154,11 +152,15 @@ public class TeamService{
             throw new RuntimeException("Failed to retrieve teams by title containing '" + title + "'", e);
         }
     }
-    public Optional<Team> findById(UUID id){
-        return springDataTeamRepository.findById(id);
+    public ServiceReturn findById(UUID id,String authToken,String refreshToken) throws AuthenticationException {
+
+        checkTokenResponsForm checkTokenResponsForm=checkUserIdAndToken(authToken,refreshToken);
+        Optional<Team> team=springDataTeamRepository.findById(id);
+
+        return ServiceReturn.builder().newToken(checkTokenResponsForm.getNewToken()).data(team.get()).build();
         //optional은 이미 null값을 처리하는데 안전한 방법을 제공하기때문에 if문으 ㄹ사용하지 않아도된다
     }
-    public List<Team> allPosts(Principal principal) {
+    public List<Team> allPosts(String loginToken, String refreshToken) {
         try {
             return springDataTeamRepository.findAll();
         } catch (EmptyResultDataAccessException e) {
@@ -167,13 +169,14 @@ public class TeamService{
     }
 
 
-    public List<Member> recommendUsers(UUID teamId, int count, String token) throws NotTeamLeaderException {
+    public List<Member> recommendUsers(UUID teamId, int count, String token,String refreshToken) throws NotTeamLeaderException {
         try {
+
             Optional<Team> optionalTeam=springDataTeamRepository.findById(teamId);
             if(optionalTeam.isEmpty()){
                 throw new RuntimeException("팀이 존재하지 않습니다.("+teamId+")");
             }
-            checkUserIdAndToken(token,optionalTeam);
+            checkUserIdAndToken(token,refreshToken,optionalTeam);
 
 
             List<UserLang> users=new ArrayList<>();
@@ -218,39 +221,62 @@ public class TeamService{
 
     }
 
-    public void delete(UUID teamId,String authToken) throws AuthenticationException, NotTeamLeaderException {
+    public ServiceReturn delete(UUID teamId,String authToken,String refreshToken) throws AuthenticationException, NotTeamLeaderException {
         Optional<Team> teamOptional = springDataTeamRepository.findById(teamId);
 
         if(teamOptional.isEmpty())
             throw new EntityNotFoundException("fail to find team with "+teamId);
 
-        checkUserIdAndToken(authToken,teamOptional);
-        Team team=teamOptional.get();
-        List<TeamMember> teamMemberList=teamMemberRepository.findAllByTeamId(team.getTeamId());
-        teamMemberRepository.deleteAll(teamMemberList);
-        springDataTeamRepository.delete(team);
+            checkTokenResponsForm checkTokenResponsForm = checkUserIdAndToken(authToken, refreshToken, teamOptional);
+            Team team = teamOptional.get();
+            List<TeamMember> teamMemberList = teamMemberRepository.findAllByTeamId(team.getTeamId());
+            teamMemberRepository.deleteAll(teamMemberList);
+            springDataTeamRepository.delete(team);
+        return ServiceReturn.builder().newToken(checkTokenResponsForm.getNewToken()).build();
     }
-    public checkTokenResponsForm checkUserIdAndToken(String token, Optional<Team> team) throws AuthenticationException, NotTeamLeaderException {
+    public checkTokenResponsForm checkUserIdAndToken(String token,String refreshToken, Optional<Team> team) throws AuthenticationException, NotTeamLeaderException {
+
+        System.out.println("in checkUserIdAndToken with team");
         if (token == null) {
-            throw new AuthenticationException(" 토큰이 없습니다.");
+            throw new AuthenticationException("Invalid Authorization header");
         }
-        Jws<Claims> claimsJws;
-        claimsJws = Jwts.parser().setSigningKey("test").parseClaimsJws(token);
 
-        Claims claims = claimsJws.getBody();
-        String username = claims.getSubject();
-        Date expirationDate = claims.getExpiration();
+        String newToken = null;
 
-        if (username == null || expirationDate == null || expirationDate.before(new Date())) {
-            throw new AuthenticationException("Invalid JWT claims");
-        }
-        if(team.isPresent())
-            if(!UUID.fromString((String)claims.get("sub")).equals(team.get().getTeamLeader()) && !claims.get("roles").equals(Role.ROLE_ADMIN)) {
-                throw new NotTeamLeaderException("권한이 없습니다.");
+        Claims claims = null;
+        try {
+            Jws<Claims> claimsJws = Jwts.parser().setSigningKey("test").parseClaimsJws(token);
+            claims = claimsJws.getBody();
+            String username = claims.getSubject();
+            Date expirationDate = claims.getExpiration();
+
+            if (username == null | expirationDate==null) {
+                throw new AuthenticationException("Invalid JWT claims");
             }
+            System.out.println("UUID's userId = "+ claims.get("sub") +", Team userId = "+ team.get().getTeamLeader());
+            if(team.isPresent())
+                if(!UUID.fromString((String)claims.get("sub")).equals(team.get().getTeamLeader()) && !claims.get("roles").equals(Role.ROLE_ADMIN)) {
+                    throw new NotTeamLeaderException("권한이 없습니다.");
+                }
 
 
-        return checkTokenResponsForm.builder().userId(UUID.fromString((String)claims.get("sub"))).build();
+            return checkTokenResponsForm.builder().userId(UUID.fromString((String) claims.get("sub"))).newToken(newToken).build();
+        } catch (ExpiredJwtException e) {
+            System.out.println("만료");
+            newToken = jwtTokenProvider.validateRefreshToken(refreshToken);
+            if(newToken != null) {
+                System.out.println(newToken);
+                Jws<Claims> claimsJws = Jwts.parser().setSigningKey("test").parseClaimsJws(newToken);
+                Claims newClaims = claimsJws.getBody();
+                if(!UUID.fromString((String)newClaims.get("sub")).equals(team.get().getTeamLeader()) && !newClaims.get("roles").equals(Role.ROLE_ADMIN)) {
+                    throw new NotTeamLeaderException("권한이 없습니다.");
+                }
+                return checkTokenResponsForm.builder().userId(UUID.fromString((String) newClaims.get("sub"))).newToken(newToken).build();
+            }else
+                throw new RuntimeException("토큰이 만료되었습니다");
+        } catch (JwtException e) {
+            throw new AuthenticationException(e.getMessage());
+        }
     }
     public checkTokenResponsForm checkUserIdAndToken(String token,String refreshToken) throws AuthenticationException {
         if (token == null) {

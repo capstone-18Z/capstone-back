@@ -8,6 +8,7 @@ import com.makedreamteam.capstoneback.exception.NotTeamLeaderException;
 import com.makedreamteam.capstoneback.form.ResponseForm;
 import com.makedreamteam.capstoneback.form.ServiceReturn;
 import com.makedreamteam.capstoneback.form.TeamData;
+import com.makedreamteam.capstoneback.form.checkTokenResponsForm;
 import com.makedreamteam.capstoneback.service.TeamService;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -35,12 +36,13 @@ public class TeamController {
     }
 
     @GetMapping("")
-    public ResponseEntity<ResponseForm> allPost(Principal principal, HttpServletRequest request) {
+    public ResponseEntity<ResponseForm> allPost(HttpServletRequest request) {
         //check login
         try {
-
+            String authToken = request.getHeader("login-token");
+            String refreshToken=request.getHeader("refresh-token");
             List<Team> recommendTeams = null;
-            List<Team> teams = teamService.allPosts(principal);
+            List<Team> teams = teamService.allPosts(authToken,refreshToken);
 
             ResponseForm responseForm = ResponseForm.builder().message("모든 팀을 조회합니다").state(HttpStatus.OK.value()).data(TeamData.builder().recommendList(recommendTeams).allTeamList(teams).build()).build();
             return ResponseEntity.ok().body(responseForm);
@@ -53,8 +55,10 @@ public class TeamController {
     }
 
     @GetMapping("/search/{title}")
-    public ResponseEntity<ResponseForm> searchPostByTitle(@PathVariable String title) {
+    public ResponseEntity<ResponseForm> searchPostByTitle(@PathVariable String title,HttpServletRequest request) {
         try {
+            String authToken = request.getHeader("login-token");
+            String refreshToken=request.getHeader("refresh-token");
             List<Team> byTitleContaining = teamService.findByTitleContaining(title);
             ResponseForm responseForm = ResponseForm.builder()
                     .message("").state(HttpStatus.OK.value()).data(TeamData.builder().allTeamList(byTitleContaining).build()).build();
@@ -67,15 +71,22 @@ public class TeamController {
 
     @GetMapping("/{id}")
     public ResponseEntity<ResponseForm> findById(@PathVariable UUID id, HttpServletRequest request) {
-        Optional<Team> team = teamService.findById(id);;
+        Team team=null;
+        String newToken = null;
         try {
-            String token = request.getHeader("login-token");
-            List<Member> members = teamService.recommendUsers(id, 5, token);
-            if (team.isPresent() && members != null) {
+            String authToken = request.getHeader("login-token");
+            String refreshToken=request.getHeader("refresh-token");
+            ServiceReturn byId = teamService.findById(id, authToken, refreshToken);
+            team=byId.getData();
+            newToken= byId.getNewToken();
+            List<Member> members = teamService.recommendUsers(id, 5, newToken,refreshToken);
+
+            if (byId.getData()!=null && members != null) {
                 ResponseForm responseForm = ResponseForm.builder()
                         .message("search successfully")
                         .state(HttpStatus.OK.value()).updatable(true)
-                        .data(TeamData.builder().recommendList(members).team(team.get()).build())
+                        .data(TeamData.builder().recommendList(members).team(team).build())
+                        .newToken(newToken)
                         .build();
                 return ResponseEntity.ok().body(responseForm);
             } else {
@@ -90,7 +101,8 @@ public class TeamController {
                     .message("search successfully")
                     .state(HttpStatus.OK.value())
                     .updatable(false)
-                    .data(TeamData.builder().team(team.get()).build())
+                    .data(TeamData.builder().team(team).build())
+                    .newToken(newToken)
                     .build();
             return ResponseEntity.ok().body(responseForm);
         } catch (RuntimeException e) {
@@ -99,6 +111,8 @@ public class TeamController {
                     .state(HttpStatus.INTERNAL_SERVER_ERROR.value())
                     .build();
             return ResponseEntity.badRequest().body(errorResponse);
+        } catch (AuthenticationException e) {
+            throw new RuntimeException(e);
         }
     }
 
@@ -111,9 +125,10 @@ public class TeamController {
             String refreshToken=request.getHeader("refresh-token");
             ServiceReturn team =  teamService.addPostTeam(form, authToken,refreshToken);
             ResponseForm responseForm = ResponseForm.builder()
-                    .data(TeamData.builder().team(team).build())
+                    .data(TeamData.builder().team(team.getData()).build())
                     .message("Team created successfully")
                     .state(HttpStatus.CREATED.value())
+                    .newToken(team.getNewToken())
                     .build();
             return ResponseEntity.status(HttpStatus.CREATED).body(responseForm);
         } catch (RuntimeException e) {
@@ -130,12 +145,15 @@ public class TeamController {
     @PostMapping("/{teamid}/update")
     public ResponseEntity<ResponseForm> updateTeamInfo(@PathVariable UUID teamid, @RequestBody Team updateForm, HttpServletRequest request) {
         try {
+            String refreshToken=request.getHeader("refresh-token");
             String authToken = request.getHeader("login-token");
-            Team updateTeam = teamService.update(teamid, updateForm, authToken);
+
+            ServiceReturn re = teamService.update(teamid, updateForm, authToken,refreshToken);
             ResponseForm responseForm = ResponseForm.builder()
                     .message("update team")
-                    .data(TeamData.builder().team(updateTeam).build())
+                    .data(TeamData.builder().team(re.getData()).build())
                     .state(HttpStatus.OK.value())
+                    .newToken(re.getNewToken())
                     .build();
             return ResponseEntity.ok().body(responseForm);
         } catch (RuntimeException | AuthenticationException |NotTeamLeaderException e) {
@@ -150,10 +168,14 @@ public class TeamController {
     @PostMapping("/{teamId}/delete")
     public ResponseEntity<ResponseForm> deleteTeam(@PathVariable UUID teamId, HttpServletRequest request) {
         try {
+
+            String refreshToken=request.getHeader("refresh-token");
             String authToken = request.getHeader("login-token");
-            teamService.delete(teamId, authToken);
+            ServiceReturn delete = teamService.delete(teamId, authToken, refreshToken);
+            String newToken=delete.getNewToken();
             ResponseForm responseForm = ResponseForm.builder()
                     .message("팀을 삭제했습니다")
+                    .newToken(newToken)
                     .state(HttpStatus.OK.value()).build();
             return ResponseEntity.ok().body(responseForm);
         } catch (AuthenticationException | RuntimeException | NotTeamLeaderException e) {

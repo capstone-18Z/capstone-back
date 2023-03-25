@@ -1,5 +1,6 @@
 package com.makedreamteam.capstoneback.form;
 
+import com.makedreamteam.capstoneback.domain.Team;
 import lombok.*;
 import org.checkerframework.checker.units.qual.A;
 
@@ -9,6 +10,6 @@ import org.checkerframework.checker.units.qual.A;
 @AllArgsConstructor
 @NoArgsConstructor
 public class ServiceReturn {
-   private Object data;
+   private Team data;
    private String newToken;
 }
