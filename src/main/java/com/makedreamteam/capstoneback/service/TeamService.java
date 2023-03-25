@@ -8,6 +8,7 @@ import com.makedreamteam.capstoneback.form.checkTokenResponsForm;
 import com.makedreamteam.capstoneback.repository.*;
 import io.jsonwebtoken.*;
 import jakarta.persistence.EntityNotFoundException;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataAccessException;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -23,6 +24,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 @Transactional
+@RequiredArgsConstructor
 public class TeamService{
     @Autowired
     private final SpringDataTeamRepository springDataTeamRepository;

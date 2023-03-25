@@ -2,12 +2,14 @@ package com.makedreamteam.capstoneback;
 
 import com.makedreamteam.capstoneback.repository.*;
 import com.makedreamteam.capstoneback.service.TeamService;
+import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.servlet.config.annotation.CorsRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 @Configuration
+@RequiredArgsConstructor
 public class SpringConfig implements WebMvcConfigurer {
     public static final String ALLOWED_METHOD_NAMES = "GET,HEAD,POST,PUT,DELETE,TRACE,OPTIONS,PATCH";
    /* private final PostTeamRepository postTeamRepository;
@@ -17,7 +19,6 @@ public class SpringConfig implements WebMvcConfigurer {
     }*/
 
     private final SpringDataTeamRepository springDataTeamRepository;
-    private final SpringDataJpaUserLangRepository springDataJpaUserLangRepository;
     private final TeamMemberRepository teamMemberRepository;
     private final MemberRepository memberRepository;
     private final PostMemberRepository postMemberRepository;
@@ -33,8 +34,10 @@ public class SpringConfig implements WebMvcConfigurer {
            this.jwtTokenProvider = jwtTokenProvider;
        }
        @Bean
+    @Bean
     public TeamService TeamService(){
         return new TeamService(springDataTeamRepository,springDataJpaUserLangRepository, teamMemberRepository, memberRepository, postMemberRepository, jwtTokenProvider);
+        return new TeamService(springDataTeamRepository, teamMemberRepository, memberRepository, postMemberRepository);
     }
 
 
