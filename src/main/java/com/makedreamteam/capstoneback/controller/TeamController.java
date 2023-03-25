@@ -1,8 +1,8 @@
 package com.makedreamteam.capstoneback.controller;
 
+import com.makedreamteam.capstoneback.domain.Member;
 import com.makedreamteam.capstoneback.domain.Team;
 import com.makedreamteam.capstoneback.service.TeamService;
-import jakarta.persistence.EntityNotFoundException;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.*;
@@ -25,10 +25,13 @@ public class TeamController {
         this.teamService = postTeamService;
     }
     @GetMapping("")
-    public ResponseEntity<ResponseForm> allPost(Principal principal){
-        String userName=principal!=null ? principal.getName() : "";
-        try{List<Team> teams=teamService.allPosts(principal);
-            ResponseForm responseForm=ResponseForm.builder().message("모든 팀을 조회합니다").state(HttpStatus.OK.value()).data(TeamData.builder().dataWithoutLogin(teams).build()).build();
+    public ResponseEntity<ResponseForm> allPost(Principal principal,HttpServletRequest request){
+        //check login
+        try{
+            List<Team> recommendTeams=null;
+            List<Team> teams=teamService.allPosts(principal);
+
+            ResponseForm responseForm=ResponseForm.builder().message("모든 팀을 조회합니다").state(HttpStatus.OK.value()).data(TeamData.builder().recommendList(recommendTeams).allTeamList(teams).build()).build();
             return ResponseEntity.ok().body(responseForm);
         }catch (RuntimeException e){
             ResponseForm errorResponseForm=ResponseForm.builder()
@@ -43,7 +46,7 @@ public class TeamController {
         try{
             List<Team> byTitleContaining = teamService.findByTitleContaining(title);
             ResponseForm responseForm=ResponseForm.builder()
-                    .message("").state(HttpStatus.OK.value()).data(TeamData.builder().dataWithLogin(byTitleContaining).build()).build();
+                    .message("").state(HttpStatus.OK.value()).data(TeamData.builder().allTeamList(byTitleContaining).build()).build();
             return ResponseEntity.ok().body(responseForm);
         }catch (RuntimeException e){
             ResponseForm errorResponseForm=ResponseForm.builder().state(HttpStatus.BAD_REQUEST.value()).message("error").build();
@@ -53,11 +56,12 @@ public class TeamController {
     @PostMapping("/{id}")
     public ResponseEntity<ResponseForm> findById(@PathVariable UUID id){
         Optional<Team> team=teamService.findById(id);
+        List<Member> members=teamService.recommandUsers(id,5);
         if(team.isPresent()){
             ResponseForm responseForm=ResponseForm.builder()
-                    .data(TeamData.builder().dataWithoutLogin(team).build())
                     .message("search successfully")
                     .state(HttpStatus.OK.value())
+                    .data(TeamData.builder().recommendList(members).team(team.get()).build())
                     .build();
             return ResponseEntity.ok().body(responseForm);
         }
@@ -78,7 +82,7 @@ public class TeamController {
             String authToken= request.getHeader("login-token");
             Team team = teamService.addPostTeam(postTeamForm,authToken);
             ResponseForm responseForm=ResponseForm.builder()
-                    .data(TeamData.builder().dataWithLogin(team).build())
+                    .data(TeamData.builder().team(team).build())
                     .message("Team created successfully")
                     .state(HttpStatus.CREATED.value())
                     .build();
@@ -102,7 +106,7 @@ public class TeamController {
             Team updateTeam = teamService.update(teamid, postTeamForm,authToken);
             ResponseForm responseForm=ResponseForm.builder()
                     .message("update team")
-                    .data(TeamData.builder().dataWithLogin(updateTeam).build())
+                    .data(TeamData.builder().team(updateTeam).build())
                     .state(HttpStatus.OK.value())
                     .build();
             return ResponseEntity.ok().body(responseForm);

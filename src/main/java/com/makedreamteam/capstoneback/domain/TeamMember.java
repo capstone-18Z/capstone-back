@@ -3,12 +3,16 @@ package com.makedreamteam.capstoneback.domain;
 
 import jakarta.persistence.*;
 import lombok.Builder;
+import lombok.Getter;
+import lombok.Setter;
 
 import java.util.UUID;
 
 
 @Entity
 @Builder
+@Getter
+@Setter
 public class TeamMember {
     @Id
     @GeneratedValue
@@ -36,38 +40,7 @@ public class TeamMember {
     }
 
 
-    public UUID getTeamId() {
-        return teamId;
-    }
 
-    public UUID getUserId() {
-        return userId;
-    }
-
-    public void setTeamId(UUID teamId) {
-        this.teamId = teamId;
-    }
-
-    public void setUserId(UUID userId) {
-        this.userId = userId;
-    }
-
-
-    public UUID getTeamMemberId() {
-        return teamMemberId;
-    }
-
-    public UUID getTeamLeader() {
-        return teamLeader;
-    }
-
-    public void setTeamMemberId(UUID teamMemberId) {
-        this.teamMemberId = teamMemberId;
-    }
-
-    public void setTeamLeader(UUID teamLeader) {
-        this.teamLeader = teamLeader;
-    }
 }
 
 

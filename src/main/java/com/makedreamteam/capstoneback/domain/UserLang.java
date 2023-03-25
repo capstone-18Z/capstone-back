@@ -1,20 +1,20 @@
 package com.makedreamteam.capstoneback.domain;
 
 import jakarta.persistence.*;
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 import org.hibernate.annotations.ColumnDefault;
+
 import java.util.UUID;
 
+@Entity
 @Getter
 @Setter
-@Entity
-@Builder
 @NoArgsConstructor
-@AllArgsConstructor
 public class UserLang {
     @Id
-    @Column(name = "member_id", columnDefinition = "BINARY(16)")
-    @GeneratedValue
     private UUID userid;
 
     @Column
@@ -56,4 +56,19 @@ public class UserLang {
     @Column
     @ColumnDefault("0")
     private int sqllang;
+
+
+    public UserLang(UUID userid, int python, int c, int java, int cpp, int cs, int vb, int javascript, int assembly, int php, int sqllang) {
+        this.userid = userid;
+        this.python = python;
+        this.c = c;
+        this.java = java;
+        this.cpp = cpp;
+        this.cs = cs;
+        this.vb = vb;
+        this.javascript = javascript;
+        this.assembly = assembly;
+        this.php = php;
+        this.sqllang = sqllang;
+    }
 }
