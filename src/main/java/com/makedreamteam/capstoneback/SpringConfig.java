@@ -9,7 +9,6 @@ import org.springframework.web.servlet.config.annotation.CorsRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 @Configuration
-@RequiredArgsConstructor
 public class SpringConfig implements WebMvcConfigurer {
     public static final String ALLOWED_METHOD_NAMES = "GET,HEAD,POST,PUT,DELETE,TRACE,OPTIONS,PATCH";
    /* private final PostTeamRepository postTeamRepository;
@@ -25,19 +24,18 @@ public class SpringConfig implements WebMvcConfigurer {
 
     private final JwtTokenProvider jwtTokenProvider;
 
-       public SpringConfig(SpringDataTeamRepository springDataTeamRepository, SpringDataJpaUserLangRepository springDataJpaUserLangRepository, TeamMemberRepository teamMemberRepository, MemberRepository memberRepository, PostMemberRepository postMemberRepository, JwtTokenProvider jwtTokenProvider) {
+       public SpringConfig(SpringDataTeamRepository springDataTeamRepository, TeamMemberRepository teamMemberRepository, MemberRepository memberRepository, PostMemberRepository postMemberRepository, JwtTokenProvider jwtTokenProvider) {
            this.springDataTeamRepository = springDataTeamRepository;
-           this.springDataJpaUserLangRepository = springDataJpaUserLangRepository;
            this.teamMemberRepository = teamMemberRepository;
            this.memberRepository = memberRepository;
            this.postMemberRepository = postMemberRepository;
            this.jwtTokenProvider = jwtTokenProvider;
        }
-       @Bean
+
     @Bean
     public TeamService TeamService(){
-        return new TeamService(springDataTeamRepository,springDataJpaUserLangRepository, teamMemberRepository, memberRepository, postMemberRepository, jwtTokenProvider);
-        return new TeamService(springDataTeamRepository, teamMemberRepository, memberRepository, postMemberRepository);
+        return new TeamService(springDataTeamRepository, teamMemberRepository, memberRepository, postMemberRepository, jwtTokenProvider);
+
     }
 
 

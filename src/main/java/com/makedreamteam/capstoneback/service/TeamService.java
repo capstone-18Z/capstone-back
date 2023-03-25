@@ -29,8 +29,6 @@ public class TeamService{
     @Autowired
     private final SpringDataTeamRepository springDataTeamRepository;
     @Autowired
-    private final SpringDataJpaUserLangRepository springDataJpaUserLangRepository;
-    @Autowired
     private final TeamMemberRepository teamMemberRepository;
     @Autowired
     private final MemberRepository memberRepository;
@@ -40,9 +38,8 @@ public class TeamService{
     private JwtTokenProvider jwtTokenProvider;
 
 
-    public TeamService(SpringDataTeamRepository springDataTeamRepository, SpringDataJpaUserLangRepository springDataJpaUserLangRepository, TeamMemberRepository teamMemberRepository, MemberRepository memberRepository, PostMemberRepository postMemberRepository, JwtTokenProvider jwtTokenProvider) {
+    public TeamService(SpringDataTeamRepository springDataTeamRepository,TeamMemberRepository teamMemberRepository, MemberRepository memberRepository, PostMemberRepository postMemberRepository, JwtTokenProvider jwtTokenProvider) {
         this.springDataTeamRepository = springDataTeamRepository;
-        this.springDataJpaUserLangRepository = springDataJpaUserLangRepository;
         this.teamMemberRepository = teamMemberRepository;
         this.memberRepository = memberRepository;
         this.postMemberRepository = postMemberRepository;
@@ -158,6 +155,9 @@ public class TeamService{
 
         checkTokenResponsForm checkTokenResponsForm=checkUserIdAndToken(authToken,refreshToken);
         Optional<Team> team=springDataTeamRepository.findById(id);
+        if(team.isEmpty()){
+            throw new RuntimeException("팀이 없습니다.");
+        }
 
         return ServiceReturn.builder().newToken(checkTokenResponsForm.getNewToken()).data(team.get()).build();
         //optional은 이미 null값을 처리하는데 안전한 방법을 제공하기때문에 if문으 ㄹ사용하지 않아도된다
@@ -171,7 +171,7 @@ public class TeamService{
     }
 
 
-    public List<Member> recommendUsers(UUID teamId, int count, String token,String refreshToken) throws NotTeamLeaderException {
+    public List<PostMember> recommendUsers(UUID teamId, int count, String token,String refreshToken) throws NotTeamLeaderException {
         try {
 
             Optional<Team> optionalTeam=springDataTeamRepository.findById(teamId);
@@ -181,37 +181,34 @@ public class TeamService{
             checkUserIdAndToken(token,refreshToken,optionalTeam);
 
 
-            List<UserLang> users=new ArrayList<>();
+
             List<PostMember> postMembers=postMemberRepository.findAll();
-            for (PostMember postMember:postMembers){
-                users.add(springDataJpaUserLangRepository.findById(postMember.getUserId()).get());
-            }
+
             Team team=optionalTeam.get();
-            HashMap<Member,Integer> weight=new HashMap<>();
-            for(UserLang lang : users){
-                Optional<Member> member = memberRepository.findById(lang.getUserid());
-                if(member.isPresent()) {
-                    weight.put(member.get(), lang.getC() * team.getC() + lang.getSqllang() * team.getSqllang() + lang.getCpp() * team.getCpp() + lang.getVb() * team.getVb() + lang.getCs() * team.getCs() + lang.getPhp() * team.getPhp() + lang.getPython() * team.getPython() + lang.getAssembly() * team.getAssembly() + lang.getJavascript() * team.getJavascript() + lang.getJava() * team.getJava());
+            HashMap<PostMember,Integer> weight=new HashMap<>();
+            for(PostMember post : postMembers){
+                if(post!=null) {
+                    weight.put(post, post.getC() * team.getC() + post.getSqllang() * team.getSqllang() + post.getCpp() * team.getCpp() + post.getVb() * team.getVb() + post.getCs() * team.getCs() + post.getPhp() * team.getPhp() + post.getPython() * team.getPython() + post.getAssembly() * team.getAssembly() + post.getJavascript() * team.getJavascript() + post.getJava() * team.getJava());
                 }
                 else
                     System.out.println("springDataTeamRepository.findById(lang.getTeamid()) is null");
             }
-            List<Map.Entry<Member, Integer>> sortedList = new ArrayList<>(weight.entrySet());
+            List<Map.Entry<PostMember, Integer>> sortedList = new ArrayList<>(weight.entrySet());
 
 
-            Collections.sort(sortedList, new Comparator<Map.Entry<Member, Integer>>() {
+            Collections.sort(sortedList, new Comparator<Map.Entry<PostMember, Integer>>() {
                 @Override
-                public int compare(Map.Entry<Member, Integer> o1, Map.Entry<Member, Integer> o2) {
+                public int compare(Map.Entry<PostMember, Integer> o1, Map.Entry<PostMember, Integer> o2) {
                     return o2.getValue().compareTo(o1.getValue());
                 }
             });
 
-            List<Member> result= sortedList.stream()
+            List<PostMember> result= sortedList.stream()
                     .map(map->map.getKey()).limit(count).collect(Collectors.toList());
 
             System.out.println("----정렬 결과---");
-            for (Member member: result){
-                System.out.println("member.getEmail() = " + member.getEmail());
+            for (PostMember post: result){
+                System.out.println("member.getEmail() = " + post.getNickname());
             }
             System.out.println("-------------------");
             return result;

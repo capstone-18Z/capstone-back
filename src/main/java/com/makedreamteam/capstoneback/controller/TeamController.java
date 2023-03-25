@@ -2,6 +2,7 @@ package com.makedreamteam.capstoneback.controller;
 
 import com.makedreamteam.capstoneback.JwtTokenProvider;
 import com.makedreamteam.capstoneback.domain.Member;
+import com.makedreamteam.capstoneback.domain.PostMember;
 import com.makedreamteam.capstoneback.domain.RefreshToken;
 import com.makedreamteam.capstoneback.domain.Team;
 import com.makedreamteam.capstoneback.exception.NotTeamLeaderException;
@@ -79,7 +80,7 @@ public class TeamController {
             ServiceReturn byId = teamService.findById(id, authToken, refreshToken);
             team=byId.getData();
             newToken= byId.getNewToken();
-            List<Member> members = teamService.recommendUsers(id, 5, newToken,refreshToken);
+            List<PostMember> members = teamService.recommendUsers(id, 5, newToken,refreshToken);
 
             if (byId.getData()!=null && members != null) {
                 ResponseForm responseForm = ResponseForm.builder()

@@ -69,7 +69,6 @@ public class MemberController {
                     .build();
             return ResponseEntity.badRequest().body(errorResponse);
         }
-        return jwtTokenProvider.createToken(member.getId(), member.getEmail(), member.getRole(), member.getNickname());
     }
 
     @GetMapping("/search/email/{email}")
