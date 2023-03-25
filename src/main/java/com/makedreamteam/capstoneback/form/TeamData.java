@@ -1,4 +1,4 @@
-package com.makedreamteam.capstoneback.controller;
+package com.makedreamteam.capstoneback.form;
 
 import lombok.Builder;
 import lombok.Data;

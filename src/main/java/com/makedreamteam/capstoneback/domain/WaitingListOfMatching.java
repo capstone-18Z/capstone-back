@@ -14,7 +14,7 @@ import java.util.UUID;
 @Getter
 @Setter
 @Table(uniqueConstraints = {@UniqueConstraint(columnNames = {"userId", "teamId"})})
-public class WaitingList {
+public class WaitingListOfMatching {
     @Id
     private UUID waitingId;
 

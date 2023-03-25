@@ -2,6 +2,8 @@ package com.makedreamteam.capstoneback.controller;
 
 import com.makedreamteam.capstoneback.domain.Member;
 import com.makedreamteam.capstoneback.domain.Team;
+import com.makedreamteam.capstoneback.form.ResponseForm;
+import com.makedreamteam.capstoneback.form.TeamData;
 import com.makedreamteam.capstoneback.service.TeamService;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,8 +26,9 @@ public class TeamController {
     public TeamController(TeamService postTeamService) {
         this.teamService = postTeamService;
     }
+
     @GetMapping("")
-    public ResponseEntity<ResponseForm> allPost(Principal principal,HttpServletRequest request){
+    public ResponseEntity<ResponseForm> allPost(Principal principal, HttpServletRequest request){
         //check login
         try{
             List<Team> recommendTeams=null;
@@ -53,10 +56,11 @@ public class TeamController {
             return ResponseEntity.badRequest().body(errorResponseForm);
         }
     }
-    @PostMapping("/{id}")
-    public ResponseEntity<ResponseForm> findById(@PathVariable UUID id){
+    @GetMapping("/{id}")
+    public ResponseEntity<ResponseForm> findById(@PathVariable UUID id,HttpServletRequest request) throws AuthenticationException {
+        String token= request.getHeader("login-token");
         Optional<Team> team=teamService.findById(id);
-        List<Member> members=teamService.recommandUsers(id,5);
+        List<Member> members=teamService.recommendUsers(id,5,token);
         if(team.isPresent()){
             ResponseForm responseForm=ResponseForm.builder()
                     .message("search successfully")
@@ -77,10 +81,10 @@ public class TeamController {
 
 
     @PostMapping("/new")
-    public ResponseEntity<ResponseForm> addNewTeam(@RequestBody PostTeamForm postTeamForm,HttpServletRequest request){
+    public ResponseEntity<ResponseForm> addNewTeam(@RequestBody Team form, HttpServletRequest request){
         try{
             String authToken= request.getHeader("login-token");
-            Team team = teamService.addPostTeam(postTeamForm,authToken);
+            Team team = teamService.addPostTeam(form,authToken);
             ResponseForm responseForm=ResponseForm.builder()
                     .data(TeamData.builder().team(team).build())
                     .message("Team created successfully")
@@ -100,10 +104,10 @@ public class TeamController {
 
     //팀 정보 수정
     @PostMapping("/{teamid}/update")
-    public ResponseEntity<ResponseForm> updateTeamInfo(@PathVariable UUID teamid, @RequestBody PostTeamForm postTeamForm,HttpServletRequest request) {
+    public ResponseEntity<ResponseForm> updateTeamInfo(@PathVariable UUID teamid, @RequestBody Team updateForm,HttpServletRequest request) {
         try{
             String authToken= request.getHeader("login-token");
-            Team updateTeam = teamService.update(teamid, postTeamForm,authToken);
+            Team updateTeam = teamService.update(teamid, updateForm,authToken);
             ResponseForm responseForm=ResponseForm.builder()
                     .message("update team")
                     .data(TeamData.builder().team(updateTeam).build())

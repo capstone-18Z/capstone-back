@@ -1,6 +1,7 @@
 package com.makedreamteam.capstoneback.controller;
 
 
+import com.makedreamteam.capstoneback.form.ResponseForm;
 import com.makedreamteam.capstoneback.service.MatchingTeamMemberService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -24,7 +25,7 @@ public class MatchingTeamMemberController {
 
     //팀에서 멤버에게 팀원 신청
     @PostMapping("/{teamId}/match/{userId}")
-    public ResponseEntity<ResponseForm> tryMatchTeamMember(@PathVariable UUID teamId,@PathVariable UUID userId){
+    public ResponseEntity<ResponseForm> tryMatchTeamMember(@PathVariable UUID teamId, @PathVariable UUID userId){
        try{
            matchingTeamMemberService.addWaitingList(teamId,userId);
        }catch (RuntimeException e){
