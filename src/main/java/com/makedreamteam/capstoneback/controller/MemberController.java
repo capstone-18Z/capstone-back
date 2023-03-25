@@ -6,6 +6,7 @@ import java.util.Optional;
 import java.util.UUID;
 
 import com.makedreamteam.capstoneback.JwtTokenProvider;
+import com.makedreamteam.capstoneback.domain.Token;
 import com.makedreamteam.capstoneback.domain.Member;
 import com.makedreamteam.capstoneback.domain.PostMember;
 import com.makedreamteam.capstoneback.domain.Role;
@@ -40,7 +41,7 @@ public class MemberController {
 
     // 로그인
     @PostMapping("/login")
-    public String login(@RequestBody Map<String, String> user) {
+    public Token login(@RequestBody Map<String, String> user) {
         Member member = memberRepository.findByEmail(user.get("email"))
                 .orElseThrow(() -> new IllegalArgumentException("가입 되지 않은 이메일입니다."));
         if (!passwordEncoder.matches(user.get("password"), member.getPassword())) {

@@ -1,9 +1,12 @@
 package com.makedreamteam.capstoneback.controller;
 
+import com.makedreamteam.capstoneback.JwtTokenProvider;
 import com.makedreamteam.capstoneback.domain.Member;
+import com.makedreamteam.capstoneback.domain.RefreshToken;
 import com.makedreamteam.capstoneback.domain.Team;
 import com.makedreamteam.capstoneback.exception.NotTeamLeaderException;
 import com.makedreamteam.capstoneback.form.ResponseForm;
+import com.makedreamteam.capstoneback.form.ServiceReturn;
 import com.makedreamteam.capstoneback.form.TeamData;
 import com.makedreamteam.capstoneback.service.TeamService;
 import jakarta.servlet.http.HttpServletRequest;
@@ -23,16 +26,19 @@ import java.util.UUID;
 public class TeamController {
 
     private final TeamService teamService;
+    private final JwtTokenProvider jwtTokenProvider;
 
     @Autowired
-    public TeamController(TeamService postTeamService) {
+    public TeamController(TeamService postTeamService, JwtTokenProvider jwtTokenProvider) {
         this.teamService = postTeamService;
+        this.jwtTokenProvider = jwtTokenProvider;
     }
 
     @GetMapping("")
     public ResponseEntity<ResponseForm> allPost(Principal principal, HttpServletRequest request) {
         //check login
         try {
+
             List<Team> recommendTeams = null;
             List<Team> teams = teamService.allPosts(principal);
 
@@ -100,8 +106,10 @@ public class TeamController {
     @PostMapping("/new")
     public ResponseEntity<ResponseForm> addNewTeam(@RequestBody Team form, HttpServletRequest request) {
         try {
+
             String authToken = request.getHeader("login-token");
-            Team team = teamService.addPostTeam(form, authToken);
+            String refreshToken=request.getHeader("refresh-token");
+            ServiceReturn team =  teamService.addPostTeam(form, authToken,refreshToken);
             ResponseForm responseForm = ResponseForm.builder()
                     .data(TeamData.builder().team(team).build())
                     .message("Team created successfully")

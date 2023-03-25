@@ -1,17 +1,18 @@
 package com.makedreamteam.capstoneback.service;
 
+import com.makedreamteam.capstoneback.JwtTokenProvider;
 import com.makedreamteam.capstoneback.domain.*;
 import com.makedreamteam.capstoneback.exception.NotTeamLeaderException;
+import com.makedreamteam.capstoneback.form.ServiceReturn;
+import com.makedreamteam.capstoneback.form.checkTokenResponsForm;
 import com.makedreamteam.capstoneback.repository.*;
-import io.jsonwebtoken.Claims;
-import io.jsonwebtoken.Jws;
-import io.jsonwebtoken.JwtException;
-import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.*;
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataAccessException;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.dao.EmptyResultDataAccessException;
+import org.springframework.http.HttpEntity;
 import org.springframework.orm.jpa.JpaSystemException;
 import org.springframework.transaction.TransactionSystemException;
 import org.springframework.transaction.annotation.Transactional;
@@ -34,26 +35,31 @@ public class TeamService{
     @Autowired
     private final PostMemberRepository postMemberRepository;
 
+    private JwtTokenProvider jwtTokenProvider;
 
-    public TeamService(  SpringDataTeamRepository springDataTeamRepository, SpringDataJpaUserLangRepository springDataJpaUserLangRepository, TeamMemberRepository teamMemberRepository, MemberRepository memberRepository, PostMemberRepository postMemberRepository) {
+
+    public TeamService(SpringDataTeamRepository springDataTeamRepository, SpringDataJpaUserLangRepository springDataJpaUserLangRepository, TeamMemberRepository teamMemberRepository, MemberRepository memberRepository, PostMemberRepository postMemberRepository, JwtTokenProvider jwtTokenProvider) {
         this.springDataTeamRepository = springDataTeamRepository;
         this.springDataJpaUserLangRepository = springDataJpaUserLangRepository;
         this.teamMemberRepository = teamMemberRepository;
         this.memberRepository = memberRepository;
         this.postMemberRepository = postMemberRepository;
+        this.jwtTokenProvider = jwtTokenProvider;
     }
 
     //순서
     //로그인 된 userId를 팀리더로 team을 만든다
     //위에서 만들어진 teamId를 통해 temaLang을 만든다
     //temaId와 로그인된 userId, teamLeader로 teamMember를 만든다
-    public Team addPostTeam(Team form,String authToken){
+    public ServiceReturn addPostTeam(Team form, String authToken, String refreshToken){
 
         if(authToken==null)
             throw new RuntimeException("로그인 상태가 아닙니다.");
 
         try {
-            UUID teamLeader= checkUserIdAndToken(authToken);
+            checkTokenResponsForm checkTokenResponsForm=checkUserIdAndToken(authToken,refreshToken);
+            UUID teamLeader= checkTokenResponsForm.getUserId();
+            String newToken=checkTokenResponsForm.getNewToken();
             List<Team> teams=springDataTeamRepository.findByTeamLeader(teamLeader);
             if(teams.size()==3){
                 throw new RuntimeException("4개 이상의 팀을 만들 수 없습니다.");
@@ -66,7 +72,7 @@ public class TeamService{
             TeamMember teamMember=TeamMember.builder().teamId(teamId).teamLeader(teamLeader).userId(teamLeader).build();
             teamMemberRepository.save(teamMember);
 
-            return team;
+            return ServiceReturn.builder().data(team).newToken(newToken).build();
         } catch (NullPointerException | DataIntegrityViolationException | JpaSystemException |
                  TransactionSystemException e) {
             /*NullPointerException: postTeamForm이 null인 경우 newTeam 및 newTeamLang 메서드에서 NullPointerException이 발생
@@ -76,7 +82,7 @@ public class TeamService{
             // 예외 발생 시 처리할 코드 작성
             // 예를 들어, 로깅 등의 작업을 수행할 수 있습니다.
             // 예외 처리 후, 예외 발생을 호출자에게 알리기 위해 RuntimeException을 던질 수 있습니다.
-            throw new RuntimeException("Failed to add team and team language.", e);
+            throw new RuntimeException(e);
         }
         catch (JwtException ex) {
             throw new RuntimeException(ex.getMessage());
@@ -121,7 +127,7 @@ public class TeamService{
         if (optionalTeam.isEmpty()) {
             throw new RuntimeException("팀이 존재하지 않습니다");
         }
-        UUID userId= checkUserIdAndToken(authToken,optionalTeam);
+        UUID userId = checkUserIdAndToken(authToken,optionalTeam).getUserId();
         try {
             Team team = optionalTeam.get();
 
@@ -149,7 +155,6 @@ public class TeamService{
         }
     }
     public Optional<Team> findById(UUID id){
-
         return springDataTeamRepository.findById(id);
         //optional은 이미 null값을 처리하는데 안전한 방법을 제공하기때문에 if문으 ㄹ사용하지 않아도된다
     }
@@ -225,11 +230,10 @@ public class TeamService{
         teamMemberRepository.deleteAll(teamMemberList);
         springDataTeamRepository.delete(team);
     }
-    public UUID checkUserIdAndToken(String token, Optional<Team> team) throws AuthenticationException, NotTeamLeaderException {
+    public checkTokenResponsForm checkUserIdAndToken(String token, Optional<Team> team) throws AuthenticationException, NotTeamLeaderException {
         if (token == null) {
             throw new AuthenticationException(" 토큰이 없습니다.");
         }
-
         Jws<Claims> claimsJws;
         claimsJws = Jwts.parser().setSigningKey("test").parseClaimsJws(token);
 
@@ -246,27 +250,42 @@ public class TeamService{
             }
 
 
-        return UUID.fromString((String)claims.get("sub"));
+        return checkTokenResponsForm.builder().userId(UUID.fromString((String)claims.get("sub"))).build();
     }
-    public UUID checkUserIdAndToken(String token) throws AuthenticationException {
+    public checkTokenResponsForm checkUserIdAndToken(String token,String refreshToken) throws AuthenticationException {
         if (token == null) {
             throw new AuthenticationException("Invalid Authorization header");
         }
 
-        Jws<Claims> claimsJws;
-        claimsJws = Jwts.parser().setSigningKey("test").parseClaimsJws(token);
+        String newToken = null;
 
-        Claims claims = claimsJws.getBody();
-        String username = claims.getSubject();
-        Date expirationDate = claims.getExpiration();
+        Claims claims = null;
+        try {
+            Jws<Claims> claimsJws = Jwts.parser().setSigningKey("test").parseClaimsJws(token);
+            claims = claimsJws.getBody();
+            String username = claims.getSubject();
+            Date expirationDate = claims.getExpiration();
 
-        if (username == null || expirationDate == null || expirationDate.before(new Date())) {
-            throw new AuthenticationException("Invalid JWT claims");
+            if (username == null | expirationDate==null) {
+                throw new AuthenticationException("Invalid JWT claims");
+            }
+
+
+
+            return checkTokenResponsForm.builder().userId(UUID.fromString((String) claims.get("sub"))).newToken(newToken).build();
+        } catch (ExpiredJwtException e) {
+            System.out.println("만료");
+            newToken = jwtTokenProvider.validateRefreshToken(refreshToken);
+            if(newToken != null) {
+                System.out.println(newToken);
+                Jws<Claims> claimsJws = Jwts.parser().setSigningKey("test").parseClaimsJws(newToken);
+                Claims newClaims = claimsJws.getBody();
+                return checkTokenResponsForm.builder().userId(UUID.fromString((String) newClaims.get("sub"))).newToken(newToken).build();
+            }else
+                throw new RuntimeException("토큰이 만료되었습니다");
+        } catch (JwtException e) {
+            throw new AuthenticationException(e.getMessage());
         }
-
-
-
-        return UUID.fromString((String)claims.get("sub"));
     }
 
 }

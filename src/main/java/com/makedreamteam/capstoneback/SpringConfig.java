@@ -22,16 +22,19 @@ public class SpringConfig implements WebMvcConfigurer {
     private final MemberRepository memberRepository;
     private final PostMemberRepository postMemberRepository;
 
-       public SpringConfig( SpringDataTeamRepository springDataTeamRepository, SpringDataJpaUserLangRepository springDataJpaUserLangRepository, TeamMemberRepository teamMemberRepository, MemberRepository memberRepository, PostMemberRepository postMemberRepository) {
+    private final JwtTokenProvider jwtTokenProvider;
+
+       public SpringConfig(SpringDataTeamRepository springDataTeamRepository, SpringDataJpaUserLangRepository springDataJpaUserLangRepository, TeamMemberRepository teamMemberRepository, MemberRepository memberRepository, PostMemberRepository postMemberRepository, JwtTokenProvider jwtTokenProvider) {
            this.springDataTeamRepository = springDataTeamRepository;
            this.springDataJpaUserLangRepository = springDataJpaUserLangRepository;
            this.teamMemberRepository = teamMemberRepository;
            this.memberRepository = memberRepository;
            this.postMemberRepository = postMemberRepository;
+           this.jwtTokenProvider = jwtTokenProvider;
        }
        @Bean
     public TeamService TeamService(){
-        return new TeamService(springDataTeamRepository,springDataJpaUserLangRepository, teamMemberRepository, memberRepository, postMemberRepository);
+        return new TeamService(springDataTeamRepository,springDataJpaUserLangRepository, teamMemberRepository, memberRepository, postMemberRepository, jwtTokenProvider);
     }
 
 
