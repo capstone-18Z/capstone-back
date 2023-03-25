@@ -109,7 +109,6 @@ public class TeamService{
                 .detail(postTeamForm.getDetail())
                 .period(postTeamForm.getPeriod())
                 .title(postTeamForm.getTitle())
-                .writer(postTeamForm.getWriter())
                 .build();
         return team;
     }
@@ -173,9 +172,9 @@ public class TeamService{
         }
     }
 
-    public List<Team> recommandTeams(Long userid,int count){
+    public List<Team> recommandTeams(UUID userid,int count){
         List<TeamLang> teamLangs=springDataJpaTeamLangRepository.findAll();
-        UserLang userLang=springDataJpaUserLangRepository.findById(userid).get();
+        UserLang userLang=springDataJpaUserLangRepository.findByUserid(userid).get();
         HashMap<Team,Integer> weight=new HashMap<>();
         for(TeamLang lang : teamLangs){
             Optional<Team> team = springDataTeamRepository.findById(lang.getTeamId());
@@ -186,12 +185,7 @@ public class TeamService{
                 System.out.println("springDataTeamRepository.findById(lang.getTeamid()) is null");
         }
         List<Map.Entry<Team, Integer>> sortedList = new ArrayList<>(weight.entrySet());
-
-
         //sortedList.sort(Comparator.comparing(Map.Entry::getValue));
-
-
-
         List<Team> result= sortedList.stream()
                 .map(map->map.getKey()).limit(count).collect(Collectors.toList());
 

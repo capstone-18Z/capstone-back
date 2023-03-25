@@ -22,8 +22,6 @@ public class Team{
     @ColumnDefault("0")
     private int currentFrontMember;
 
-
-
     @Column
     @ColumnDefault("0")
     private int currentBackMember;
@@ -38,8 +36,6 @@ public class Team{
 
     @Column(columnDefinition = "VARCHAR(255) CHARACTER SET utf8 COLLATE utf8_general_ci")
     private String title;
-    @Column(columnDefinition = "VARCHAR(255) CHARACTER SET utf8 COLLATE utf8_general_ci")
-    private String writer;
 
     @Column(columnDefinition = "VARCHAR(255) CHARACTER SET utf8 COLLATE utf8_general_ci")
     private String createDate;
