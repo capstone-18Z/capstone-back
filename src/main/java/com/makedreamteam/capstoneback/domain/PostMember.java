@@ -9,6 +9,8 @@ import java.util.UUID;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
+@Getter
+@Setter
 public class PostMember {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

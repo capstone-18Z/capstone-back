@@ -1,4 +1,4 @@
-package com.makedreamteam.capstoneback.controller;
+package com.makedreamteam.capstoneback.form;
 
 import lombok.Builder;
 import lombok.Data;
@@ -9,4 +9,5 @@ public class ResponseForm {
     private int state;
     private String message;
     private TeamData data;
+    private boolean updatable;
 }

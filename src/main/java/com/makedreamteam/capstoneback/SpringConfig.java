@@ -15,22 +15,23 @@ public class SpringConfig implements WebMvcConfigurer {
         this.postTeamRepository = postTeamRepository;
 
     }*/
-    private final SpringDataJpaTeamLangRepository springDataJpaTeamLangRepository;
+
     private final SpringDataTeamRepository springDataTeamRepository;
     private final SpringDataJpaUserLangRepository springDataJpaUserLangRepository;
     private final TeamMemberRepository teamMemberRepository;
     private final MemberRepository memberRepository;
+    private final PostMemberRepository postMemberRepository;
 
-       public SpringConfig(SpringDataJpaTeamLangRepository springDataJpaTeamLangRepository, SpringDataTeamRepository springDataTeamRepository, SpringDataJpaUserLangRepository springDataJpaUserLangRepository, TeamMemberRepository teamMemberRepository, MemberRepository memberRepository) {
-           this.springDataJpaTeamLangRepository = springDataJpaTeamLangRepository;
+       public SpringConfig( SpringDataTeamRepository springDataTeamRepository, SpringDataJpaUserLangRepository springDataJpaUserLangRepository, TeamMemberRepository teamMemberRepository, MemberRepository memberRepository, PostMemberRepository postMemberRepository) {
            this.springDataTeamRepository = springDataTeamRepository;
            this.springDataJpaUserLangRepository = springDataJpaUserLangRepository;
            this.teamMemberRepository = teamMemberRepository;
            this.memberRepository = memberRepository;
+           this.postMemberRepository = postMemberRepository;
        }
        @Bean
     public TeamService TeamService(){
-        return new TeamService(springDataJpaTeamLangRepository,springDataTeamRepository,springDataJpaUserLangRepository, teamMemberRepository, memberRepository);
+        return new TeamService(springDataTeamRepository,springDataJpaUserLangRepository, teamMemberRepository, memberRepository, postMemberRepository);
     }
 
 

@@ -10,4 +10,5 @@ import java.util.UUID;
 @Repository
 public interface SpringDataTeamRepository extends JpaRepository<Team, UUID>  {
     List<Team> findByTitleContaining(String title);
+    List<Team> findByTeamLeader(UUID userID);
 }
