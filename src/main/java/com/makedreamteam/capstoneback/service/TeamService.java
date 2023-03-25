@@ -1,6 +1,7 @@
 package com.makedreamteam.capstoneback.service;
 
 import com.makedreamteam.capstoneback.domain.*;
+import com.makedreamteam.capstoneback.exception.NotTeamLeaderException;
 import com.makedreamteam.capstoneback.repository.*;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jws;
@@ -22,8 +23,6 @@ import java.util.stream.Collectors;
 
 @Transactional
 public class TeamService{
-    // @Autowired
-    //private final SpringDataJpaTeamLangRepository springDataJpaTeamLangRepository;
     @Autowired
     private final SpringDataTeamRepository springDataTeamRepository;
     @Autowired
@@ -117,7 +116,7 @@ public class TeamService{
 
 
 
-    public Team update(UUID teamId,Team form,String authToken) throws AuthenticationException {
+    public Team update(UUID teamId,Team form,String authToken) throws AuthenticationException, NotTeamLeaderException {
         Optional<Team> optionalTeam = springDataTeamRepository.findById(teamId);
         if (optionalTeam.isEmpty()) {
             throw new RuntimeException("팀이 존재하지 않습니다");
@@ -163,53 +162,58 @@ public class TeamService{
     }
 
 
-    public List<Member> recommendUsers(UUID teamId, int count, String token) {
+    public List<Member> recommendUsers(UUID teamId, int count, String token) throws NotTeamLeaderException {
         try {
-            checkUserIdAndToken(token);
+            Optional<Team> optionalTeam=springDataTeamRepository.findById(teamId);
+            if(optionalTeam.isEmpty()){
+                throw new RuntimeException("팀이 존재하지 않습니다.("+teamId+")");
+            }
+            checkUserIdAndToken(token,optionalTeam);
+
+
+            List<UserLang> users=new ArrayList<>();
+            List<PostMember> postMembers=postMemberRepository.findAll();
+            for (PostMember postMember:postMembers){
+                users.add(springDataJpaUserLangRepository.findById(postMember.getUserId()).get());
+            }
+            Team team=optionalTeam.get();
+            HashMap<Member,Integer> weight=new HashMap<>();
+            for(UserLang lang : users){
+                Optional<Member> member = memberRepository.findById(lang.getUserid());
+                if(member.isPresent()) {
+                    weight.put(member.get(), lang.getC() * team.getC() + lang.getSqllang() * team.getSqllang() + lang.getCpp() * team.getCpp() + lang.getVb() * team.getVb() + lang.getCs() * team.getCs() + lang.getPhp() * team.getPhp() + lang.getPython() * team.getPython() + lang.getAssembly() * team.getAssembly() + lang.getJavascript() * team.getJavascript() + lang.getJava() * team.getJava());
+                }
+                else
+                    System.out.println("springDataTeamRepository.findById(lang.getTeamid()) is null");
+            }
+            List<Map.Entry<Member, Integer>> sortedList = new ArrayList<>(weight.entrySet());
+
+
+            Collections.sort(sortedList, new Comparator<Map.Entry<Member, Integer>>() {
+                @Override
+                public int compare(Map.Entry<Member, Integer> o1, Map.Entry<Member, Integer> o2) {
+                    return o2.getValue().compareTo(o1.getValue());
+                }
+            });
+
+            List<Member> result= sortedList.stream()
+                    .map(map->map.getKey()).limit(count).collect(Collectors.toList());
+
+            System.out.println("----정렬 결과---");
+            for (Member member: result){
+                System.out.println("member.getEmail() = " + member.getEmail());
+            }
+            System.out.println("-------------------");
+            return result;
+        }catch (NotTeamLeaderException e){
+            throw new NotTeamLeaderException(e.getMessage());
         }catch (AuthenticationException e){
-            return null;
+            throw new RuntimeException(e);
         }
-        Optional<Team> optionalTeam=springDataTeamRepository.findById(teamId);
-        if(optionalTeam.isEmpty()){
-            throw new RuntimeException("팀이 존재하지 않습니다.("+teamId+")");
-        }
-        List<UserLang> users=new ArrayList<>();
-        List<PostMember> postMembers=postMemberRepository.findAll();
-        for (PostMember postMember:postMembers){
-            users.add(springDataJpaUserLangRepository.findById(postMember.getUserId()).get());
-        }
-        Team team=optionalTeam.get();
-        HashMap<Member,Integer> weight=new HashMap<>();
-        for(UserLang lang : users){
-            Optional<Member> member = memberRepository.findById(lang.getUserid());
-            if(member.isPresent()) {
-                weight.put(member.get(), lang.getC() * team.getC() + lang.getSqllang() * team.getSqllang() + lang.getCpp() * team.getCpp() + lang.getVb() * team.getVb() + lang.getCs() * team.getCs() + lang.getPhp() * team.getPhp() + lang.getPython() * team.getPython() + lang.getAssembly() * team.getAssembly() + lang.getJavascript() * team.getJavascript() + lang.getJava() * team.getJava());
-            }
-            else
-                System.out.println("springDataTeamRepository.findById(lang.getTeamid()) is null");
-        }
-        List<Map.Entry<Member, Integer>> sortedList = new ArrayList<>(weight.entrySet());
 
-
-        Collections.sort(sortedList, new Comparator<Map.Entry<Member, Integer>>() {
-            @Override
-            public int compare(Map.Entry<Member, Integer> o1, Map.Entry<Member, Integer> o2) {
-                return o2.getValue().compareTo(o1.getValue());
-            }
-        });
-
-        List<Member> result= sortedList.stream()
-                .map(map->map.getKey()).limit(count).collect(Collectors.toList());
-
-        System.out.println("----정렬 결과---");
-        for (Member member: result){
-            System.out.println("member.getEmail() = " + member.getEmail());
-        }
-        System.out.println("-------------------");
-        return result;
     }
 
-    public void delete(UUID teamId,String authToken) throws AuthenticationException {
+    public void delete(UUID teamId,String authToken) throws AuthenticationException, NotTeamLeaderException {
         Optional<Team> teamOptional = springDataTeamRepository.findById(teamId);
 
         if(teamOptional.isEmpty())
@@ -221,9 +225,9 @@ public class TeamService{
         teamMemberRepository.deleteAll(teamMemberList);
         springDataTeamRepository.delete(team);
     }
-    public UUID checkUserIdAndToken(String token, Optional<Team> team) throws AuthenticationException {
+    public UUID checkUserIdAndToken(String token, Optional<Team> team) throws AuthenticationException, NotTeamLeaderException {
         if (token == null) {
-            throw new AuthenticationException("Invalid Authorization header");
+            throw new AuthenticationException(" 토큰이 없습니다.");
         }
 
         Jws<Claims> claimsJws;
@@ -238,7 +242,7 @@ public class TeamService{
         }
         if(team.isPresent())
             if(!UUID.fromString((String)claims.get("sub")).equals(team.get().getTeamLeader()) && !claims.get("roles").equals(Role.ROLE_ADMIN)) {
-                throw new RuntimeException("권한이 없습니다.");
+                throw new NotTeamLeaderException("권한이 없습니다.");
             }
 
 
