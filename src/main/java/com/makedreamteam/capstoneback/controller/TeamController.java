@@ -80,7 +80,7 @@ public class TeamController {
             ServiceReturn byId = teamService.findById(id, authToken, refreshToken);
             team=byId.getData();
             newToken= byId.getNewToken();
-            List<PostMember> members = teamService.recommendUsers(id, 5, newToken,refreshToken);
+            List<PostMember> members = teamService.recommendUsers(id, 5, newToken==null ? authToken : newToken,refreshToken);
 
             if (byId.getData()!=null && members != null) {
                 ResponseForm responseForm = ResponseForm.builder()
@@ -130,6 +130,7 @@ public class TeamController {
                     .message("Team created successfully")
                     .state(HttpStatus.CREATED.value())
                     .newToken(team.getNewToken())
+                    .updatable(true)
                     .build();
             return ResponseEntity.status(HttpStatus.CREATED).body(responseForm);
         } catch (RuntimeException e) {
@@ -155,6 +156,7 @@ public class TeamController {
                     .data(TeamData.builder().team(re.getData()).build())
                     .state(HttpStatus.OK.value())
                     .newToken(re.getNewToken())
+                    .updatable(true)
                     .build();
             return ResponseEntity.ok().body(responseForm);
         } catch (RuntimeException | AuthenticationException |NotTeamLeaderException e) {
