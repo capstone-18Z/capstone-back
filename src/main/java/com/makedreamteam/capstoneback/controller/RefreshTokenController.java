@@ -7,6 +7,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Map;
 import java.util.UUID;
 
 
@@ -22,7 +23,8 @@ public class RefreshTokenController {
     }
 
     @PostMapping("/refresh")
-    public ResponseEntity<Token> makeNewToken(@RequestBody String refreshToken){
+    public ResponseEntity<Token> makeNewToken(@RequestBody Map<String,Object> data){
+        String refreshToken=(String)data.get("refreshToken");
         System.out.println(refreshToken);
         Token newToken=refreshTokenService.createNewToKen(refreshToken);
         return ResponseEntity.ok().body(newToken);
