@@ -1,27 +1,24 @@
 package com.makedreamteam.capstoneback.domain;
 
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.*;
+
+import java.util.UUID;
 
 @Builder
 @Entity
 @Getter
 @NoArgsConstructor
 @AllArgsConstructor
+@Setter
 public class RefreshToken {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column
-    private Long refreshTokenId;
+    private UUID userId;
 
     @Column
     private String refreshToken;
 
-    @Column
-    private String userId;
+
 
 }

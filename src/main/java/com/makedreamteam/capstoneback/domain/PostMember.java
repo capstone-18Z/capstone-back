@@ -1,10 +1,14 @@
 package com.makedreamteam.capstoneback.domain;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.ColumnDefault;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Entity
 @Builder
@@ -12,6 +16,7 @@ import java.util.UUID;
 @AllArgsConstructor
 @Getter
 @Setter
+@Table(name="post_member")
 public class PostMember {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -65,4 +70,25 @@ public class PostMember {
     @Column
     @ColumnDefault("0")
     private int sqllang;
+    @OneToMany(mappedBy = "postMember", cascade = CascadeType.ALL, orphanRemoval = true,fetch = FetchType.EAGER)
+    private List<MemberKeyword> memberKeywords = new ArrayList<>();
+
+    @JsonProperty("memberKeywords")
+    public List<String> getKeywordValues() {
+        return memberKeywords.stream().map(MemberKeyword::getValue).collect(Collectors.toList());
+    }
+
+    public void addKeyword(MemberKeyword memberKeywords) {
+        this.memberKeywords.add(memberKeywords);
+        memberKeywords.setPostMember(this);
+    }
+
+    public void removeKeyword(MemberKeyword memberKeywords) {
+        this.memberKeywords.remove(memberKeywords);
+        memberKeywords.setPostMember(null);
+    }
+
+    public void setTeam(MemberKeyword memberKeywords){
+        memberKeywords.setPostMember(this);
+    }
 }

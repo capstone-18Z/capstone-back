@@ -5,11 +5,8 @@ import com.makedreamteam.capstoneback.domain.Member;
 import com.makedreamteam.capstoneback.domain.PostMember;
 import com.makedreamteam.capstoneback.domain.RefreshToken;
 import com.makedreamteam.capstoneback.domain.Team;
-import com.makedreamteam.capstoneback.exception.NotTeamLeaderException;
-import com.makedreamteam.capstoneback.form.ResponseForm;
-import com.makedreamteam.capstoneback.form.ServiceReturn;
-import com.makedreamteam.capstoneback.form.TeamData;
-import com.makedreamteam.capstoneback.form.checkTokenResponsForm;
+import com.makedreamteam.capstoneback.exception.*;
+import com.makedreamteam.capstoneback.form.*;
 import com.makedreamteam.capstoneback.service.TeamService;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -72,68 +69,36 @@ public class TeamController {
 
     @GetMapping("/{id}")
     public ResponseEntity<ResponseForm> findById(@PathVariable UUID id, HttpServletRequest request) {
-        Team team=null;
-        String newToken = null;
-        try {
             String authToken = request.getHeader("login-token");
             String refreshToken=request.getHeader("refresh-token");
-            ServiceReturn byId = teamService.findById(id, authToken, refreshToken);
-            team=byId.getData();
-            newToken= byId.getNewToken();
-            List<PostMember> members = teamService.recommendUsers(id, 5, newToken==null ? authToken : newToken,refreshToken);
-
-            if (byId.getData()!=null && members != null) {
-                ResponseForm responseForm = ResponseForm.builder()
-                        .message("search successfully")
-                        .state(HttpStatus.OK.value()).updatable(true)
-                        .data(TeamData.builder().recommendList(members).team(team).build())
-                        .newToken(newToken)
-                        .build();
-                return ResponseEntity.ok().body(responseForm);
-            } else {
-                ResponseForm errorResponse = ResponseForm.builder()
-                        .message("Failed to search team")
-                        .state(HttpStatus.INTERNAL_SERVER_ERROR.value())
-                        .build();
-                return ResponseEntity.badRequest().body(errorResponse);
+            ResponseForm team = teamService.findById(id, authToken, refreshToken);
+            if(team.getData()==null){//team의  data가 null이라면 오류
+                return ResponseEntity.badRequest().body(team);
             }
-        } catch (NotTeamLeaderException e) {
-            ResponseForm responseForm = ResponseForm.builder()
-                    .message("search successfully")
-                    .state(HttpStatus.OK.value())
-                    .updatable(false)
-                    .data(TeamData.builder().team(team).build())
-                    .newToken(newToken)
-                    .build();
-            return ResponseEntity.ok().body(responseForm);
-        } catch (RuntimeException e) {
-            ResponseForm errorResponse = ResponseForm.builder()
-                    .message(e.getMessage())
-                    .state(HttpStatus.INTERNAL_SERVER_ERROR.value())
-                    .build();
-            return ResponseEntity.badRequest().body(errorResponse);
-        } catch (AuthenticationException e) {
-            throw new RuntimeException(e);
-        }
+            if(team.isUpdatable()){//team이 업데이트 가능하다면 추천목록또한 같이 보낸다
+                List<PostMember> members = teamService.recommendUsers(id, 5);
+                TeamData teamData=(TeamData) team.getData();
+                teamData.setRecommendList(members);
+                team.setData(teamData);
+                return ResponseEntity.badRequest().body(team);
+            }
+            else{
+                return ResponseEntity.badRequest().body(team);
+            }
+
     }
 
 
     @PostMapping("/new")
-    public ResponseEntity<ResponseForm> addNewTeam(@RequestBody Team form, HttpServletRequest request) {
+    public ResponseEntity<ResponseForm> addNewTeam(@RequestBody Team form , HttpServletRequest request) {
         try {
 
             String authToken = request.getHeader("login-token");
             String refreshToken=request.getHeader("refresh-token");
-            ServiceReturn team =  teamService.addPostTeam(form, authToken,refreshToken);
-            ResponseForm responseForm = ResponseForm.builder()
-                    .data(TeamData.builder().team(team.getData()).build())
-                    .message("Team created successfully")
-                    .state(HttpStatus.CREATED.value())
-                    .newToken(team.getNewToken())
-                    .updatable(true)
-                    .build();
+            ResponseForm responseForm =  teamService.addPostTeam(form, authToken,refreshToken);
+
             return ResponseEntity.status(HttpStatus.CREATED).body(responseForm);
-        } catch (RuntimeException e) {
+        } catch (RuntimeException | TokenException | DatabaseException e) {
             ResponseForm errorResponse = ResponseForm.builder()
                     .message("Failed to create team: " + e.getMessage())
                     .state(HttpStatus.INTERNAL_SERVER_ERROR.value())
@@ -145,7 +110,7 @@ public class TeamController {
 
     //팀 정보 수정
     @PostMapping("/{teamid}/update")
-    public ResponseEntity<ResponseForm> updateTeamInfo(@PathVariable UUID teamid, @RequestBody Team updateForm, HttpServletRequest request) {
+    public ResponseEntity<ResponseForm> updateTeamInfo(@PathVariable UUID teamid, @RequestBody Team updateForm, HttpServletRequest request,List<String> keywordList) {
         try {
             String refreshToken=request.getHeader("refresh-token");
             String authToken = request.getHeader("login-token");
@@ -155,16 +120,27 @@ public class TeamController {
                     .message("update team")
                     .data(TeamData.builder().team(re.getData()).build())
                     .state(HttpStatus.OK.value())
-                    .newToken(re.getNewToken())
                     .updatable(true)
                     .build();
             return ResponseEntity.ok().body(responseForm);
-        } catch (RuntimeException | AuthenticationException |NotTeamLeaderException e) {
+        } catch (RuntimeException | AuthenticationException | NotTeamLeaderException e) {
             ResponseForm errorResponseForm = ResponseForm.builder()
                     .message(e.getMessage())
                     .state(HttpStatus.BAD_REQUEST.value())
                     .build();
             return ResponseEntity.badRequest().body(errorResponseForm);
+        }catch (LoginTokenExpiredException e){
+            ResponseForm newTokenResponse = ResponseForm.builder()
+                    .message("새로운 토큰 발급이 필요합니다")
+                    .state(HttpStatus.INTERNAL_SERVER_ERROR.value())
+                    .build();
+            return ResponseEntity.badRequest().body(newTokenResponse);
+        } catch (RefreshTokenExpiredException e) {
+            ResponseForm newTokenResponse = ResponseForm.builder()
+                    .message("새로운 로그인이 필요합니다")
+                    .state(HttpStatus.INTERNAL_SERVER_ERROR.value())
+                    .build();
+            return ResponseEntity.badRequest().body(newTokenResponse);
         }
     }
 
@@ -175,18 +151,30 @@ public class TeamController {
             String refreshToken=request.getHeader("refresh-token");
             String authToken = request.getHeader("login-token");
             ServiceReturn delete = teamService.delete(teamId, authToken, refreshToken);
-            String newToken=delete.getNewToken();
+
             ResponseForm responseForm = ResponseForm.builder()
                     .message("팀을 삭제했습니다")
-                    .newToken(newToken)
                     .state(HttpStatus.OK.value()).build();
             return ResponseEntity.ok().body(responseForm);
         } catch (AuthenticationException | RuntimeException | NotTeamLeaderException e) {
             ResponseForm errorResponseForm = ResponseForm.builder()
                     .message(e.getMessage()).state(HttpStatus.BAD_REQUEST.value()).build();
             return ResponseEntity.badRequest().body(errorResponseForm);
+        } catch (LoginTokenExpiredException e){
+            ResponseForm newTokenResponse = ResponseForm.builder()
+                    .message("새로운 토큰 발급이 필요합니다")
+                    .state(HttpStatus.INTERNAL_SERVER_ERROR.value())
+                    .build();
+            return ResponseEntity.badRequest().body(newTokenResponse);
+        } catch (RefreshTokenExpiredException e) {
+            ResponseForm newTokenResponse = ResponseForm.builder()
+                    .message("새로운 로그인이 필요합니다")
+                    .state(HttpStatus.INTERNAL_SERVER_ERROR.value())
+                    .build();
+            return ResponseEntity.badRequest().body(newTokenResponse);
         }
     }
+
 
 
 }

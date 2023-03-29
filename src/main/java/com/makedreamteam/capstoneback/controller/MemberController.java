@@ -7,6 +7,7 @@ import java.util.UUID;
 
 import com.makedreamteam.capstoneback.JwtTokenProvider;
 import com.makedreamteam.capstoneback.domain.*;
+import com.makedreamteam.capstoneback.exception.*;
 import com.makedreamteam.capstoneback.form.ResponseForm;
 import com.makedreamteam.capstoneback.repository.MemberRepository;
 import com.makedreamteam.capstoneback.repository.PostMemberRepository;
@@ -55,9 +56,9 @@ public class MemberController {
             if (!passwordEncoder.matches(user.get("password"), member.getPassword())) {
                 throw new IllegalArgumentException("이메일 또는 비밀번호가 맞지 않습니다.");
             }
+            MemberData memberData=memberService.doLogin(member);
             MemberResponseForm memberResponseForm = MemberResponseForm.builder()
-                    .data(MemberData.builder().Token(jwtTokenProvider.createToken(member.getId(), member.getEmail(), member.getRole(),
-                            member.getNickname())).build())
+                    .data(memberData)
                     .state(HttpStatus.OK.value())
                     .message("로그인 성공")
                     .build();
@@ -174,4 +175,23 @@ public class MemberController {
         UUID uid = memberService.checkUserIdAndToken(authToken);
         return memberService.recommendTeams(uid, 2, authToken);
     }
+
+    @PostMapping("/post/new")
+    public ResponseEntity<ResponseForm> addNewPost(@RequestBody PostMember postMember,HttpServletRequest request){
+        try {
+            String loginToken = request.getHeader("login-token");
+            String refreshToken=request.getHeader("refresh-token");
+            ResponseForm responseForm = memberService.testAddNewMember(postMember, loginToken, refreshToken);
+            return ResponseEntity.badRequest().body(responseForm);
+        } catch (RefreshTokenExpiredException e) {
+            ResponseForm responseForm=ResponseForm.builder().message(e.getMessage()).build();
+            return ResponseEntity.badRequest().body(responseForm);
+        } catch (TokenException e) {
+            throw new RuntimeException(e);
+        } catch (DatabaseException e) {
+            throw new RuntimeException(e);
+        }
+
+    }
+
 }

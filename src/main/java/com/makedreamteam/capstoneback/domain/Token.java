@@ -5,6 +5,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.Date;
 import java.util.UUID;
 
 @Data
@@ -15,5 +16,6 @@ public class Token {
     private String grantType;
     private String accessToken;
     private String refreshToken;
+    private Date exp;
     private UUID key;
 }

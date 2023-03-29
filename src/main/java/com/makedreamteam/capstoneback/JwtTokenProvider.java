@@ -5,8 +5,10 @@ import java.util.*;
 import com.makedreamteam.capstoneback.domain.RefreshToken;
 import com.makedreamteam.capstoneback.domain.Role;
 import com.makedreamteam.capstoneback.domain.Token;
+import com.makedreamteam.capstoneback.exception.RefreshTokenExpiredException;
 import io.jsonwebtoken.*;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.xml.bind.DatatypeConverter;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -22,8 +24,8 @@ public class JwtTokenProvider {
     private String secretKey = "test";
 
     // 토큰 유효시간 30분
-    private long accesstokenValidTime = 30*60*1000L;
-    private long refreshtokenValidTime=30*60*10000L;
+    private long accesstokenValidTime =10*60*1000L;
+    private long refreshtokenValidTime=60*24*7*60*1000L; //1주
 
     private final UserDetailsService userDetailsService;
 
@@ -39,6 +41,7 @@ public class JwtTokenProvider {
         claims.put("nickname", nickname);
         claims.put("roles", roles); // 정보 저장 (key-value)
         Date now = new Date();
+        Date expiration = new Date(now.getTime() + accesstokenValidTime);
         String accessToken=Jwts.builder()
                 .setClaims(claims)
                 .setIssuedAt(now)
@@ -52,7 +55,7 @@ public class JwtTokenProvider {
                 .signWith(SignatureAlgorithm.HS256, secretKey) // 사용할 암호화 알고리즘과 signature에 들어갈 secret 값 세팅
                 .compact();
 
-        return Token.builder().accessToken(accessToken).refreshToken(refreshToken).build();
+        return Token.builder().accessToken(accessToken).exp(expiration).refreshToken(refreshToken).build();
     }
 
     // JWT 토큰에서 인증 정보 조회
@@ -81,44 +84,97 @@ public class JwtTokenProvider {
             return false;
         }
     }
-    public String recreationAccessToken(UUID id,String refreshToken){
-
-        Claims claims = Jwts.claims().setSubject(String.valueOf(id)); // JWT payload 에 저장되는 정보단위
-        // 정보는 key / value 쌍으로 저장된다.
-        Jws<Claims> re = Jwts.parser().setSigningKey(secretKey).parseClaimsJws(refreshToken);
-        System.out.println("re = "+refreshToken);
-        Date now = new Date();
-        claims.put("email", re.getBody().get("email"));
-        claims.put("nickname", re.getBody().get("nickname"));
-        claims.put("roles", re.getBody().get("roles"));
-        //Access Token
-        String accessToken = Jwts.builder()
-                .setClaims(claims) // 정보 저장
-                .setIssuedAt(now) // 토큰 발행 시간 정보
-                .setExpiration(new Date(now.getTime() + accesstokenValidTime)) // set Expire Time
-                .signWith(SignatureAlgorithm.HS256, secretKey)  // 사용할 암호화 알고리즘과
-                // signature 에 들어갈 secret값 세팅
-                .compact();
 
 
-
-        return accessToken;
-    }
-
-    public String validateRefreshToken(String refreshTokenObj) {
+    public boolean validateRefreshToken(String refreshTokenObj) throws RefreshTokenExpiredException {
 
         try {
             // 검증
             Jws<Claims> claims = Jwts.parser().setSigningKey(secretKey).parseClaimsJws(refreshTokenObj);
             //refresh 토큰의 만료시간이 지나지 않았을 경우, 새로운 access 토큰을 생성합니다.
             if (!claims.getBody().getExpiration().before(new Date())) {
-
-                return recreationAccessToken(UUID.fromString(claims.getBody().get("sub").toString()),refreshTokenObj);
+                //return recreationAccessToken(UUID.fromString(claims.getBody().get("sub").toString()),refreshTokenObj);
+               return true;
             }
         }catch (ExpiredJwtException e) {
             //refresh 토큰이 만료되었을 경우, 로그인이 필요합니다.
-            return null;
+            return false;
+
         }
-        return null;
+
+        return false;
+    }
+
+    public Claims getClaimsToken(String token) {
+        return Jwts.parser()
+                .setSigningKey(DatatypeConverter.parseBase64Binary(secretKey))
+                .parseClaimsJws(token)
+                .getBody();
+    }
+
+    public boolean isValidRefreshToken(String token) {
+        try {
+            Claims accessClaims = getClaimsToken(token);
+            System.out.println("Access expireTime: " + accessClaims.getExpiration());
+            System.out.println("Access userId: " + accessClaims.get("userId"));
+            return true;
+        } catch (ExpiredJwtException exception) {
+            System.out.println("Token Expired UserID : " + exception.getClaims().get("userId"));
+            return false;
+        } catch (JwtException exception) {
+            System.out.println("Token Tampered");
+            return false;
+        } catch (NullPointerException exception) {
+            System.out.println("Token is null");
+            return false;
+        }
+    }
+
+    public boolean isValidAccessToken(String token) {
+        System.out.println("isValidToken is : " +token);
+        try {
+            Claims accessClaims = getClaimsToken(token);
+            System.out.println("Access expireTime: " + accessClaims.getExpiration());
+            System.out.println("Access userId: " + accessClaims.get("sub"));
+            return true;
+        } catch (ExpiredJwtException exception) {//만료
+            System.out.println("Token Expired UserID : " + exception.getClaims().get("sub"));
+            return false;
+        } catch (JwtException exception) {
+            System.out.println("Token Tampered");
+            throw new JwtException("Token Tampered");
+        } catch (NullPointerException exception) {
+            System.out.println("Token is null");
+            throw new NullPointerException("Token is null");
+        }
+    }
+
+    public String createAccessToken(UUID id, String userPK, Role roles, String nickname) {
+        Claims claims = Jwts.claims();//.setSubject(userPk); // JWT payload 에 저장되는 정보단위
+        claims.put("userId", id);
+        claims.put("email",userPK);
+        claims.put("nickname",nickname);
+        claims.put("roles",roles);
+        Date now = new Date();
+        return Jwts.builder()
+                .setClaims(claims) // 정보 저장
+                .setIssuedAt(now) // 토큰 발행 시간 정보
+                .setExpiration(new Date(now.getTime() + accesstokenValidTime)) // set Expire Time
+                .signWith(SignatureAlgorithm.HS256, secretKey)  // 사용할 암호화 알고리즘과
+                .compact();
+    }
+
+    public String createRefreshToken(UUID userId) {
+        Claims claims = Jwts.claims();
+        claims.put("userId", userId); //
+        Date now = new Date();
+        Date expiration = new Date(now.getTime() + refreshtokenValidTime);
+
+        return Jwts.builder()
+                .setClaims(claims)
+                .setIssuedAt(now)
+                .setExpiration(expiration)
+                .signWith(SignatureAlgorithm.HS256, secretKey)
+                .compact();
     }
 }

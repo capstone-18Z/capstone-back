@@ -8,10 +8,10 @@ import java.util.Optional;
 import java.util.UUID;
 
 @Repository
-public interface RefreshTokenRepository extends JpaRepository<RefreshToken,Long> {
-    boolean existsByUserId(String loginUserId);
+public interface RefreshTokenRepository extends JpaRepository<RefreshToken,UUID> {
+    boolean existsByUserId(UUID loginUserId);
 
-    void deleteByUserId(String loginUserId);
+    void deleteByUserId(UUID loginUserId);
 
     Optional<RefreshToken> findByRefreshToken(String refreshToken);
 }

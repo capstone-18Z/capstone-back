@@ -1,11 +1,14 @@
 package com.makedreamteam.capstoneback.domain;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
 import lombok.*;
-import org.checkerframework.common.reflection.qual.UnknownClass;
 import org.hibernate.annotations.ColumnDefault;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Entity
 @Builder
@@ -16,7 +19,7 @@ import java.util.UUID;
 public class Team{
     @Id
     @GeneratedValue
-    @Column(columnDefinition = "BINARY(16)")
+    @Column(columnDefinition = "BINARY(16)" ,name="team_id")
     private UUID teamId;
 
     @Column
@@ -66,6 +69,28 @@ public class Team{
     @Column
     private int period;
 
+
+    @OneToMany(mappedBy = "team", cascade = CascadeType.ALL, orphanRemoval = true,fetch = FetchType.EAGER)
+    private List<TeamKeyword> teamKeywords = new ArrayList<>();
+
+    @JsonProperty("teamKeywords")
+    public List<String> getKeywordValues() {
+        return teamKeywords.stream().map(TeamKeyword::getValue).collect(Collectors.toList());
+    }
+
+    public void addKeyword(TeamKeyword teamKeyword) {
+        this.teamKeywords.add(teamKeyword);
+        teamKeyword.setTeam(this);
+    }
+
+    public void removeKeyword(TeamKeyword teamKeyword) {
+        this.teamKeywords.remove(teamKeyword);
+        teamKeyword.setTeam(null);
+    }
+
+    public void setTeam(TeamKeyword teamKeyword){
+        teamKeyword.setTeam(this);
+    }
     @Column
     @ColumnDefault("0")
     private int python;
