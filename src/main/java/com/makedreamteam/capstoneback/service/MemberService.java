@@ -302,8 +302,6 @@ public class MemberService {
 
     public MemberData doLogin(Member member) {
 
-
-
         //새로운 토큰 생성
         String loginToken= jwtTokenProvider.createAccessToken(member.getId(), member.getEmail(), member.getRole(),
                 member.getNickname());
@@ -319,6 +317,6 @@ public class MemberService {
         }
         else refreshTokenRepository.save(refreshTok);
 
-        return MemberData.builder().Token(Token.builder().accessToken(loginToken).refreshToken(refreshToken).build()).build();
+        return MemberData.builder().Token(Token.builder().userId(member.getId()).accessToken(loginToken).refreshToken(refreshToken).build()).build();
     }
 }

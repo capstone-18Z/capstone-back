@@ -3,6 +3,7 @@ package com.makedreamteam.capstoneback.controller;
 import com.makedreamteam.capstoneback.JwtTokenProvider;
 import com.makedreamteam.capstoneback.domain.Token;
 import com.makedreamteam.capstoneback.service.RefreshTokenService;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -20,9 +21,10 @@ public class RefreshTokenController {
         this.refreshTokenService = refreshTokenService;
     }
 
-    @PostMapping("/{userId}/refresh")
-    public ResponseEntity<Token> makeNewToken(@PathVariable UUID userId){
-        Token newToken=refreshTokenService.createNewToKen(userId);
+    @PostMapping("/refresh")
+    public ResponseEntity<Token> makeNewToken(@RequestBody String refreshToken){
+        System.out.println(refreshToken);
+        Token newToken=refreshTokenService.createNewToKen(refreshToken);
         return ResponseEntity.ok().body(newToken);
     }
 
