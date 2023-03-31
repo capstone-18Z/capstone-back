@@ -99,14 +99,30 @@ public class TeamController {
 
 
     //팀 정보 수정
-    @PostMapping("/{teamid}/update")//미구현
-    public ResponseEntity<ResponseForm> updateTeamInfo(@PathVariable UUID teamid, @RequestBody Team updateForm, HttpServletRequest request,List<String> keywordList) {
-        return null;
+    @PostMapping("/{teamId}/update")
+    public ResponseEntity<ResponseForm> updateTeamInfo(@PathVariable UUID teamId,@RequestBody Team updateForm, HttpServletRequest request) {
+        String accessToken= request.getHeader("login-token");
+        String refreshToken= request.getHeader("refresh-token");
+        try {
+            ResponseForm update = teamService.update(teamId,updateForm, accessToken,refreshToken);
+            return ResponseEntity.ok().body(update);
+        }catch (NullPointerException e){
+            ResponseForm build = ResponseForm.builder().message(e.getMessage()).build();
+            return ResponseEntity.badRequest().body(build);
+        }
     }
 
     @PostMapping("/{teamId}/delete")//미구현
     public ResponseEntity<ResponseForm> deleteTeam(@PathVariable UUID teamId, HttpServletRequest request) {
-       return null;
+        String accessToken=request.getHeader("login-token");
+        String refreshToken= request.getHeader("refresh-token");
+        try {
+            ResponseForm result = teamService.delete(teamId, accessToken, refreshToken);
+            return ResponseEntity.ok().body(result);
+        }catch (RuntimeException e){
+            ResponseForm error= ResponseForm.builder().message(e.getMessage()).build();
+            return ResponseEntity.badRequest().body(error);
+        }
     }
 
 

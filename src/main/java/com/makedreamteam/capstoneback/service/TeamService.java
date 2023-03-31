@@ -115,11 +115,26 @@ public class TeamService{
         }
 
     }
-    public ResponseForm update(UUID teamId,Team updatedTeam,String authToken,String refreshToken) throws AuthenticationException, NotTeamLeaderException, RefreshTokenExpiredException, LoginTokenExpiredException, DatabaseException, TokenException {
-        return null;
+    public ResponseForm update(UUID teamId,Team team,String accessToken,String refreshToken) {
+        if(jwtTokenProvider.isValidAccessToken(accessToken)){
+            Optional<Team> optionalTeam = springDataTeamRepository.findById(teamId);
+            if(optionalTeam.isEmpty()){
+                throw new RuntimeException("springDataTeamRepository.findById(team.getTeamId()) is empty");
+            }
+            Team updatedTeam=optionalTeam.get();
+            for(TeamKeyword teamKeyword : team.getTeamKeywords()){
+                teamKeyword.setTeam(team);
+            }
+            team.setTeamId(updatedTeam.getTeamId());
+            team.setTeamLeader(updatedTeam.getTeamLeader());
+            Team savedTeam = springDataTeamRepository.save(team);
+            return ResponseForm.builder().data(TeamData.builder().team(savedTeam).build()).build();
+        }else{
+            return checkRefreshToken(refreshToken);
+        }
     }
-    public List<Team> findByTitleContaining(String title){
-       return null;
+    public ResponseForm findByTitleContaining(String title){
+        return null;
     }
     public ResponseForm findById(UUID teamId,String authToken,String refreshToken) {
 
@@ -179,10 +194,24 @@ public class TeamService{
 
 
     }
-    public ServiceReturn delete(UUID teamId,String authToken,String refreshToken) throws AuthenticationException, NotTeamLeaderException, RefreshTokenExpiredException, LoginTokenExpiredException {
-       return null;
+    public ResponseForm delete(UUID teamId,String authToken,String refreshToken) {
+        if(jwtTokenProvider.isValidAccessToken(authToken)){
+            Optional<Team> optionalTeam = springDataTeamRepository.findById(teamId);
+            if(optionalTeam.isEmpty()){
+                throw new RuntimeException("springDataTeamRepository.findById(team.getTeamId()) is empty");
+            }
+            Team team=optionalTeam.get();
+            springDataTeamRepository.delete(team);
+
+            return ResponseForm.builder().message("삭제를 완료했습니다.").build();
+        }else{
+            return checkRefreshToken(refreshToken);
+        }
     }
     public ResponseForm checkRefreshToken(String refreshToken){
+        if(refreshToken==null){
+            throw new NullPointerException("refreshTokenRepository.findById(team.getTeamLeader()) is empty");
+        }
         if(jwtTokenProvider.isValidRefreshToken(refreshToken)){//refreshtoken이 유효하다면
             //db에서 refreshtoken 검사
             Optional<RefreshToken> byRefreshToken = refreshTokenRepository.findByRefreshToken(refreshToken);
