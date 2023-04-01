@@ -31,16 +31,17 @@ public class MatchingTeamMemberController {
     }
 
     //팀에서 멤버에게 팀원 신청
-    @PostMapping("/{teamId}/{userId}/match-try")
-    public ResponseEntity<ResponseForm> tryMatchTeamMember(HttpServletRequest request,@PathVariable UUID teamId, @PathVariable UUID userId){
+    @PostMapping("/{teamId}/{userId}/{postId}/match-try")
+    public ResponseEntity<ResponseForm> tryMatchTeamMember(HttpServletRequest request,@PathVariable Long postId,@PathVariable UUID teamId, @PathVariable UUID userId){
        try{
            String accessToken= request.getHeader("login-token");
            String refreshToken= request.getHeader("refresh-token");
-           matchingTeamMemberService.matchTry(teamId,userId,accessToken,refreshToken);
+           ResponseForm responseForm = matchingTeamMemberService.matchTry(teamId, userId, postId, accessToken, refreshToken);
+           return ResponseEntity.ok().body(responseForm);
        }catch (RuntimeException e){
-            return null;
+           ResponseForm error= ResponseForm.builder().message(e.getMessage()).build();
+           return ResponseEntity.internalServerError().body(error);
        }
-        return null;
     }
     //멤버가 팀에게 매칭 신청
 

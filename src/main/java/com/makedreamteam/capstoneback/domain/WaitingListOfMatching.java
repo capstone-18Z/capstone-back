@@ -1,10 +1,7 @@
 package com.makedreamteam.capstoneback.domain;
 
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 
 import java.util.UUID;
 
@@ -13,6 +10,7 @@ import java.util.UUID;
 @AllArgsConstructor
 @Getter
 @Setter
+@Builder
 @Table(uniqueConstraints = {@UniqueConstraint(columnNames = {"userId", "teamId"})})
 public class WaitingListOfMatching {
     @Id
@@ -23,5 +21,8 @@ public class WaitingListOfMatching {
 
     @Column
     private UUID teamId;
+
+    @Column
+    private Long postId;
 
 }
