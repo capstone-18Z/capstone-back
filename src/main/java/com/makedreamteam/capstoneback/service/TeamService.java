@@ -138,45 +138,10 @@ public class TeamService{
 
     }
     public ServiceReturn update(UUID teamId,Team updatedTeam,String authToken,String refreshToken) throws AuthenticationException, NotTeamLeaderException, RefreshTokenExpiredException, LoginTokenExpiredException {
-        Optional<Team> optionalTeam = springDataTeamRepository.findById(teamId);
-        if (optionalTeam.isEmpty()) {
-            throw new RuntimeException("팀이 존재하지 않습니다");
-        }
-
-        try {
-            checkTokenResponsForm checkTokenResponsForm = checkUserIdAndToken(authToken, refreshToken, optionalTeam);
-            UUID userId = checkTokenResponsForm.getUserId();
-            //String newToken=checkTokenResponsForm.getNewToken();
-            Team team = optionalTeam.get();
-
-
-
-            updatedTeam.setTeamId(team.getTeamId());
-            updatedTeam.setTeamLeader(userId);
-            springDataTeamRepository.save(updatedTeam);
-
-
-            return ServiceReturn.builder().newToken(authToken).data(updatedTeam).build();
-        }catch (RuntimeException e){
-            throw new RuntimeException(e);
-        }catch (NotTeamLeaderException e){
-            throw new RuntimeException(e);
-        } catch (RefreshTokenExpiredException e) {
-            throw new RefreshTokenExpiredException(e.getMessage());
-        } catch (LoginTokenExpiredException e) {
-            throw new LoginTokenExpiredException(e.getMessage());
-        }
-
+        return null;
     }
     public List<Team> findByTitleContaining(String title){
-        if (title == null) {
-            return new ArrayList<>();
-        }
-        try {
-            return springDataTeamRepository.findByTitleContaining(title);
-        } catch (DataAccessException e) {
-            throw new RuntimeException("Failed to retrieve teams by title containing '" + title + "'", e);
-        }
+        return null;
     }
     public ResponseForm findById(UUID teamId,String authToken,String refreshToken) {
 
@@ -250,99 +215,6 @@ public class TeamService{
 
     }
     public ServiceReturn delete(UUID teamId,String authToken,String refreshToken) throws AuthenticationException, NotTeamLeaderException, RefreshTokenExpiredException, LoginTokenExpiredException {
-        Optional<Team> teamOptional = springDataTeamRepository.findById(teamId);
-
-        if(teamOptional.isEmpty())
-            throw new EntityNotFoundException("fail to find team with "+teamId);
-
-            checkTokenResponsForm checkTokenResponsForm = checkUserIdAndToken(authToken, refreshToken, teamOptional);
-            Team team = teamOptional.get();
-            List<TeamMember> teamMemberList = teamMemberRepository.findAllByTeamId(team.getTeamId());
-            teamMemberRepository.deleteAll(teamMemberList);
-            springDataTeamRepository.delete(team);
-        return ServiceReturn.builder().build();
+        return null;
     }
-    public checkTokenResponsForm checkUserIdAndToken(String token,String refreshToken, Optional<Team> team) throws AuthenticationException, NotTeamLeaderException, RefreshTokenExpiredException, LoginTokenExpiredException {
-
-        System.out.println("in checkUserIdAndToken with team");
-        if (token == null) {
-            throw new AuthenticationException("Invalid Authorization header");
-        }
-
-        boolean newToken = false;
-
-        Claims claims = null;
-        try {
-            Jws<Claims> claimsJws = Jwts.parser().setSigningKey("test").parseClaimsJws(token);
-            claims = claimsJws.getBody();
-            String username = claims.getSubject();
-            Date expirationDate = claims.getExpiration();
-
-            if (username == null | expirationDate==null) {
-                throw new AuthenticationException("Invalid JWT claims");
-            }
-            System.out.println("UUID's userId = "+ claims.get("sub") +", Team userId = "+ team.get().getTeamLeader());
-            if(team.isPresent())
-                if(!UUID.fromString((String)claims.get("userId")).equals(team.get().getTeamLeader()) && !claims.get("roles").equals(Role.ROLE_ADMIN)) {
-                    throw new NotTeamLeaderException("권한이 없습니다.");
-                }
-
-
-            return checkTokenResponsForm.builder().userId(UUID.fromString((String) claims.get("sub"))).build();
-        } catch (ExpiredJwtException e) {
-            System.out.println("만료");
-            newToken=jwtTokenProvider.validateRefreshToken(refreshToken);
-            if(newToken) {
-//                System.out.println(newToken);
-//                Jws<Claims> claimsJws = Jwts.parser().setSigningKey("test").parseClaimsJws(newToken);
-//                Claims newClaims = claimsJws.getBody();
-//                if(!UUID.fromString((String)newClaims.get("sub")).equals(team.get().getTeamLeader()) && !newClaims.get("roles").equals(Role.ROLE_ADMIN)) {
-//                    throw new NotTeamLeaderException("권한이 없습니다.");
-//                }
-                //return checkTokenResponsForm.builder().userId(UUID.fromString((String) newClaims.get("sub"))).newToken(newToken).build();
-                throw new LoginTokenExpiredException("새로운 토큰 발급이 필요합니다");
-            }else
-                throw new RefreshTokenExpiredException("토큰이 만료되었습니다");
-        } catch (JwtException e) {
-            throw new AuthenticationException(e.getMessage());
-        }
-    }
-    public checkTokenResponsForm checkUserIdAndToken(String token,String refreshToken) throws AuthenticationException, RefreshTokenExpiredException, TokenException, LoginTokenExpiredException {
-        if (token == null) {
-            throw new AuthenticationException("Invalid Authorization header");
-        }
-
-        boolean newToken = false;
-
-        Claims claims = null;
-        try {
-            Jws<Claims> claimsJws = Jwts.parser().setSigningKey("test").parseClaimsJws(token);
-            claims = claimsJws.getBody();
-            String username = claims.getSubject();
-            Date expirationDate = claims.getExpiration();
-
-            if (username == null | expirationDate==null) {
-                throw new AuthenticationException("Invalid JWT claims");
-            }
-            return checkTokenResponsForm.builder().userId(UUID.fromString((String) claims.get("sub"))).build();
-        } catch (ExpiredJwtException e) {
-            try {
-
-                newToken = jwtTokenProvider.validateRefreshToken(refreshToken);
-                if (newToken) {
-                    throw new LoginTokenExpiredException("새로운 토큰 발급이 필요합니다");
-                } else
-                    throw new RefreshTokenExpiredException("토큰이 만료되었습니다");
-            }catch (RefreshTokenExpiredException m){
-                throw new RefreshTokenExpiredException(m.getMessage());
-            } catch (LoginTokenExpiredException ex) {
-                throw new LoginTokenExpiredException(ex.getMessage());
-            }
-        } catch (JwtException e) {
-            throw new AuthenticationException(e.getMessage());
-        }
-    }
-
-
-
 }

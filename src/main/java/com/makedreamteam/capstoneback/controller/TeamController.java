@@ -111,70 +111,11 @@ public class TeamController {
     //팀 정보 수정
     @PostMapping("/{teamid}/update")
     public ResponseEntity<ResponseForm> updateTeamInfo(@PathVariable UUID teamid, @RequestBody Team updateForm, HttpServletRequest request,List<String> keywordList) {
-        try {
-            String refreshToken=request.getHeader("refresh-token");
-            String authToken = request.getHeader("login-token");
-
-            ServiceReturn re = teamService.update(teamid, updateForm, authToken,refreshToken);
-            ResponseForm responseForm = ResponseForm.builder()
-                    .message("update team")
-                    .data(TeamData.builder().team(re.getData()).build())
-                    .state(HttpStatus.OK.value())
-                    .updatable(true)
-                    .build();
-            return ResponseEntity.ok().body(responseForm);
-        } catch (RuntimeException | AuthenticationException | NotTeamLeaderException e) {
-            ResponseForm errorResponseForm = ResponseForm.builder()
-                    .message(e.getMessage())
-                    .state(HttpStatus.BAD_REQUEST.value())
-                    .build();
-            return ResponseEntity.badRequest().body(errorResponseForm);
-        }catch (LoginTokenExpiredException e){
-            ResponseForm newTokenResponse = ResponseForm.builder()
-                    .message("새로운 토큰 발급이 필요합니다")
-                    .state(HttpStatus.INTERNAL_SERVER_ERROR.value())
-                    .build();
-            return ResponseEntity.badRequest().body(newTokenResponse);
-        } catch (RefreshTokenExpiredException e) {
-            ResponseForm newTokenResponse = ResponseForm.builder()
-                    .message("새로운 로그인이 필요합니다")
-                    .state(HttpStatus.INTERNAL_SERVER_ERROR.value())
-                    .build();
-            return ResponseEntity.badRequest().body(newTokenResponse);
-        }
+        return null;
     }
 
     @PostMapping("/{teamId}/delete")
     public ResponseEntity<ResponseForm> deleteTeam(@PathVariable UUID teamId, HttpServletRequest request) {
-        try {
-
-            String refreshToken=request.getHeader("refresh-token");
-            String authToken = request.getHeader("login-token");
-            ServiceReturn delete = teamService.delete(teamId, authToken, refreshToken);
-
-            ResponseForm responseForm = ResponseForm.builder()
-                    .message("팀을 삭제했습니다")
-                    .state(HttpStatus.OK.value()).build();
-            return ResponseEntity.ok().body(responseForm);
-        } catch (AuthenticationException | RuntimeException | NotTeamLeaderException e) {
-            ResponseForm errorResponseForm = ResponseForm.builder()
-                    .message(e.getMessage()).state(HttpStatus.BAD_REQUEST.value()).build();
-            return ResponseEntity.badRequest().body(errorResponseForm);
-        } catch (LoginTokenExpiredException e){
-            ResponseForm newTokenResponse = ResponseForm.builder()
-                    .message("새로운 토큰 발급이 필요합니다")
-                    .state(HttpStatus.INTERNAL_SERVER_ERROR.value())
-                    .build();
-            return ResponseEntity.badRequest().body(newTokenResponse);
-        } catch (RefreshTokenExpiredException e) {
-            ResponseForm newTokenResponse = ResponseForm.builder()
-                    .message("새로운 로그인이 필요합니다")
-                    .state(HttpStatus.INTERNAL_SERVER_ERROR.value())
-                    .build();
-            return ResponseEntity.badRequest().body(newTokenResponse);
-        }
+        return null;
     }
-
-
-
 }
