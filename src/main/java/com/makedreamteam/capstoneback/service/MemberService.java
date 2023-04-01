@@ -107,92 +107,31 @@ public class MemberService {
             throw new RuntimeException("유저가 존재하지 않습니다.");
         }
     }
-    public void delete(Long postid, String authToken, String refreshToken) throws RefreshTokenExpiredException, TokenException, DatabaseException{
+
+    public UUID checkUserIdAndToken(String token) throws AuthenticationException {
+        if (token == null) {
+            throw new AuthenticationException("Invalid Authorization header");
+        }
+
+        Jws<Claims> claimsJws;
+        claimsJws = Jwts.parser().setSigningKey("test").parseClaimsJws(token);
+
+        Claims claims = claimsJws.getBody();
+        String username = claims.getSubject();
+        Date expirationDate = claims.getExpiration();
+
+        if (username == null || expirationDate == null || expirationDate.before(new Date())) {
+            throw new AuthenticationException("Invalid JWT claims");
+        }
+        return UUID.fromString((String)claims.get("sub"));
+    }
+
+    public List<Team> recommendTeams(UUID userId, int count, String token) {
         try {
-            // checkTokenResponsForm checkTokenResponsForm = checkUserIdAndToken(authToken, refreshToken);
-            //임시
-            if(jwtTokenProvider.isValidAccessToken(authToken)){//accesstoken 유효
-                //addPost 진행
-                System.out.println("accesstoken이 유효합니다");
-                Claims userinfo= jwtTokenProvider.getClaimsToken(refreshToken);
-                UUID writer=UUID.fromString((String)userinfo.get("userId"));
-                Optional<Member> byId = memberRepository.findById(writer);
-
-                if(byId.isEmpty()){
-                    throw new RuntimeException("사용자가 존재하지 않습니다.");
-                }
-
-                //String newToken = checkTokenResponsForm.getNewToken();
-
-                postMemberRepository.deleteById(postid);
-            }
-            else{//accesstoken 만료
-                if(jwtTokenProvider.isValidRefreshToken(refreshToken)){//refreshtoken 유효성검사
-                    //refreshtoken db 검사
-                    System.out.println("accesstoken이 만료되었습니다");
-                    System.out.println("refreshtoken 유효성 검사를 시작합니다");
-                    Claims userinfo= jwtTokenProvider.getClaimsToken(refreshToken);
-                    UUID userId=UUID.fromString((String)userinfo.get("userId"));
-                    Optional<RefreshToken> optionalRefreshToken = refreshTokenRepository.findById(userId);
-                    if(optionalRefreshToken.isPresent()){
-                        //db에 존재하므로 access토큰 재발급 문자 출력
-                        System.out.println("accseetoken 재발급이 필요합니다.");
-                    }
-                    else{
-                        //db에 없는 토큰이므로 오류메시지 출력
-                        System.out.println("허용되지 않은 refreshtoken 입니다");
-                    }
-                }
-                else{
-                    // 다시 login 시도
-                    System.out.println("refreshtoken이 만료되었습니다, 다시 로그인 해주세요");
-                }
-            }
-
-        } catch (DataIntegrityViolationException | JpaSystemException | TransactionSystemException e) {
-            throw new DatabaseException("데이터베이스 처리 중 오류가 발생했습니다.");
-        } catch (JwtException ex) {
-            throw new TokenException(ex.getMessage());
+            checkUserIdAndToken(token);
+        }catch (AuthenticationException e){
+            return null;
         }
-    }
-
-    public UUID checkUserIdAndToken(String authToken, String refreshToken) throws AuthenticationException {
-        if(jwtTokenProvider.isValidAccessToken(authToken)) {//accesstoken 유효
-            //addPost 진행
-            System.out.println("accesstoken이 유효합니다");
-            Claims userinfo = jwtTokenProvider.getClaimsToken(refreshToken);
-            UUID uid = UUID.fromString((String) userinfo.get("userId"));
-            return uid;
-        }
-        else{//accesstoken 만료
-            if(jwtTokenProvider.isValidRefreshToken(refreshToken)){//refreshtoken 유효성검사
-                //refreshtoken db 검사
-                System.out.println("accesstoken이 만료되었습니다");
-                System.out.println("refreshtoken 유효성 검사를 시작합니다");
-                Claims userinfo= jwtTokenProvider.getClaimsToken(refreshToken);
-                UUID userId=UUID.fromString((String)userinfo.get("userId"));
-                Optional<RefreshToken> optionalRefreshToken = refreshTokenRepository.findById(userId);
-                if(optionalRefreshToken.isPresent()){
-                    //db에 존재하므로 access토큰 재발급 문자 출력
-                    System.out.println("accseetoken 재발급이 필요합니다.");
-                    throw new AuthenticationException("accseetoken 재발급이 필요합니다.");
-                }
-                else{
-                    //db에 없는 토큰이므로 오류메시지 출력
-                    System.out.println("허용되지 않은 refreshtoken 입니다");
-                    throw new AuthenticationException("허용되지 않은 refreshtoken 입니다");
-                }
-            }
-            else{
-                // 다시 login 시도
-                System.out.println("refreshtoken이 만료되었습니다, 다시 로그인 해주세요");
-                throw new AuthenticationException("refreshtoken이 만료되었습니다, 다시 로그인 해주세요");
-            }
-        }
-    }
-
-    public List<Team> recommendTeams(UUID userId, int count) {
-
         Optional<Member> optionalmember = memberRepository.findById(userId);
         if(optionalmember.isEmpty()){
             throw new RuntimeException("유저가 존재하지 않습니다.("+userId+")");
@@ -233,8 +172,9 @@ public class MemberService {
         return result;
     }
 
-
     public void updateMemberPost(PostMember member,String authToken,String refreshToken) throws RefreshTokenExpiredException, AuthenticationException, LoginTokenExpiredException, TokenException, CannotFindTeamOrMember {
+
+        checkTokenResponsForm check = checkUserIdAndToken(authToken, refreshToken);
 
         Optional<Member> optionalMember = memberRepository.findById(member.getUserId());
         if(optionalMember.isEmpty()){
@@ -274,6 +214,9 @@ public class MemberService {
 
                 // post 저장
                 PostMember saved=postMemberRepository.save(member);
+
+
+
 
                 return ResponseForm.builder().state(HttpStatus.OK.value()).message("게시물을 등록했습니다.").data(saved).updatable(true).build();
             }else{//accesstoken 만료
@@ -315,6 +258,46 @@ public class MemberService {
     }
     public boolean checkNicknameDuplicate(String nickname){
         return memberRepository.existsByNickname(nickname);
+    }
+
+    public checkTokenResponsForm checkUserIdAndToken(String token, String refreshToken) throws AuthenticationException, RefreshTokenExpiredException, TokenException, LoginTokenExpiredException {
+        if (token == null) {
+            throw new AuthenticationException("Invalid Authorization header");
+        }
+
+        boolean newToken = false;
+
+        Claims claims = null;
+        try {
+            Jws<Claims> claimsJws = Jwts.parser().setSigningKey("test").parseClaimsJws(token);
+            claims = claimsJws.getBody();
+            String username = claims.getSubject();
+            Date expirationDate = claims.getExpiration();
+
+            if (username == null | expirationDate==null) {
+                throw new AuthenticationException("Invalid JWT claims");
+            }
+            return checkTokenResponsForm.builder().userId(UUID.fromString((String) claims.get("sub"))).build();
+        } catch (ExpiredJwtException e) {
+            try {
+
+                newToken = jwtTokenProvider.validateRefreshToken(refreshToken);
+                if (newToken) {
+//                    System.out.println(newToken);
+//                    Jws<Claims> claimsJws = Jwts.parser().setSigningKey("test").parseClaimsJws(newToken);
+//                    Claims newClaims = claimsJws.getBody();
+//                    return checkTokenResponsForm.builder().userId(UUID.fromString((String) newClaims.get("sub"))).newToken(newToken).build();
+                    throw new LoginTokenExpiredException("새로운 토큰 발급이 필요합니다");
+                } else
+                    throw new RefreshTokenExpiredException("토큰이 만료되었습니다");
+            }catch (RefreshTokenExpiredException m){
+                throw new RefreshTokenExpiredException(m.getMessage());
+            } catch (LoginTokenExpiredException ex) {
+                throw new LoginTokenExpiredException(ex.getMessage());
+            }
+        } catch (JwtException e) {
+            throw new AuthenticationException(e.getMessage());
+        }
     }
 
     public MemberData doLogin(Member member) {
