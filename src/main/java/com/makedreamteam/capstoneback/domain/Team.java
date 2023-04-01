@@ -69,28 +69,6 @@ public class Team{
     @Column
     private int period;
 
-
-    @OneToMany(mappedBy = "team", cascade = CascadeType.ALL, orphanRemoval = true,fetch = FetchType.EAGER)
-    private List<TeamKeyword> teamKeywords = new ArrayList<>();
-
-    @JsonProperty("teamKeywords")
-    public List<String> getKeywordValues() {
-        return teamKeywords.stream().map(TeamKeyword::getValue).collect(Collectors.toList());
-    }
-
-    public void addKeyword(TeamKeyword teamKeyword) {
-        this.teamKeywords.add(teamKeyword);
-        teamKeyword.setTeam(this);
-    }
-
-    public void removeKeyword(TeamKeyword teamKeyword) {
-        this.teamKeywords.remove(teamKeyword);
-        teamKeyword.setTeam(null);
-    }
-
-    public void setTeam(TeamKeyword teamKeyword){
-        teamKeyword.setTeam(this);
-    }
     @Column
     @ColumnDefault("0")
     private int python;
@@ -130,4 +108,28 @@ public class Team{
     @Column
     @ColumnDefault("0")
     private int sqllang;
+
+
+    @OneToMany(mappedBy = "team", cascade = CascadeType.ALL, orphanRemoval = true,fetch = FetchType.EAGER)
+    private List<TeamKeyword> teamKeywords = new ArrayList<>();
+
+    @JsonProperty("teamKeywords")
+    public List<String> getKeywordValues() {
+        return teamKeywords.stream().map(TeamKeyword::getValue).collect(Collectors.toList());
+    }
+
+    public void addKeyword(TeamKeyword teamKeyword) {
+        this.teamKeywords.add(teamKeyword);
+        teamKeyword.setTeam(this);
+    }
+
+    public void removeKeyword(TeamKeyword teamKeyword) {
+        this.teamKeywords.remove(teamKeyword);
+        teamKeyword.setTeam(null);
+    }
+
+    public void setTeam(TeamKeyword teamKeyword){
+        teamKeyword.setTeam(this);
+    }
+
 }

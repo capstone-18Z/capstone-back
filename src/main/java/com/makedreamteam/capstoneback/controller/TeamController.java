@@ -66,7 +66,7 @@ public class TeamController {
                 return ResponseEntity.badRequest().body(team);
             }
             if(team.isUpdatable()){//team이 업데이트 가능하다면 추천목록또한 같이 보낸다
-                List<PostMember> members = teamService.recommendUsers(id, 5);
+                List<PostMember> members = teamService.recommendUsersWithKeyword(id, 5);
                 TeamData teamData=(TeamData) team.getData();
                 teamData.setRecommendList(members);
                 team.setData(teamData);
@@ -82,7 +82,7 @@ public class TeamController {
     @PostMapping("/new")
     public ResponseEntity<ResponseForm> addNewTeam(@RequestBody Team form , HttpServletRequest request) {
         try {
-
+            System.out.println(form.getTitle());
             String authToken = request.getHeader("login-token");
             String refreshToken=request.getHeader("refresh-token");
             ResponseForm responseForm =  teamService.addPostTeam(form, authToken,refreshToken);

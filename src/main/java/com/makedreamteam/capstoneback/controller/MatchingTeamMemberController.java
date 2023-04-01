@@ -11,7 +11,13 @@ import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 
+import java.util.Map;
 import java.util.UUID;
+import com.google.firebase.messaging.FirebaseMessaging;
+import com.google.firebase.messaging.FirebaseMessagingException;
+import com.google.firebase.messaging.Message;
+import com.google.firebase.messaging.Notification;
+import org.springframework.web.bind.annotation.RequestBody;
 
 @Controller
 @CrossOrigin
@@ -24,12 +30,12 @@ public class MatchingTeamMemberController {
     }
 
     //팀에서 멤버에게 팀원 신청
-    @PostMapping("/{teamId}/match/{userId}")
-    public ResponseEntity<ResponseForm> tryMatchTeamMember(@PathVariable UUID teamId, @PathVariable UUID userId){
+    @PostMapping("/match")
+    public ResponseEntity<ResponseForm> tryMatchTeamMember(@RequestBody Map<String,String> data){
        try{
-           matchingTeamMemberService.addWaitingList(teamId,userId);
+           System.out.println("요처왔다아아아아");
        }catch (RuntimeException e){
-
+            return null;
        }
         return null;
     }

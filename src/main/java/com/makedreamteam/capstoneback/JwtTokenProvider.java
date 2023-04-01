@@ -116,7 +116,7 @@ public class JwtTokenProvider {
         try {
             Claims accessClaims = getClaimsToken(token);
             System.out.println("Access expireTime: " + accessClaims.getExpiration());
-            System.out.println("Access userId: " + accessClaims.get("userId"));
+            System.out.println("Access userId: " + (String)accessClaims.get("userId"));
             return true;
         } catch (ExpiredJwtException exception) {
             System.out.println("Token Expired UserID : " + exception.getClaims().get("userId"));
@@ -159,8 +159,8 @@ public class JwtTokenProvider {
         return Jwts.builder()
                 .setClaims(claims) // 정보 저장
                 .setIssuedAt(now) // 토큰 발행 시간 정보
-                .setExpiration(new Date(now.getTime() + accesstokenValidTime)) // set Expire Time
-                .signWith(SignatureAlgorithm.HS256, secretKey)  // 사용할 암호화 알고리즘과
+                .setExpiration(new Date(now.getTime() + accesstokenValidTime)) //set Expire Time
+                .signWith(SignatureAlgorithm.HS256, secretKey)  //사용할 암호화 알고리즘과
                 .compact();
     }
 

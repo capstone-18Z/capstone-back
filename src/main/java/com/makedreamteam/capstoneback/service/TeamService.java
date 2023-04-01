@@ -166,7 +166,7 @@ public class TeamService{
             throw new RuntimeException("Failed to retrieve Team information from the database", e);
         }
     }
-    public List<PostMember> recommendUsers(UUID teamId, int count) {
+    public List<PostMember> recommendUsersWithKeyword(UUID teamId, int count) {
         //recommend는 위에서 토큰 인증을 진행했기때문에 따로 토큰의 유효성검사를 하지 않는다
 
 
@@ -193,6 +193,28 @@ public class TeamService{
             return sortedPostMembers;
 
 
+    }
+    public List<PostMember> recommendUsersWithLang(UUID teamId, int count){
+        Optional<Team> optionalTeam = springDataTeamRepository.findById(teamId);
+        if(optionalTeam.isEmpty()){
+            throw new RuntimeException("springDataTeamRepository.findById(team.getTeamId()) is empty");
+        }
+        Team team=optionalTeam.get();
+        List<PostMember> allPost = postMemberRepository.findAll();
+
+        //key : post ,value : 가중치 를 가지는 hashmap 선언
+        Map<PostMember,Long> recommendMap=new HashMap<>();
+        for(PostMember post : allPost){
+            long weight= (long) team.getAssembly() * post.getAssembly()+team.getCs()* post.getCs()+ team.getVb()* post.getVb()+ team.getJava()* post.getJava()+ team.getPhp()* post.getPhp()+ team.getJava()* post.getJava()+ team.getPython()* post.getPython()+ team.getC()* post.getC()+ team.getCpp()* post.getCpp()+ team.getSqllang()* post.getSqllang();
+            recommendMap.put(post,weight);
+        }
+        List<PostMember> recommendList = recommendMap.entrySet().stream()
+                .sorted(Map.Entry.<PostMember, Long>comparingByValue().reversed())
+                .map(Map.Entry::getKey)
+                .limit(count)
+                .collect(Collectors.toList());
+
+        return recommendList;
     }
     public ResponseForm delete(UUID teamId,String authToken,String refreshToken) {
         if(jwtTokenProvider.isValidAccessToken(authToken)){
