@@ -3,6 +3,7 @@ package com.makedreamteam.capstoneback.controller;
 
 import com.makedreamteam.capstoneback.form.ResponseForm;
 import com.makedreamteam.capstoneback.service.MatchingTeamMemberService;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -30,10 +31,12 @@ public class MatchingTeamMemberController {
     }
 
     //팀에서 멤버에게 팀원 신청
-    @PostMapping("/match")
-    public ResponseEntity<ResponseForm> tryMatchTeamMember(@RequestBody Map<String,String> data){
+    @PostMapping("/{teamId}/{userId}/match-try")
+    public ResponseEntity<ResponseForm> tryMatchTeamMember(HttpServletRequest request,@PathVariable UUID teamId, @PathVariable UUID userId){
        try{
-           System.out.println("요처왔다아아아아");
+           String accessToken= request.getHeader("login-token");
+           String refreshToken= request.getHeader("refresh-token");
+           matchingTeamMemberService.matchTry(teamId,userId,accessToken,refreshToken);
        }catch (RuntimeException e){
             return null;
        }
