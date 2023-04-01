@@ -355,7 +355,7 @@ public class MemberController {
             String loginToken = request.getHeader("login-token");
             String refreshToken=request.getHeader("refresh-token");
             ResponseForm responseForm = memberService.testAddNewMember(postMember, loginToken, refreshToken);
-            return ResponseEntity.badRequest().body(responseForm);
+            return ResponseEntity.ok().body(responseForm);
         } catch (RefreshTokenExpiredException e) {
             ResponseForm responseForm=ResponseForm.builder().message(e.getMessage()).build();
             return ResponseEntity.badRequest().body(responseForm);
