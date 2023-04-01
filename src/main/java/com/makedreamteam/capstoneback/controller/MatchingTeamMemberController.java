@@ -49,29 +49,22 @@ public class MatchingTeamMemberController {
     //매칭 승인
     @PostMapping("/{teamId}/match/{userId}/approve")
     public ResponseEntity<ResponseForm> approveMatchTeamMember(@PathVariable UUID teamId, @PathVariable UUID userId){
-        try{
-            matchingTeamMemberService.addTeamMember(teamId,userId);
-            ResponseForm responseForm= ResponseForm.builder().message("매칭이 완료되었습니다.").state(HttpStatus.OK.value()).build();
-            return ResponseEntity.ok().body(responseForm);
-        }catch (RuntimeException e){
-            ResponseForm error= ResponseForm.builder().message(e.getMessage()).state(HttpStatus.BAD_REQUEST.value()).build();
-            return ResponseEntity.badRequest().body(error);
-        }
+//        try{
+//            matchingTeamMemberService.addTeamMember(teamId,userId);
+//            ResponseForm responseForm= ResponseForm.builder().message("매칭이 완료되었습니다.").state(HttpStatus.OK.value()).build();
+//            return ResponseEntity.ok().body(responseForm);
+//        }catch (RuntimeException e){
+//            ResponseForm error= ResponseForm.builder().message(e.getMessage()).state(HttpStatus.BAD_REQUEST.value()).build();
+//            return ResponseEntity.badRequest().body(error);
+//        }
+        return null;
     }
 
     //팀원이 나갈때,팀원 삭제
     @PostMapping("/{teamId}/match/{userId}/delete")
     public ResponseEntity<ResponseForm> deleteTeamMember(@PathVariable UUID teamId,@PathVariable UUID userId){
-        try{
-            matchingTeamMemberService.deleteTeamMember(teamId,userId);
-            ResponseForm responseForm=ResponseForm.builder()
-                    .state(HttpStatus.OK.value()).message("정상적으로 삭제 완료했습니다.").build();
-            return ResponseEntity.ok().body(responseForm);
-        }catch(RuntimeException e){
-            ResponseForm errorResponseForm=ResponseForm.builder()
-                    .state(HttpStatus.BAD_REQUEST.value()).message(e.getMessage()).build();
-            return ResponseEntity.badRequest().body(errorResponseForm);
-        }
+//
+        return null;
     }
 
 }
