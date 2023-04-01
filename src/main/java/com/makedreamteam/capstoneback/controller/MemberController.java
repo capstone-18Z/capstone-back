@@ -264,6 +264,8 @@ public class MemberController {
                         case "sqllang":
                             oldPost.setSqllang((Integer) value);
                             break;
+                        case "keyword":
+                            oldPost.setMemberKeywords((List<MemberKeyword>) value);
                         // 필드가 추가될 때마다 case 추가
                     }
                 });
@@ -362,7 +364,5 @@ public class MemberController {
         } catch (DatabaseException e) {
             throw new RuntimeException(e);
         }
-
     }
-
 }

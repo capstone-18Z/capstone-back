@@ -71,42 +71,6 @@ public class MemberService {
         }
     }
 
-    public Member newMember(Member form){
-        Member member = Member.builder()
-                .email(form.getEmail())
-                .nickname(form.getNickname())
-                .cs(form.getCs())
-                .cpp(form.getCpp())
-                .c(form.getC())
-                .python(form.getPython())
-                .php(form.getPhp())
-                .javascript(form.getJavascript())
-                .vb(form.getVb())
-                .java(form.getJava())
-                .assembly(form.getAssembly())
-                .sqllang(form.getSqllang())
-                .build();
-        return member;
-    }
-
-    public Member update(UUID uid, Member member){
-        Optional<Member> optionalMember = memberRepository.findById(uid);
-        if(optionalMember.isPresent()){
-            try{
-                Member currentMember = optionalMember.get();
-                Member updateMember = newMember(member);
-                updateMember.setId(currentMember.getId());
-                updateMember.setPassword(currentMember.getPassword());
-                memberRepository.save(updateMember);
-                return updateMember;
-            }catch (RuntimeException e){
-                throw new RuntimeException(e);
-            }
-        }
-        else{
-            throw new RuntimeException("유저가 존재하지 않습니다.");
-        }
-    }
     public void delete(Long postid, String authToken, String refreshToken) throws RefreshTokenExpiredException, TokenException, DatabaseException{
         try {
             // checkTokenResponsForm checkTokenResponsForm = checkUserIdAndToken(authToken, refreshToken);
