@@ -13,5 +13,6 @@ public class ResponseForm {
     private int state;
     private String message;
     private Object data;
+    private Long postid;
     private boolean updatable;
 }

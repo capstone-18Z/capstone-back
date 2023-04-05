@@ -12,14 +12,23 @@ import com.makedreamteam.capstoneback.repository.*;
 import io.jsonwebtoken.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.orm.jpa.JpaSystemException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.TransactionSystemException;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
+import org.springframework.web.multipart.MultipartFile;
 
 import javax.naming.AuthenticationException;
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -239,7 +248,7 @@ public class MemberService {
                 // post 저장
                 PostMember saved=postMemberRepository.save(member);
 
-                return ResponseForm.builder().state(HttpStatus.OK.value()).message("게시물을 등록했습니다.").data(saved).updatable(true).build();
+                return ResponseForm.builder().state(HttpStatus.OK.value()).message("게시물을 등록했습니다.").data(saved).postid(saved.getPostId()).updatable(true).build();
             }else{//accesstoken 만료
                 if(jwtTokenProvider.isValidRefreshToken(refreshToken)){//refreshtoken 유효성검사
                     //refreshtoken db 검사

@@ -1,5 +1,11 @@
 package com.makedreamteam.capstoneback.controller;
 
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.util.*;
 
 import com.makedreamteam.capstoneback.JwtTokenProvider;
@@ -8,21 +14,30 @@ import com.makedreamteam.capstoneback.exception.*;
 import com.makedreamteam.capstoneback.form.ResponseForm;
 import com.makedreamteam.capstoneback.repository.MemberRepository;
 import com.makedreamteam.capstoneback.repository.PostMemberRepository;
+import com.makedreamteam.capstoneback.service.FileService;
 import com.makedreamteam.capstoneback.service.MemberService;
 import com.makedreamteam.capstoneback.service.TeamService;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jws;
 import io.jsonwebtoken.Jwts;
 import jakarta.servlet.http.HttpServletRequest;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.ui.Model;
+import org.springframework.util.StringUtils;
+import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.*;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import javax.naming.AuthenticationException;
 
+@Slf4j
 @RequiredArgsConstructor
 @RestController
 @RequestMapping("/member")
@@ -33,6 +48,7 @@ public class MemberController {
     private final JwtTokenProvider jwtTokenProvider;
     private final MemberRepository memberRepository;
     private final PostMemberRepository postMemberRepository;
+    private final FileService fileService;
     private final TeamService teamService;
 
     // 회원가입
@@ -349,6 +365,11 @@ public class MemberController {
         return memberService.recommendTeams(uid, 2);
     }
 
+    @GetMapping("/post")
+    public List<PostMember> findAllPostMember(){
+        return postMemberRepository.findAll();
+    }
+
     @PostMapping("/post/new")
     public ResponseEntity<ResponseForm> addNewPost(@RequestBody PostMember postMember,HttpServletRequest request){
         try {
@@ -363,6 +384,28 @@ public class MemberController {
             throw new RuntimeException(e);
         } catch (DatabaseException e) {
             throw new RuntimeException(e);
+        }
+    }
+
+    @PostMapping("/post/new/test")
+    public ResponseEntity<ResponseForm> addNewPosttest(@RequestPart(value = "metadata", required = true) PostMember postMember, @RequestPart(value = "file", required = false) MultipartFile file, HttpServletRequest request){
+        try {
+            String loginToken = request.getHeader("login-token");
+            String refreshToken=request.getHeader("refresh-token");
+            UUID userid = memberService.checkUserIdAndToken(loginToken, refreshToken);
+            ResponseForm responseForm = memberService.testAddNewMember(postMember, loginToken, refreshToken);
+            if(file!=null){
+                fileService.uploadFile(file, userid, responseForm.getPostid());
+            }
+            return ResponseEntity.ok().body(responseForm);
+        } catch (RefreshTokenExpiredException e) {
+            ResponseForm responseForm=ResponseForm.builder().message(e.getMessage()).build();
+            return ResponseEntity.badRequest().body(responseForm);
+        } catch (TokenException | AuthenticationException | DatabaseException e) {
+            throw new RuntimeException(e);
+        } catch (IOException e) {
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(ResponseForm.builder().message("Error occurred while uploading file.").build());
         }
     }
 }

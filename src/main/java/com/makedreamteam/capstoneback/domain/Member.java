@@ -10,6 +10,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
 import org.hibernate.annotations.ColumnDefault;
+import org.springframework.web.multipart.MultipartFile;
 
 @Getter
 @Setter
@@ -73,6 +74,8 @@ public class Member {
     @Column
     @ColumnDefault("0")
     private int sqllang;
+
+
 
     public Member(String email, String password, String nickname) {
         this.email = email;
