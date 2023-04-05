@@ -5,6 +5,7 @@ import com.makedreamteam.capstoneback.controller.MemberData;
 import com.makedreamteam.capstoneback.controller.MemberResponseForm;
 import com.makedreamteam.capstoneback.domain.*;
 import com.makedreamteam.capstoneback.exception.*;
+import com.makedreamteam.capstoneback.form.PostResponseForm;
 import com.makedreamteam.capstoneback.form.ResponseForm;
 import com.makedreamteam.capstoneback.form.TeamData;
 import com.makedreamteam.capstoneback.form.checkTokenResponsForm;
@@ -45,7 +46,13 @@ public class MemberService {
     private final SpringDataTeamRepository springDataTeamRepository;
 
     @Autowired
+    private final FileDataRepository fileDataRepository;
+
+    @Autowired
     private final RefreshTokenRepository refreshTokenRepository;
+
+    @Autowired
+    private final FileService fileService;
 
     @Autowired
     private JwtTokenProvider jwtTokenProvider;
@@ -80,21 +87,58 @@ public class MemberService {
         }
     }
 
-    public void delete(Long postid, String authToken, String refreshToken) throws RefreshTokenExpiredException, TokenException, DatabaseException{
+    public void updateMemberPost(PostMember member,String authToken,String refreshToken) throws RefreshTokenExpiredException, AuthenticationException, LoginTokenExpiredException, TokenException, CannotFindTeamOrMember, DatabaseException {
+        try {
+            if (jwtTokenProvider.isValidAccessToken(authToken)) {
+                System.out.println("accesstoken이 유효합니다");
+                postMemberRepository.save(member);
+            } else {//accesstoken 만료
+                if (jwtTokenProvider.isValidRefreshToken(refreshToken)) {//refreshtoken 유효성검사
+                    //refreshtoken db 검사
+                    System.out.println("accesstoken이 만료되었습니다");
+                    System.out.println("refreshtoken 유효성 검사를 시작합니다");
+                    Claims userinfo = jwtTokenProvider.getClaimsToken(refreshToken);
+                    UUID userId = UUID.fromString((String) userinfo.get("userId"));
+                    Optional<RefreshToken> optionalRefreshToken = refreshTokenRepository.findById(userId);
+                    if (optionalRefreshToken.isPresent()) {
+                        //db에 존재하므로 access토큰 재발급 문자 출력
+                        System.out.println("accseetoken 재발급이 필요합니다.");
+                    } else {
+                        //db에 없는 토큰이므로 오류메시지 출력
+                        System.out.println("허용되지 않은 refreshtoken 입니다");
+                    }
+                } else {
+                    // 다시 login 시도
+                    System.out.println("refreshtoken이 만료되었습니다, 다시 로그인 해주세요");
+                }
+            }
+        }catch (DataIntegrityViolationException | JpaSystemException | TransactionSystemException e) {
+            throw new DatabaseException("데이터베이스 처리 중 오류가 발생했습니다.");
+        } catch (JwtException ex) {
+            throw new TokenException(ex.getMessage());
+        }
+
+    }
+
+    public void deletePost(Long postid, String authToken, String refreshToken) throws RefreshTokenExpiredException, TokenException, DatabaseException{
         try {
             // checkTokenResponsForm checkTokenResponsForm = checkUserIdAndToken(authToken, refreshToken);
-            //임시
             if(jwtTokenProvider.isValidAccessToken(authToken)){//accesstoken 유효
                 //addPost 진행
                 System.out.println("accesstoken이 유효합니다");
                 Claims userinfo= jwtTokenProvider.getClaimsToken(refreshToken);
                 UUID writer=UUID.fromString((String)userinfo.get("userId"));
                 Optional<Member> byId = memberRepository.findById(writer);
-
+                PostMember postMember = postMemberRepository.findByPostId(postid).get();
+                System.out.println("(삭제) 변경 전 FileData Size : "+postMemberRepository.findById(postid).get().getFileDataList().size());
                 if(byId.isEmpty()){
                     throw new RuntimeException("사용자가 존재하지 않습니다.");
                 }
-
+                List<FileData> fileList = postMember.getFileDataList();
+                for (FileData file : fileList) {
+                    fileService.deleteFile(file);
+                }
+                System.out.println("(삭제) 변경 후 FileData Size : "+postMemberRepository.findById(postid).get().getFileDataList().size());
                 //String newToken = checkTokenResponsForm.getNewToken();
 
                 postMemberRepository.deleteById(postid);
@@ -128,6 +172,8 @@ public class MemberService {
             throw new TokenException(ex.getMessage());
         }
     }
+
+
 
     public UUID checkUserIdAndToken(String authToken, String refreshToken) throws AuthenticationException {
         if(jwtTokenProvider.isValidAccessToken(authToken)) {//accesstoken 유효
@@ -207,22 +253,9 @@ public class MemberService {
     }
 
 
-    public void updateMemberPost(PostMember member,String authToken,String refreshToken) throws RefreshTokenExpiredException, AuthenticationException, LoginTokenExpiredException, TokenException, CannotFindTeamOrMember {
 
-        Optional<Member> optionalMember = memberRepository.findById(member.getUserId());
-        if(optionalMember.isEmpty()){
-            throw new CannotFindTeamOrMember("사용자를 찾을수 없습니다");
-        }
-        List<MemberKeyword> memberKeywords=member.getMemberKeywords();
-        for (MemberKeyword memberKeyword : memberKeywords){
-            memberKeyword.setPostMember(member);
-        }
-        member.setMemberKeywords(memberKeywords);
-        postMemberRepository.save(member);
 
-    }
-
-    public ResponseForm testAddNewMember(PostMember member, String authToken, String refreshToken) throws RefreshTokenExpiredException, TokenException, DatabaseException {
+    public PostResponseForm testAddNewMember(PostMember member, String authToken, String refreshToken) throws RefreshTokenExpiredException, TokenException, DatabaseException {
 
         try {
             // checkTokenResponsForm checkTokenResponsForm = checkUserIdAndToken(authToken, refreshToken);
@@ -248,7 +281,7 @@ public class MemberService {
                 // post 저장
                 PostMember saved=postMemberRepository.save(member);
 
-                return ResponseForm.builder().state(HttpStatus.OK.value()).message("게시물을 등록했습니다.").data(saved).postid(saved.getPostId()).updatable(true).build();
+                return PostResponseForm.builder().state(HttpStatus.OK.value()).message("게시물을 등록했습니다.").data(saved).postid(saved.getPostId()).updatable(true).build();
             }else{//accesstoken 만료
                 if(jwtTokenProvider.isValidRefreshToken(refreshToken)){//refreshtoken 유효성검사
                     //refreshtoken db 검사
@@ -260,18 +293,18 @@ public class MemberService {
                     if(optionalRefreshToken.isPresent()){
                         //db에 존재하므로 access토큰 재발급 문자 출력
                         System.out.println("accseetoken 재발급이 필요합니다.");
-                        return ResponseForm.builder().message("LonginToken 재발급이 필요합니다.").build();
+                        return PostResponseForm.builder().message("LonginToken 재발급이 필요합니다.").build();
                     }
                     else{
                         //db에 없는 토큰이므로 오류메시지 출력
                         System.out.println("허용되지 않은 refreshtoken 입니다");
-                        return ResponseForm.builder().message("허용되지 않은 RefreshToken 입니다").build();
+                        return PostResponseForm.builder().message("허용되지 않은 RefreshToken 입니다").build();
                     }
                 }
                 else{
                     // 다시 login 시도
                     System.out.println("refreshtoken이 만료되었습니다, 다시 로그인 해주세요");
-                    return ResponseForm.builder().message("RefreshToken 이 만료되었습니다, 다시 로그인 해주세요").build();
+                    return PostResponseForm.builder().message("RefreshToken 이 만료되었습니다, 다시 로그인 해주세요").build();
                 }
             }
 

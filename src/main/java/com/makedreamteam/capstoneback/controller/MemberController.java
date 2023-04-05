@@ -7,10 +7,12 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.util.*;
+import java.util.stream.Collectors;
 
 import com.makedreamteam.capstoneback.JwtTokenProvider;
 import com.makedreamteam.capstoneback.domain.*;
 import com.makedreamteam.capstoneback.exception.*;
+import com.makedreamteam.capstoneback.form.PostResponseForm;
 import com.makedreamteam.capstoneback.form.ResponseForm;
 import com.makedreamteam.capstoneback.repository.MemberRepository;
 import com.makedreamteam.capstoneback.repository.PostMemberRepository;
@@ -225,12 +227,103 @@ public class MemberController {
         }
     }
 
-    @PostMapping("/post/update")
-    public ResponseEntity<MemberResponseForm> updatePost(@RequestBody Map<String, Object> updates, HttpServletRequest request) throws AuthenticationException{
+
+
+
+
+    @GetMapping("/all")
+    public List<Member> allMember(){
+        return memberRepository.findAll();
+    }
+
+    @GetMapping("/check_email/{email}/exists")
+    public ResponseEntity<Boolean> checkEmailDuplicate(@PathVariable String email){
+        return ResponseEntity.ok(memberService.checkEmailDuplicate(email));
+    }
+    @GetMapping("/check_nickname/{nickname}/exists")
+    public ResponseEntity<Boolean> checkNicknameDuplicate(@PathVariable String nickname){
+        return ResponseEntity.ok(memberService.checkNicknameDuplicate(nickname));
+    }
+
+    @GetMapping("/recommand")
+    public List<Team> TeamRecommand(HttpServletRequest request) throws AuthenticationException {
+        String authToken= request.getHeader("login-token");
+        String refreshToken = request.getHeader("refresh-token");
+        UUID uid = memberService.checkUserIdAndToken(authToken, refreshToken);
+        return memberService.recommendTeams(uid, 2);
+    }
+
+    @GetMapping("/post")
+    public List<PostMember> findAllPostMember(){
+        return postMemberRepository.findAll();
+    }
+
+    @PostMapping("/post/new")
+    public ResponseEntity<PostResponseForm> addNewPost(@RequestPart(value = "metadata", required = true) PostMember postMember, @RequestPart(value = "files", required = false) MultipartFile[] files, HttpServletRequest request){
+        try {
+            String loginToken = request.getHeader("login-token");
+            String refreshToken=request.getHeader("refresh-token");
+            UUID userid = memberService.checkUserIdAndToken(loginToken, refreshToken);
+            PostResponseForm responseForm = memberService.testAddNewMember(postMember, loginToken, refreshToken);
+            if (files != null) {
+                for (MultipartFile file : files) {
+                    if (file.isEmpty()) {
+                        continue;
+                    }
+                    fileService.uploadFile(file, userid, responseForm.getPostid());
+                }
+            }
+            return ResponseEntity.ok().body(responseForm);
+        } catch (RefreshTokenExpiredException e) {
+            PostResponseForm responseForm = PostResponseForm.builder().message(e.getMessage()).build();
+            return ResponseEntity.badRequest().body(responseForm);
+        } catch (TokenException | AuthenticationException | DatabaseException e) {
+            throw new RuntimeException(e);
+        } catch (IOException e) {
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(PostResponseForm.builder().message("Error occurred while uploading file.").build());
+        }
+    }
+
+    @PostMapping("/post/delete")
+    public ResponseEntity<PostResponseForm> deletePost(@RequestParam("postid") Long postid, HttpServletRequest request) throws AuthenticationException {
         try{
             String loginToken = request.getHeader("login-token");
             String refreshToken = request.getHeader("refresh-token");
-            Long postid = (Long) updates.get("postid");
+            UUID userid = memberService.checkUserIdAndToken(loginToken, refreshToken);
+            UUID checkid = postMemberRepository.findByPostId(postid).get().getUserId();
+            System.out.println(checkid.toString());
+            System.out.println(userid.toString());
+            if(checkid.toString().equals(userid.toString())){
+                // 해당 게시물이 본인의 게시물이 맞다면 삭제
+                memberService.deletePost(postid, loginToken, refreshToken);
+                PostResponseForm successForm = PostResponseForm.builder()
+                        .message("유저 포스트 삭제 성공")
+                        .state(HttpStatus.OK.value())
+                        .build();
+                return ResponseEntity.ok().body(successForm);
+            }
+            else{
+                PostResponseForm errorResponseForm = PostResponseForm.builder()
+                        .message("본인의 게시물이 아닙니다.").state(HttpStatus.BAD_REQUEST.value()).build();
+                return ResponseEntity.badRequest().body(errorResponseForm);
+            }
+        }catch (RuntimeException e){
+            PostResponseForm errorResponseForm = PostResponseForm.builder()
+                    .message(e.getMessage()).state(HttpStatus.BAD_REQUEST.value()).build();
+            return ResponseEntity.badRequest().body(errorResponseForm);
+        } catch (RefreshTokenExpiredException | TokenException | DatabaseException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    @PostMapping("/post/update")
+    public ResponseEntity<PostResponseForm> updatePost(@RequestPart(value = "metadata", required = true) Map<String, Object> updates, @RequestPart(value = "files", required = false) MultipartFile[] files, HttpServletRequest request) throws AuthenticationException{
+        try{
+            String loginToken = request.getHeader("login-token");
+            String refreshToken = request.getHeader("refresh-token");
+            Integer postIdInt = (Integer) updates.get("postid");
+            Long postid = postIdInt.longValue();
             UUID userid = memberService.checkUserIdAndToken(loginToken, refreshToken);
             UUID checkid = postMemberRepository.findByPostId(postid).get().getUserId();
             System.out.println(checkid.toString());
@@ -282,130 +375,71 @@ public class MemberController {
                             break;
                         case "keyword":
                             oldPost.setMemberKeywords((List<MemberKeyword>) value);
-                        // 필드가 추가될 때마다 case 추가
+                            // 필드가 추가될 때마다 case 추가
                     }
                 });
+                PostMember postMember = postMemberRepository.findByPostId(postid).get();
+                System.out.println("변경 전 FileData Size : "+postMemberRepository.findById(postid).get().getFileDataList().size());
 
-                postMemberRepository.save(oldPost);
-                MemberResponseForm successForm = MemberResponseForm.builder()
+                if (files != null) {
+                    List<FileData> newList = new ArrayList<>();
+                    List<FileData> fileList = postMember.getFileDataList();
+                    for (FileData file : fileList) {
+                        System.out.println("파일 이름 : "+file.getFileName());
+                        fileService.deleteFile(file);
+                    }
+                    oldPost.getFileDataList().clear();
+                    for (MultipartFile file : files) {
+                        if (file.isEmpty()) {
+                            continue;
+                        }
+                        newList.add(fileService.uploadFile(file, userid, postid));
+                    }
+                    oldPost.setFileDataList(newList);
+                }
+
+                memberService.updateMemberPost(oldPost, loginToken, refreshToken);
+                System.out.println("변경 후 FileData Size : "+postMemberRepository.findById(postid).get().getFileDataList().size());
+                PostResponseForm successForm = PostResponseForm.builder()
                         .message("유저 포스트 수정 성공")
                         .state(HttpStatus.OK.value())
                         .data(MemberData.builder().PostMember(oldPost).build())
+                        .postid(postid)
                         .build();
                 return ResponseEntity.ok().body(successForm);
             }
             else{
-                MemberResponseForm errorResponseForm = MemberResponseForm.builder()
+                PostResponseForm errorResponseForm = PostResponseForm.builder()
                         .message("본인의 게시물이 아닙니다.").state(HttpStatus.BAD_REQUEST.value()).build();
                 return ResponseEntity.badRequest().body(errorResponseForm);
             }
 
         }catch (RuntimeException e){
-            MemberResponseForm errorResponseForm = MemberResponseForm.builder()
+            PostResponseForm errorResponseForm = PostResponseForm.builder()
                     .message(e.getMessage()).state(HttpStatus.BAD_REQUEST.value()).build();
             return ResponseEntity.badRequest().body(errorResponseForm);
-        }
-    }
-
-    @PostMapping("/post/delete")
-    public ResponseEntity<MemberResponseForm> deletePost(@RequestParam("postid") Long postid, HttpServletRequest request) throws AuthenticationException {
-        try{
-            String loginToken = request.getHeader("login-token");
-            String refreshToken = request.getHeader("refresh-token");
-            UUID userid = memberService.checkUserIdAndToken(loginToken, refreshToken);
-            UUID checkid = postMemberRepository.findByPostId(postid).get().getUserId();
-            System.out.println(checkid.toString());
-            System.out.println(userid.toString());
-            if(checkid.toString().equals(userid.toString())){
-                // 해당 게시물이 본인의 게시물이 맞다면 삭제
-                memberService.delete(postid, loginToken, refreshToken);
-                MemberResponseForm successForm = MemberResponseForm.builder()
-                        .message("유저 포스트 삭제 성공")
-                        .state(HttpStatus.OK.value())
-                        .build();
-                return ResponseEntity.ok().body(successForm);
-            }
-            else{
-                MemberResponseForm errorResponseForm = MemberResponseForm.builder()
-                        .message("본인의 게시물이 아닙니다.").state(HttpStatus.BAD_REQUEST.value()).build();
-                return ResponseEntity.badRequest().body(errorResponseForm);
-            }
-        }catch (RuntimeException e){
-            MemberResponseForm errorResponseForm = MemberResponseForm.builder()
-                    .message(e.getMessage()).state(HttpStatus.BAD_REQUEST.value()).build();
-            return ResponseEntity.badRequest().body(errorResponseForm);
-        } catch (RefreshTokenExpiredException e) {
-            throw new RuntimeException(e);
-        } catch (TokenException e) {
-            throw new RuntimeException(e);
-        } catch (DatabaseException e) {
+        } catch (RefreshTokenExpiredException | LoginTokenExpiredException | TokenException | CannotFindTeamOrMember |
+                 DatabaseException | IOException e) {
             throw new RuntimeException(e);
         }
     }
 
-    @GetMapping("/all")
-    public List<Member> allMember(){
-        return memberRepository.findAll();
-    }
-
-    @GetMapping("/check_email/{email}/exists")
-    public ResponseEntity<Boolean> checkEmailDuplicate(@PathVariable String email){
-        return ResponseEntity.ok(memberService.checkEmailDuplicate(email));
-    }
-    @GetMapping("/check_nickname/{nickname}/exists")
-    public ResponseEntity<Boolean> checkNicknameDuplicate(@PathVariable String nickname){
-        return ResponseEntity.ok(memberService.checkNicknameDuplicate(nickname));
-    }
-
-    @GetMapping("/recommand")
-    public List<Team> TeamRecommand(HttpServletRequest request) throws AuthenticationException {
-        String authToken= request.getHeader("login-token");
-        String refreshToken = request.getHeader("refresh-token");
-        UUID uid = memberService.checkUserIdAndToken(authToken, refreshToken);
-        return memberService.recommendTeams(uid, 2);
-    }
-
-    @GetMapping("/post")
-    public List<PostMember> findAllPostMember(){
-        return postMemberRepository.findAll();
-    }
-
-    @PostMapping("/post/new")
-    public ResponseEntity<ResponseForm> addNewPost(@RequestBody PostMember postMember,HttpServletRequest request){
+    @GetMapping("/post/{postid}")
+    public ResponseEntity<PostResponseForm> getPost(@PathVariable Long postid){
         try {
-            String loginToken = request.getHeader("login-token");
-            String refreshToken=request.getHeader("refresh-token");
-            ResponseForm responseForm = memberService.testAddNewMember(postMember, loginToken, refreshToken);
+            PostMember postMember = postMemberRepository.findByPostId(postid).get();
+            List<String> filenames = postMember.getFileDataList().stream()
+                    .map(FileData::getFileName)
+                    .collect(Collectors.toList());
+            PostResponseForm responseForm = PostResponseForm.builder()
+                    .message("포스트 조회가 완료되었습니다.")
+                    .data(postMember)
+                    .postid(postid)
+                    .filenames(filenames)
+                    .build();
             return ResponseEntity.ok().body(responseForm);
-        } catch (RefreshTokenExpiredException e) {
-            ResponseForm responseForm=ResponseForm.builder().message(e.getMessage()).build();
-            return ResponseEntity.badRequest().body(responseForm);
-        } catch (TokenException e) {
+        } catch (Exception e) {
             throw new RuntimeException(e);
-        } catch (DatabaseException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    @PostMapping("/post/new/test")
-    public ResponseEntity<ResponseForm> addNewPosttest(@RequestPart(value = "metadata", required = true) PostMember postMember, @RequestPart(value = "file", required = false) MultipartFile file, HttpServletRequest request){
-        try {
-            String loginToken = request.getHeader("login-token");
-            String refreshToken=request.getHeader("refresh-token");
-            UUID userid = memberService.checkUserIdAndToken(loginToken, refreshToken);
-            ResponseForm responseForm = memberService.testAddNewMember(postMember, loginToken, refreshToken);
-            if(file!=null){
-                fileService.uploadFile(file, userid, responseForm.getPostid());
-            }
-            return ResponseEntity.ok().body(responseForm);
-        } catch (RefreshTokenExpiredException e) {
-            ResponseForm responseForm=ResponseForm.builder().message(e.getMessage()).build();
-            return ResponseEntity.badRequest().body(responseForm);
-        } catch (TokenException | AuthenticationException | DatabaseException e) {
-            throw new RuntimeException(e);
-        } catch (IOException e) {
-            e.printStackTrace();
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(ResponseForm.builder().message("Error occurred while uploading file.").build());
         }
     }
 }
