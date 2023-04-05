@@ -5,24 +5,25 @@ import lombok.*;
 
 import java.util.UUID;
 
+
+@Getter
+@Setter
 @Entity
 @NoArgsConstructor
 @AllArgsConstructor
-@Getter
-@Setter
 @Builder
-@Table(uniqueConstraints = {@UniqueConstraint(columnNames = {"userId", "teamId"})})
-public class WaitingListOfMatching {
+public class WaitingListOfMatchingTeamToUser {
+
     @Id
-    private UUID waitingId;
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long Id;
 
     @Column
-    private UUID userId;
+    private Long memberPostId;
 
     @Column
     private UUID teamId;
 
     @Column
-    private Long postId;
-
+    private int field;
 }

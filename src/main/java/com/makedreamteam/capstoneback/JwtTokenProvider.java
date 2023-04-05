@@ -6,6 +6,7 @@ import com.makedreamteam.capstoneback.domain.RefreshToken;
 import com.makedreamteam.capstoneback.domain.Role;
 import com.makedreamteam.capstoneback.domain.Token;
 import com.makedreamteam.capstoneback.exception.RefreshTokenExpiredException;
+import com.makedreamteam.capstoneback.form.ResponseForm;
 import io.jsonwebtoken.*;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.xml.bind.DatatypeConverter;
@@ -24,7 +25,7 @@ public class JwtTokenProvider {
     private String secretKey = "test";
 
     // 토큰 유효시간 30분
-    private long accesstokenValidTime =10*60*1000L;
+    private long accesstokenValidTime =60*60*1000L;
     private long refreshtokenValidTime=60*24*7*60*1000L; //1주
 
     private final UserDetailsService userDetailsService;
@@ -116,7 +117,7 @@ public class JwtTokenProvider {
         try {
             Claims accessClaims = getClaimsToken(token);
             System.out.println("Access expireTime: " + accessClaims.getExpiration());
-            System.out.println("Access userId: " + (String)accessClaims.get("userId"));
+            System.out.println("Access userId: " + accessClaims.get("userId"));
             return true;
         } catch (ExpiredJwtException exception) {
             System.out.println("Token Expired UserID : " + exception.getClaims().get("userId"));
@@ -135,7 +136,7 @@ public class JwtTokenProvider {
         try {
             Claims accessClaims = getClaimsToken(token);
             System.out.println("Access expireTime: " + accessClaims.getExpiration());
-            System.out.println("Access userId: " + accessClaims.get("sub"));
+            System.out.println("Access userId: " + accessClaims.get("userId"));
             return true;
         } catch (ExpiredJwtException exception) {//만료
             System.out.println("Token Expired UserID : " + exception.getClaims().get("sub"));
@@ -177,4 +178,6 @@ public class JwtTokenProvider {
                 .signWith(SignatureAlgorithm.HS256, secretKey)
                 .compact();
     }
+
+
 }
