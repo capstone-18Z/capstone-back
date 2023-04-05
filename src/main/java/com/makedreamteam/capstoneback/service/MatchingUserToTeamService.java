@@ -74,20 +74,27 @@ public class MatchingUserToTeamService {
 
     public ResponseForm approveMatch(UUID waitingListId,String accessToken,String refreshToken){
         if(jwtTokenProvider.isValidAccessToken(accessToken)){
-            Optional<WaitingListOfMatchingUserToTeam> byId = waitingListRepository.findById(waitingListId);
-            if(byId.isEmpty()){
+            WaitingListOfMatchingUserToTeam waitingList = waitingListRepository.findById(waitingListId).orElseThrow(()->{
                 throw new RuntimeException("매칭 대기 리스트가 존재하지 않습니다.");
-            }
-            WaitingListOfMatchingUserToTeam waitingList=byId.get();
-
+            });
+            UUID userId=waitingList.getUserId();
+            int field=waitingList.getField();
             Team team = waitingList.getTeam();
-            TeamMember teamMember= TeamMember.builder().teamId(team.getTeamId()).teamLeader(team.getTeamLeader()).userId(waitingList.getUserId()).build();
-            //매칭이 완료외었으므로 해당 대기인원 data는 삭제한다
-            waitingListRepository.delete(waitingList);
 
+            team.getRequestList().removeIf(req -> req.equals(waitingList));
+
+            TeamMember teamMember= TeamMember.builder().teamId(team.getTeamId()).teamLeader(team.getTeamLeader()).userId(userId).build();
+
+            //매칭이 완료외었으므로 해당 대기인원 data는 삭제한다
+
+            //waitingListRepository.delete(waitingList);
+            waitingListRepository.delete(waitingList);
             //이후, 팀멤버 테이블에 해당 사용자를 추가
+
             teamMemberRepository.save(teamMember);
-            springDataTeamRepository.save(settingTeamMember(team, waitingList.getField()));
+
+            springDataTeamRepository.save(settingTeamMember(team, field));
+
 
             return ResponseForm.builder().message("사용자를 팀에 추가했습니다").build();
         }else{

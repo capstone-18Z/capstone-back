@@ -42,12 +42,12 @@ public class MatchingUserToTeamController {
 
 
     //매칭 승인
-    @PostMapping("/{waitingListId}/approve")
-    public ResponseEntity<ResponseForm> approveMatch( @PathVariable UUID waitingListId, HttpServletRequest request){
+    @PostMapping("/{waitingId}/approve")
+    public ResponseEntity<ResponseForm> approveMatch( @PathVariable UUID waitingId, HttpServletRequest request){
         String accessToken= request.getHeader("login-token");
         String refreshToken= request.getHeader("refresh-token");
         try {
-            ResponseForm responseForm = matchingUserToTeamService.approveMatch(waitingListId,accessToken, refreshToken);
+            ResponseForm responseForm = matchingUserToTeamService.approveMatch(waitingId,accessToken, refreshToken);
             return ResponseEntity.ok().body(responseForm);
         }catch (RuntimeException e){
             ResponseForm error=ResponseForm.builder().message(e.getMessage()).build();
@@ -69,12 +69,12 @@ public class MatchingUserToTeamController {
         }
     }
 
-    @PostMapping("/{waitingListId}/fuckyou")
-    public ResponseEntity<ResponseForm> fuckyouMatch( @PathVariable UUID waitingListId, HttpServletRequest request){
+    @PostMapping("/{waitingId}/fuckyou")
+    public ResponseEntity<ResponseForm> fuckyouMatch( @PathVariable UUID waitingId, HttpServletRequest request){
         String accessToken= request.getHeader("login-token");
         String refreshToken= request.getHeader("refresh-token");
         try {
-            ResponseForm responseForm = matchingUserToTeamService.fuckYouMatch(waitingListId,accessToken, refreshToken);
+            ResponseForm responseForm = matchingUserToTeamService.fuckYouMatch(waitingId,accessToken, refreshToken);
             return ResponseEntity.ok().body(responseForm);
         }catch (RuntimeException e){
             ResponseForm error=ResponseForm.builder().message(e.getMessage()).build();
