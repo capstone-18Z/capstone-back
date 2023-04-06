@@ -11,4 +11,7 @@ import java.util.UUID;
 public interface SpringDataTeamRepository extends JpaRepository<Team, UUID>  {
     List<Team> findByTitleContaining(String title);
     List<Team> findByTeamLeader(UUID userID);
+    List<Team> findAllByOrderByUpdateDateDesc();
+
+
 }

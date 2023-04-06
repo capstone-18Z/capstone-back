@@ -16,6 +16,7 @@ import java.util.stream.Collectors;
 @NoArgsConstructor
 @Getter
 @Setter
+@Table(indexes = {@Index(name = "idx_title", columnList = "title")})//게시물 검색 시 제목을 주로 검색을 하므로 title을 인덱싱한다
 public class Team{
     @Id
     @GeneratedValue
@@ -113,6 +114,9 @@ public class Team{
     @OneToMany(mappedBy = "team", cascade = CascadeType.ALL, orphanRemoval = true,fetch = FetchType.EAGER)
     private List<TeamKeyword> teamKeywords = new ArrayList<>();
 
+    @OneToMany(mappedBy = "team", cascade = CascadeType.ALL, orphanRemoval = true,fetch = FetchType.EAGER)
+    private List<WaitingListOfMatchingUserToTeam> requestList=new ArrayList<>();
+
     @JsonProperty("teamKeywords")
     public List<String> getKeywordValues() {
         return teamKeywords.stream().map(TeamKeyword::getValue).collect(Collectors.toList());
@@ -128,8 +132,9 @@ public class Team{
         teamKeyword.setTeam(null);
     }
 
-    public void setTeam(TeamKeyword teamKeyword){
+    public void setKeywordTeam(TeamKeyword teamKeyword){
         teamKeyword.setTeam(this);
     }
+    public void setWaitingListTeam(WaitingListOfMatchingUserToTeam waitingListOfMatchingUserToTeam){waitingListOfMatchingUserToTeam.setTeam(this);}
 
 }

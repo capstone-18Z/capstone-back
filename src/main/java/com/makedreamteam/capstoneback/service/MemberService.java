@@ -272,10 +272,11 @@ public class MemberService {
                 }
 
                 //String newToken = checkTokenResponsForm.getNewToken();
-
-                for (MemberKeyword memberKeyword : member.getMemberKeywords()){
-                    memberKeyword.setPostMember(member);
-                }
+                List<MemberKeyword> memberKeywords=member.getMemberKeywords();
+                if(memberKeywords!=null)
+                    for (MemberKeyword memberKeyword : memberKeywords){
+                        memberKeyword.setPostMember(member);
+                    }
                 member.setUserId(writer);
 
                 // post 저장

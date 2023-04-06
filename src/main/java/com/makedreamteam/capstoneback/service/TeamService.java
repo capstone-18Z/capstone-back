@@ -77,7 +77,7 @@ public class TeamService{
             if(jwtTokenProvider.isValidAccessToken(authToken)){//accesstoken 유효
                 //addPost 진행
                 System.out.println("accesstoken이 유효합니다 게시물을 추가합니다.");
-                Claims userinfo= jwtTokenProvider.getClaimsToken(refreshToken);
+                Claims userinfo= jwtTokenProvider.getClaimsToken(authToken);
                 UUID teamLeader=UUID.fromString((String)userinfo.get("userId"));
 
                 Optional<Member> byId = memberRepository.findById(teamLeader);
@@ -90,9 +90,11 @@ public class TeamService{
                 if (teams.size() == 3) {
                     throw new RuntimeException("4개 이상의 팀을 만들 수 없습니다.");
                 }
-                for (TeamKeyword teamKeyword : team.getTeamKeywords()){
-                    teamKeyword.setTeam(team);
-                }
+                List<TeamKeyword> teamKeywords=team.getTeamKeywords();
+                if(teamKeywords!=null)
+                    for (TeamKeyword teamKeyword : teamKeywords){
+                        teamKeyword.setTeam(team);
+                    }
                 team.setTeamLeader(teamLeader);
 
                 // 팀 저장
@@ -161,7 +163,7 @@ public class TeamService{
     }
     public List<Team> allPosts(String loginToken, String refreshToken) {
         try {
-            return springDataTeamRepository.findAll();
+            return springDataTeamRepository.findAllByOrderByUpdateDateDesc();
         } catch (EmptyResultDataAccessException e) {
             throw new RuntimeException("Failed to retrieve Team information from the database", e);
         }

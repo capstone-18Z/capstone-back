@@ -52,12 +52,12 @@ public class TeamController {
 
     }
 
-    @GetMapping("/search/{title}")//미구현
+    @GetMapping("/search/{title}")//제목으로 포스트 검색
     public ResponseEntity<ResponseForm> searchPostByTitle(@PathVariable String title,HttpServletRequest request) {
        return null;
     }
 
-    @GetMapping("/{id}")
+    @GetMapping("/{id}")//포스트 페이지 접속
     public ResponseEntity<ResponseForm> findById(@PathVariable UUID id, HttpServletRequest request) {
             String authToken = request.getHeader("login-token");
             String refreshToken=request.getHeader("refresh-token");
