@@ -121,7 +121,7 @@ public class Team{
     public List<String> getKeywordValues() {
         return teamKeywords.stream().map(TeamKeyword::getValue).collect(Collectors.toList());
     }
-    @ElementCollection
+    @ElementCollection(fetch = FetchType.EAGER)
     private List<String> imagePaths;
 
     public void addKeyword(TeamKeyword teamKeyword) {

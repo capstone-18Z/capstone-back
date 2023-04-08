@@ -5,6 +5,7 @@ import com.makedreamteam.capstoneback.domain.PostMember;
 import com.makedreamteam.capstoneback.domain.Team;
 import com.makedreamteam.capstoneback.exception.*;
 import com.makedreamteam.capstoneback.form.*;
+import com.makedreamteam.capstoneback.service.FileService;
 import com.makedreamteam.capstoneback.service.ImageStorageService;
 import com.makedreamteam.capstoneback.service.TeamService;
 import jakarta.servlet.http.HttpServletRequest;
@@ -24,12 +25,14 @@ public class TeamController {
     private final TeamService teamService;
     private final JwtTokenProvider jwtTokenProvider;
     private final ImageStorageService imageStorage;
+    private final FileService fileService;
 
     @Autowired
-    public TeamController(TeamService postTeamService, JwtTokenProvider jwtTokenProvider, ImageStorageService imageStorage) {
+    public TeamController(TeamService postTeamService, JwtTokenProvider jwtTokenProvider, ImageStorageService imageStorage, FileService fileService) {
         this.teamService = postTeamService;
         this.jwtTokenProvider = jwtTokenProvider;
         this.imageStorage = imageStorage;
+        this.fileService = fileService;
     }
 
     @GetMapping("")
@@ -128,20 +131,12 @@ public class TeamController {
 
         String refreshToken= request.getHeader("refresh-token");
         String accessToken= request.getHeader("login-token");
-
-
-        List<String> imageUrls = new ArrayList<>();
-        for (MultipartFile image : images) {
-            try {
-                String imageUrl = imageStorage.store(image);
-                imageUrls.add(imageUrl);
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }
-        team.setImagePaths(imageUrls);
+        List<String> imageUrls=null;
+        if(images!=null)
+            imageUrls = fileService.uploadFile(images);
+        team.setImagePaths(imageUrls != null ? imageUrls : null);
         ResponseForm responseForm = teamService.addPostTeam(team, accessToken, refreshToken);
-        responseForm.setImages(imageStorage.getImage(team.getImagePaths()));
+
 
 
         return ResponseEntity.ok(responseForm);

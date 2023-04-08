@@ -3,6 +3,7 @@ package com.makedreamteam.capstoneback.service;
 import com.makedreamteam.capstoneback.domain.FileData;
 import com.makedreamteam.capstoneback.domain.FileType;
 import com.makedreamteam.capstoneback.domain.PostMember;
+import com.makedreamteam.capstoneback.domain.Team;
 import com.makedreamteam.capstoneback.repository.FileDataRepository;
 import com.makedreamteam.capstoneback.repository.MemberRepository;
 import com.makedreamteam.capstoneback.repository.PostMemberRepository;
@@ -21,6 +22,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
@@ -73,6 +75,20 @@ public class FileService {
         fileData.setUploadDate(LocalDateTime.now());
 
         return fileDataRepository.save(fileData);
+    }
+
+    public List<String> uploadFile(List<MultipartFile> files) throws IOException {
+        List<String> images=new ArrayList<>();
+        for(MultipartFile file : files) {
+            String originalFileName = file.getOriginalFilename();
+            String extension = originalFileName.substring(originalFileName.lastIndexOf(".") + 1);
+            String fileName = String.valueOf(UUID.randomUUID())+originalFileName;
+            images.add(fileName);
+            Path path = Paths.get(uploadDir + "/" + fileName);
+            Files.write(path, file.getBytes());
+        }
+
+        return images;
     }
 
     public void deleteFile(FileData file){
