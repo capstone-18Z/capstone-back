@@ -4,6 +4,9 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.Getter;
 import lombok.Setter;
+import org.springframework.core.io.InputStreamResource;
+
+import java.util.List;
 
 @Builder
 @Data
@@ -14,4 +17,5 @@ public class ResponseForm {
     private String message;
     private Object data;
     private boolean updatable;
+    private List<InputStreamResource> images;
 }

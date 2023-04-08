@@ -1,23 +1,20 @@
 package com.makedreamteam.capstoneback.controller;
 
 import com.makedreamteam.capstoneback.JwtTokenProvider;
-import com.makedreamteam.capstoneback.domain.Member;
 import com.makedreamteam.capstoneback.domain.PostMember;
-import com.makedreamteam.capstoneback.domain.RefreshToken;
 import com.makedreamteam.capstoneback.domain.Team;
 import com.makedreamteam.capstoneback.exception.*;
 import com.makedreamteam.capstoneback.form.*;
+import com.makedreamteam.capstoneback.service.ImageStorageService;
 import com.makedreamteam.capstoneback.service.TeamService;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.*;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
-import javax.naming.AuthenticationException;
-import java.security.Principal;
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
+import java.io.IOException;
+import java.util.*;
 
 @RestController
 @CrossOrigin
@@ -26,11 +23,13 @@ public class TeamController {
 
     private final TeamService teamService;
     private final JwtTokenProvider jwtTokenProvider;
+    private final ImageStorageService imageStorage;
 
     @Autowired
-    public TeamController(TeamService postTeamService, JwtTokenProvider jwtTokenProvider) {
+    public TeamController(TeamService postTeamService, JwtTokenProvider jwtTokenProvider, ImageStorageService imageStorage) {
         this.teamService = postTeamService;
         this.jwtTokenProvider = jwtTokenProvider;
+        this.imageStorage = imageStorage;
     }
 
     @GetMapping("")
@@ -124,7 +123,29 @@ public class TeamController {
             return ResponseEntity.badRequest().body(error);
         }
     }
+    @PostMapping(value = "/teams/new",consumes = "multipart/form-data")
+    public ResponseEntity<ResponseForm> createTeam(@RequestPart("images") List<MultipartFile> images,@RequestPart("team") Team team,HttpServletRequest request) throws TokenException, DatabaseException, IOException {
 
+        String refreshToken= request.getHeader("refresh-token");
+        String accessToken= request.getHeader("login-token");
+
+
+        List<String> imageUrls = new ArrayList<>();
+        for (MultipartFile image : images) {
+            try {
+                String imageUrl = imageStorage.store(image);
+                imageUrls.add(imageUrl);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+        team.setImagePaths(imageUrls);
+        ResponseForm responseForm = teamService.addPostTeam(team, accessToken, refreshToken);
+        responseForm.setImages(imageStorage.getImage(team.getImagePaths()));
+
+
+        return ResponseEntity.ok(responseForm);
+    }
 
 
 }
