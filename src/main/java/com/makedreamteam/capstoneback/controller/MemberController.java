@@ -25,6 +25,8 @@ import io.jsonwebtoken.Jws;
 import io.jsonwebtoken.Jwts;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
+import org.junit.platform.commons.logging.Logger;
+import org.junit.platform.commons.logging.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -46,6 +48,7 @@ import javax.naming.AuthenticationException;
 @RequestMapping("/member")
 public class MemberController {
 
+    private static final Logger logger = LoggerFactory.getLogger(MemberController.class);
     private final MemberService memberService;
     private final PasswordEncoder passwordEncoder;
     private final JwtTokenProvider jwtTokenProvider;
@@ -244,14 +247,22 @@ public class MemberController {
             String loginToken = request.getHeader("login-token");
             String refreshToken = request.getHeader("refresh-token");
             UUID userid = memberService.checkUserIdAndToken(loginToken, refreshToken);
-            UUID checkid = postMemberRepository.findByPostId(postid).get().getMember().getId();
+            UUID checkid = postMemberRepository.findById(postid).get().getMember().getId();
+            PostMember deletePost = postMemberRepository.findById(postid).get();
             System.out.println(checkid.toString());
             System.out.println(userid.toString());
             if(checkid.toString().equals(userid.toString())){
                 // 해당 게시물이 본인의 게시물이 맞다면 삭제
-                memberService.deletePost(postid, loginToken, refreshToken);
+                // memberService.deletePost(postid, loginToken, refreshToken);
+                List<FileData> fileList = deletePost.getFileDataList();
+                for (FileData file : fileList) {
+                    fileService.deleteFile(file);
+                }
+                postMemberRepository.deleteById(postid);
                 PostResponseForm successForm = PostResponseForm.builder()
                         .message("유저 포스트 삭제 성공")
+                        .data(deletePost)
+                        .pid(postid)
                         .state(HttpStatus.OK.value())
                         .build();
                 return ResponseEntity.ok().body(successForm);
@@ -265,8 +276,6 @@ public class MemberController {
             PostResponseForm errorResponseForm = PostResponseForm.builder()
                     .message(e.getMessage()).state(HttpStatus.BAD_REQUEST.value()).build();
             return ResponseEntity.badRequest().body(errorResponseForm);
-        } catch (RefreshTokenExpiredException | TokenException | DatabaseException e) {
-            throw new RuntimeException(e);
         }
     }
 

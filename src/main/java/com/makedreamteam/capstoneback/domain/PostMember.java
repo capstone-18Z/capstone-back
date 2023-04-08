@@ -32,7 +32,7 @@ public class PostMember {
     private String nickname;
     @Column
     private String title;
-    @Column
+    @Column(columnDefinition = "LONGTEXT")
     private String detail;
     @Column
     private int field;//1 : 프론트  2 : 백 ,  3 : 구분없음

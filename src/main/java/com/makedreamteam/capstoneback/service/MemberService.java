@@ -131,7 +131,6 @@ public class MemberService {
                 UUID writer=UUID.fromString((String)userinfo.get("userId"));
                 Optional<Member> byId = memberRepository.findById(writer);
                 PostMember postMember = postMemberRepository.findByPostId(postid).get();
-                System.out.println("(삭제) 변경 전 FileData Size : "+postMemberRepository.findById(postid).get().getFileDataList().size());
                 if(byId.isEmpty()){
                     throw new RuntimeException("사용자가 존재하지 않습니다.");
                 }
@@ -139,9 +138,8 @@ public class MemberService {
                 for (FileData file : fileList) {
                     fileService.deleteFile(file);
                 }
-                System.out.println("(삭제) 변경 후 FileData Size : "+postMemberRepository.findById(postid).get().getFileDataList().size());
                 //String newToken = checkTokenResponsForm.getNewToken();
-
+                System.out.println("postid : "+postid+"를 삭제합니다.");
                 postMemberRepository.deleteById(postid);
             }
             else{//accesstoken 만료
