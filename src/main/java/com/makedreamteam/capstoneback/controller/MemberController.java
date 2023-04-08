@@ -2,6 +2,7 @@ package com.makedreamteam.capstoneback.controller;
 
 import java.io.File;
 import java.io.IOException;
+import java.lang.reflect.Field;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -100,43 +101,6 @@ public class MemberController {
         return memberRepository.findById(uid);
     }
 
-    @PostMapping("/new")
-    public ResponseEntity<MemberResponseForm> addPostMember(@RequestBody Map<String, Object> post, HttpServletRequest request) throws AuthenticationException {
-        try {
-            String authToken= request.getHeader("login-token");
-            String refreshToken = request.getHeader("refresh-token");
-            UUID memberid = memberService.checkUserIdAndToken(authToken, refreshToken);
-            Optional<Member> member = memberRepository.findById(memberid);
-            PostMember postman = PostMember.builder()
-                    .userId(memberid)
-                    .title((String) post.get("title"))
-                    .nickname(member.get().getNickname())
-                    .detail((String) post.get("detail"))
-                    .field((Integer) post.get("field"))
-                    .c((Integer) post.get("c"))
-                    .cs((Integer) post.get("cs"))
-                    .php((Integer) post.get("php"))
-                    .cpp((Integer) post.get("cpp"))
-                    .vb((Integer) post.get("vb"))
-                    .assembly((Integer) post.get("assembly"))
-                    .java((Integer) post.get("java"))
-                    .javascript((Integer) post.get("javascript"))
-                    .python((Integer) post.get("python"))
-                    .sqllang((Integer) post.get("sqllang"))
-                    .build();
-            PostMember result = memberService.PostJoin(postman, authToken);
-            MemberResponseForm successForm = MemberResponseForm.builder()
-                    .message("유저 포스트 입력 성공")
-                    .state(HttpStatus.OK.value())
-                    .data(MemberData.builder().PostMember(result)
-                            .Member(memberRepository.findById(memberid)).build()).build();
-            return ResponseEntity.ok().body(successForm);
-        } catch (AuthenticationException | RuntimeException e){
-            MemberResponseForm errorResponseForm = MemberResponseForm.builder()
-                    .message(e.getMessage()).state(HttpStatus.BAD_REQUEST.value()).build();
-            return ResponseEntity.badRequest().body(errorResponseForm);
-        }
-    }
     @GetMapping("/userForm")
     public ResponseEntity<MemberResponseForm> inquireMember(HttpServletRequest request) throws AuthenticationException {
         try {
@@ -167,53 +131,18 @@ public class MemberController {
                     .parseClaimsJws(authToken)
                     .getBody();
             UUID memberid = memberService.checkUserIdAndToken(authToken, refreshToken);
-            Member oldPost = memberRepository.findById(memberid)
-                    .orElseThrow(() -> new RuntimeException("해당하는 게시물이 존재하지 않습니다."));
-            updates.forEach((key, value) -> {
-                switch (key) {
-                    case "email":
-                        oldPost.setEmail((String) value);
-                        break;
-                    case "nickname":
-                        oldPost.setNickname((String) value);
-                        break;
-                    case "password":
-                        oldPost.setPassword((String) value);
-                        break;
-                    case "c":
-                        oldPost.setC((Integer) value);
-                        break;
-                    case "cpp":
-                        oldPost.setCpp((Integer) value);
-                        break;
-                    case "cs":
-                        oldPost.setCs((Integer) value);
-                        break;
-                    case "php":
-                        oldPost.setPhp((Integer) value);
-                        break;
-                    case "vb":
-                        oldPost.setVb((Integer) value);
-                        break;
-                    case "assembly":
-                        oldPost.setAssembly((Integer) value);
-                        break;
-                    case "java":
-                        oldPost.setJava((Integer) value);
-                        break;
-                    case "javascript":
-                        oldPost.setJavascript((Integer) value);
-                        break;
-                    case "python":
-                        oldPost.setPython((Integer) value);
-                        break;
-                    case "sqllang":
-                        oldPost.setSqllang((Integer) value);
-                        break;
-                        // 필드가 추가될 때마다 case 추가
+            Member oldMember = memberRepository.findById(memberid)
+                    .orElseThrow(() -> new RuntimeException("해당하는 회원이 존재하지 않습니다."));
+
+            for (Field field : oldMember.getClass().getDeclaredFields()) {
+                String fieldName = field.getName();
+                if (updates.containsKey(fieldName)) {
+                    field.setAccessible(true);
+                    Object value = updates.get(fieldName);
+                    field.set(oldMember, value);
                 }
-            });
-            memberRepository.save(oldPost);
+            }
+            memberRepository.save(oldMember);
             //Member updateMember = memberService.update(memberid, post);
             MemberResponseForm successForm = MemberResponseForm.builder()
                     .message("유저 업데이트 성공")
@@ -224,12 +153,10 @@ public class MemberController {
             MemberResponseForm errorResponseForm = MemberResponseForm.builder()
                     .message(e.getMessage()).state(HttpStatus.BAD_REQUEST.value()).build();
             return ResponseEntity.badRequest().body(errorResponseForm);
+        } catch (IllegalAccessException e) {
+            throw new RuntimeException(e);
         }
     }
-
-
-
-
 
     @GetMapping("/all")
     public List<Member> allMember(){
@@ -285,13 +212,13 @@ public class MemberController {
         }
     }
 
-    @PostMapping("/post/delete")
-    public ResponseEntity<PostResponseForm> deletePost(@RequestParam("postid") Long postid, HttpServletRequest request) throws AuthenticationException {
+    @PostMapping("/post/delete/{postid}")
+    public ResponseEntity<PostResponseForm> deletePost(@PathVariable Long postid, HttpServletRequest request) throws AuthenticationException {
         try{
             String loginToken = request.getHeader("login-token");
             String refreshToken = request.getHeader("refresh-token");
             UUID userid = memberService.checkUserIdAndToken(loginToken, refreshToken);
-            UUID checkid = postMemberRepository.findByPostId(postid).get().getUserId();
+            UUID checkid = postMemberRepository.findByPostId(postid).get().getMember().getId();
             System.out.println(checkid.toString());
             System.out.println(userid.toString());
             if(checkid.toString().equals(userid.toString())){
@@ -317,67 +244,27 @@ public class MemberController {
         }
     }
 
-    @PostMapping("/post/update")
-    public ResponseEntity<PostResponseForm> updatePost(@RequestPart(value = "metadata", required = true) Map<String, Object> updates, @RequestPart(value = "files", required = false) MultipartFile[] files, HttpServletRequest request) throws AuthenticationException{
+    @PostMapping("/post/update/{postid}")
+    public ResponseEntity<PostResponseForm> updatePost(@RequestPart(value = "metadata", required = true) Map<String, Object> updates, @RequestPart(value = "files", required = false) MultipartFile[] files, @PathVariable Long postid, HttpServletRequest request) throws AuthenticationException{
         try{
             String loginToken = request.getHeader("login-token");
             String refreshToken = request.getHeader("refresh-token");
-            Integer postIdInt = (Integer) updates.get("postid");
-            Long postid = postIdInt.longValue();
             UUID userid = memberService.checkUserIdAndToken(loginToken, refreshToken);
-            UUID checkid = postMemberRepository.findByPostId(postid).get().getUserId();
+            UUID checkid = postMemberRepository.findByPostId(postid).get().getMember().getId();
             System.out.println(checkid.toString());
             System.out.println(userid.toString());
             if(checkid.toString().equals(userid.toString())){
                 // 해당 게시물이 본인의 게시물이 맞다면 삭제
                 PostMember oldPost = postMemberRepository.findById(postid)
                         .orElseThrow(() -> new RuntimeException("해당하는 게시물이 존재하지 않습니다."));
-                updates.forEach((key, value) -> {
-                    switch (key) {
-                        case "title":
-                            oldPost.setTitle((String) value);
-                            break;
-                        case "field":
-                            oldPost.setField((Integer) value);
-                            break;
-                        case "detail":
-                            oldPost.setDetail((String) value);
-                            break;
-                        case "c":
-                            oldPost.setC((Integer) value);
-                            break;
-                        case "cpp":
-                            oldPost.setCpp((Integer) value);
-                            break;
-                        case "cs":
-                            oldPost.setCs((Integer) value);
-                            break;
-                        case "php":
-                            oldPost.setPhp((Integer) value);
-                            break;
-                        case "vb":
-                            oldPost.setVb((Integer) value);
-                            break;
-                        case "assembly":
-                            oldPost.setAssembly((Integer) value);
-                            break;
-                        case "java":
-                            oldPost.setJava((Integer) value);
-                            break;
-                        case "javascript":
-                            oldPost.setJavascript((Integer) value);
-                            break;
-                        case "python":
-                            oldPost.setPython((Integer) value);
-                            break;
-                        case "sqllang":
-                            oldPost.setSqllang((Integer) value);
-                            break;
-                        case "keyword":
-                            oldPost.setMemberKeywords((List<MemberKeyword>) value);
-                            // 필드가 추가될 때마다 case 추가
+                for (Field field : oldPost.getClass().getDeclaredFields()) {
+                    String fieldName = field.getName();
+                    if (updates.containsKey(fieldName)) {
+                        field.setAccessible(true);
+                        Object value = updates.get(fieldName);
+                        field.set(oldPost, value);
                     }
-                });
+                }
                 PostMember postMember = postMemberRepository.findByPostId(postid).get();
                 System.out.println("변경 전 FileData Size : "+postMemberRepository.findById(postid).get().getFileDataList().size());
 
@@ -419,7 +306,7 @@ public class MemberController {
                     .message(e.getMessage()).state(HttpStatus.BAD_REQUEST.value()).build();
             return ResponseEntity.badRequest().body(errorResponseForm);
         } catch (RefreshTokenExpiredException | LoginTokenExpiredException | TokenException | CannotFindTeamOrMember |
-                 DatabaseException | IOException e) {
+                 DatabaseException | IOException | IllegalAccessException e) {
             throw new RuntimeException(e);
         }
     }

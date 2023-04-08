@@ -277,7 +277,7 @@ public class MemberService {
                     for (MemberKeyword memberKeyword : memberKeywords){
                         memberKeyword.setPostMember(member);
                     }
-                member.setUserId(writer);
+                member.setMember(byId.get());
 
                 // post 저장
                 PostMember saved=postMemberRepository.save(member);
