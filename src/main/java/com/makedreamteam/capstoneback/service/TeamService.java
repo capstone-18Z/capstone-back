@@ -19,8 +19,10 @@ import org.springframework.http.HttpStatus;
 import org.springframework.orm.jpa.JpaSystemException;
 import org.springframework.transaction.TransactionSystemException;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 import javax.naming.AuthenticationException;
+import java.io.File;
 import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -229,4 +231,26 @@ public class TeamService{
         }
     }
 
+    public void addNewTeamWithImage(MultipartFile[] imageFiles, Team team, String refreshToken, String accessToken) throws Exception {
+        if(jwtTokenProvider.isValidAccessToken(accessToken)){
+            List<String> imagePaths = new ArrayList<>();
+
+            for (MultipartFile imageFile : imageFiles) {
+                String imagePath = saveImageToLocal(imageFile);
+                imagePaths.add(imagePath);
+            }
+            team.setImagePaths(imagePaths);
+            springDataTeamRepository.save(team);
+        }else {
+            checkRefreshToken(refreshToken);
+        }
+    }
+    private String saveImageToLocal(MultipartFile imageFile) throws Exception {
+        String fileName = imageFile.getOriginalFilename();
+        String filePath = "C:/images/" + fileName;
+        File file = new File(filePath);
+        file.getParentFile().mkdirs();
+        imageFile.transferTo(file);
+        return filePath;
+    }
 }
