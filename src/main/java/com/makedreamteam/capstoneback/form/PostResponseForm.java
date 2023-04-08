@@ -15,7 +15,7 @@ public class PostResponseForm {
     private int state;
     private String message;
     private Object data;
-    private Long postid;
+    private Long pid;
     private List<String> filenames;
     private boolean updatable;
 }

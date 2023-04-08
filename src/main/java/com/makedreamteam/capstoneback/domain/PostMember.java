@@ -23,6 +23,7 @@ public class PostMember {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long postId;
 
+    @JsonIgnore
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "member_id")
     private Member member;
