@@ -172,7 +172,7 @@ public class MemberController {
         return ResponseEntity.ok(memberService.checkNicknameDuplicate(nickname));
     }
 
-    @GetMapping("/recommand")
+    @GetMapping("/post/recommand")
     public List<Team> TeamRecommand(HttpServletRequest request) throws AuthenticationException {
         String authToken= request.getHeader("login-token");
         String refreshToken = request.getHeader("refresh-token");
@@ -180,9 +180,35 @@ public class MemberController {
         return memberService.recommendTeams(uid, 2);
     }
 
+    @GetMapping("/post/{postid}/recommand2")
+    public List<Team> TeamRecommandbyKeyword(@PathVariable Long postid,HttpServletRequest request) throws AuthenticationException {
+        String authToken= request.getHeader("login-token");
+        String refreshToken = request.getHeader("refresh-token");
+        UUID uid = memberService.checkUserIdAndToken(authToken, refreshToken);
+        return memberService.recommendTeamsByKeyword(postid, 2);
+    }
+
     @GetMapping("/post")
-    public List<PostMember> findAllPostMember(){
-        return postMemberRepository.findAll();
+    public ResponseEntity<List<PostResponseForm>> getAllPosts() {
+        try {
+            List<PostMember> postMembers = postMemberRepository.findAll();
+            List<PostResponseForm> responseForms = new ArrayList<>();
+            for (PostMember postMember : postMembers) {
+                List<String> filenames = postMember.getFileDataList().stream()
+                        .map(FileData::getFileName)
+                        .collect(Collectors.toList());
+                PostResponseForm responseForm = PostResponseForm.builder()
+                        .message("포스트 전체 조회가 완료되었습니다.")
+                        .data(postMember)
+                        .pid(postMember.getPostId())
+                        .filenames(filenames)
+                        .build();
+                responseForms.add(responseForm);
+            }
+            return ResponseEntity.ok().body(responseForms);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
     }
 
     @PostMapping("/post/new")
@@ -197,7 +223,7 @@ public class MemberController {
                     if (file.isEmpty()) {
                         continue;
                     }
-                    fileService.uploadFile(file, userid, responseForm.getPostid());
+                    fileService.uploadFile(file, userid, responseForm.getPid());
                 }
             }
             return ResponseEntity.ok().body(responseForm);
@@ -291,7 +317,7 @@ public class MemberController {
                         .message("유저 포스트 수정 성공")
                         .state(HttpStatus.OK.value())
                         .data(MemberData.builder().PostMember(oldPost).build())
-                        .postid(postid)
+                        .pid(postid)
                         .build();
                 return ResponseEntity.ok().body(successForm);
             }
@@ -321,7 +347,7 @@ public class MemberController {
             PostResponseForm responseForm = PostResponseForm.builder()
                     .message("포스트 조회가 완료되었습니다.")
                     .data(postMember)
-                    .postid(postid)
+                    .pid(postid)
                     .filenames(filenames)
                     .build();
             return ResponseEntity.ok().body(responseForm);
