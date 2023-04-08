@@ -49,7 +49,7 @@ public class MyPageService {
             List<Team> myAllTeams = springDataTeamRepository.findByTeamLeader(userId);
             //내가 만든 팀에 들어온 요청 리스트
             //내가 작성한 유저 포스트
-            List<PostMember> myAllPost = postMemberRepository.findAllByUserId(userId);
+            List<PostMember> myAllPost = postMemberRepository.findAllByMember_Id(userId);
             //내가 팀원 신청한 리스트
             List<WaitingListOfMatchingUserToTeam> ListOfRequestISubmitted = waitingListUserToTeamRepository.findAllByUserId(userId);
             ResponseFormForMyPage responseFormForMyPage= ResponseFormForMyPage.builder().myAllTeams(myAllTeams).myAllPost(myAllPost).ListOfRequestISubmitted(ListOfRequestISubmitted).build();

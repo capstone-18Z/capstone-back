@@ -1,5 +1,7 @@
 package com.makedreamteam.capstoneback.domain;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
 import jakarta.persistence.*;
@@ -10,6 +12,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
 import org.hibernate.annotations.ColumnDefault;
+import org.springframework.web.multipart.MultipartFile;
 
 @Getter
 @Setter
@@ -73,6 +76,10 @@ public class Member {
     @Column
     @ColumnDefault("0")
     private int sqllang;
+
+    @OneToMany(mappedBy = "member", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
+    private List<PostMember> postMemberList = new ArrayList<>();
+
 
     public Member(String email, String password, String nickname) {
         this.email = email;

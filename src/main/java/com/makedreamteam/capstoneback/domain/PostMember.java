@@ -1,5 +1,6 @@
 package com.makedreamteam.capstoneback.domain;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
 import lombok.*;
@@ -21,8 +22,11 @@ public class PostMember {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long postId;
-    @Column
-    private UUID userId;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "member_id")
+    private Member member;
+
     @Column
     private String nickname;
     @Column
@@ -70,6 +74,7 @@ public class PostMember {
     @Column
     @ColumnDefault("0")
     private int sqllang;
+
     @OneToMany(mappedBy = "postMember", cascade = CascadeType.ALL, orphanRemoval = true,fetch = FetchType.EAGER)
     private List<MemberKeyword> memberKeywords = new ArrayList<>();
 
@@ -77,6 +82,10 @@ public class PostMember {
     public List<String> getKeywordValues() {
         return memberKeywords.stream().map(MemberKeyword::getValue).collect(Collectors.toList());
     }
+
+    @JsonIgnore
+    @OneToMany(mappedBy = "post", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
+    private List<FileData> fileDataList = new ArrayList<>();
 
     public void addKeyword(MemberKeyword memberKeywords) {
         this.memberKeywords.add(memberKeywords);
