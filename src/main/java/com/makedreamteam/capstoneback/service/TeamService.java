@@ -128,7 +128,7 @@ public class TeamService{
         }
 
     }
-    public ResponseForm update(UUID teamId,Team team,MultipartFile[] images,String accessToken,String refreshToken) throws IOException {
+    public ResponseForm update(UUID teamId,Team team,List<MultipartFile> images,String accessToken,String refreshToken) throws IOException {
         if(jwtTokenProvider.isValidAccessToken(accessToken)){
             Optional<Team> optionalTeam = springDataTeamRepository.findById(teamId);
             if(optionalTeam.isEmpty()){
@@ -138,14 +138,14 @@ public class TeamService{
 
             //이미지를 삭제한다
             deleteFile(updatedTeam.getImagePaths());
-            List<String> imageURL=uploadFile(images);
+            if(images!=null) {
+                team.setImagePaths(uploadFile(images));
+            }
             for(TeamKeyword teamKeyword : team.getTeamKeywords()){
                 teamKeyword.setTeam(team);
             }
             team.setTeamId(updatedTeam.getTeamId());
-            team.setImagePaths(imageURL
 
-            );
             team.setTeamLeader(updatedTeam.getTeamLeader());
             Team savedTeam = springDataTeamRepository.save(team);
             return ResponseForm.builder().data(TeamData.builder().team(savedTeam).build()).build();
@@ -270,7 +270,7 @@ public class TeamService{
         return filePath;
     }
 
-    public List<String> uploadFile(MultipartFile[] files) throws IOException {
+    public List<String> uploadFile(List<MultipartFile> files) throws IOException {
         List<String> images=new ArrayList<>();
         for (MultipartFile file : files){
             Bucket bucket= StorageClient.getInstance().bucket("caps-1edf8.appspot.com");

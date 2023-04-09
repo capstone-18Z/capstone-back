@@ -9,6 +9,7 @@ import com.makedreamteam.capstoneback.service.FileService;
 import com.makedreamteam.capstoneback.service.ImageStorageService;
 import com.makedreamteam.capstoneback.service.TeamService;
 import jakarta.servlet.http.HttpServletRequest;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.*;
 import org.springframework.web.bind.annotation.*;
@@ -82,7 +83,7 @@ public class TeamController {
 
     //팀 정보 수정
     @PostMapping(value = "/{teamId}/update", consumes = "multipart/form-data")
-    public ResponseEntity<ResponseForm> updateTeamInfo(@PathVariable UUID teamId,@RequestPart("team") Team updateForm, @RequestPart("images") MultipartFile[] images,HttpServletRequest request) {
+    public ResponseEntity<ResponseForm> updateTeamInfo(@PathVariable UUID teamId,@RequestPart("team") Team updateForm, @RequestPart(value = "images", required = false) List<MultipartFile> images,HttpServletRequest request) {
         String accessToken= request.getHeader("login-token");
         String refreshToken= request.getHeader("refresh-token");
         try {
@@ -107,15 +108,15 @@ public class TeamController {
         }
     }
     @PostMapping(value = "/new",consumes = "multipart/form-data")
-    public ResponseEntity<ResponseForm> createTeam(@RequestPart("images") MultipartFile[] images,@RequestPart("team") Team team,HttpServletRequest request) throws TokenException, DatabaseException, IOException {
+    public ResponseEntity<ResponseForm> createTeam(@RequestPart(value = "images", required = false) List<MultipartFile> images, @RequestPart("team") Team team, HttpServletRequest request) throws TokenException, DatabaseException, IOException {
         try {
             String refreshToken = request.getHeader("refresh-token");
             String accessToken = request.getHeader("login-token");
+
             List<String> imageUrls = null;
-            if (images != null)
-                imageUrls = teamService.uploadFile(images);
-            if(imageUrls!=null)
-                team.setImagePaths(imageUrls);
+            if (images != null) {
+                team.setImagePaths(teamService.uploadFile(images));
+            }
             ResponseForm responseForm = teamService.addPostTeam(team, accessToken, refreshToken);
             return ResponseEntity.ok(responseForm);
         }catch (RuntimeException e){
