@@ -77,9 +77,11 @@ public class Member {
     @ColumnDefault("0")
     private int sqllang;
 
+    @Column
+    private String profileImageUrl;
+
     @OneToMany(mappedBy = "member", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
     private List<PostMember> postMemberList = new ArrayList<>();
-
 
     public Member(String email, String password, String nickname) {
         this.email = email;

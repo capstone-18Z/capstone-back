@@ -15,8 +15,10 @@ import com.makedreamteam.capstoneback.domain.*;
 import com.makedreamteam.capstoneback.exception.*;
 import com.makedreamteam.capstoneback.form.PostResponseForm;
 import com.makedreamteam.capstoneback.form.ResponseForm;
+import com.makedreamteam.capstoneback.repository.FileDataRepository;
 import com.makedreamteam.capstoneback.repository.MemberRepository;
 import com.makedreamteam.capstoneback.repository.PostMemberRepository;
+import com.makedreamteam.capstoneback.repository.ProfileDataRepository;
 import com.makedreamteam.capstoneback.service.FileService;
 import com.makedreamteam.capstoneback.service.MemberService;
 import com.makedreamteam.capstoneback.service.TeamService;
@@ -56,6 +58,7 @@ public class MemberController {
     private final PostMemberRepository postMemberRepository;
     private final FileService fileService;
     private final TeamService teamService;
+    private final FileDataRepository fileDataRepository;
 
     // 회원가입
     @PostMapping("/register")
@@ -64,6 +67,7 @@ public class MemberController {
                 .email(user.get("email"))
                 .password(passwordEncoder.encode(user.get("password")))
                 .nickname(user.get("nickname"))
+                .profileImageUrl("https://firebasestorage.googleapis.com/v0/b/caps-1edf8.appspot.com/o/DefaultProfile.PNG?alt=media&token=266e52f4-818f-4a20-970d-2d84ba48e5a1")
                 .role(Role.ROLE_MEMBER)
                 .build();
         return memberService.MemberJoin(member);
@@ -124,15 +128,33 @@ public class MemberController {
 
     }
 
-    @PostMapping("/userForm/update")
-    public ResponseEntity<MemberResponseForm> updateUser(@RequestBody Map<String, Object> updates, HttpServletRequest request) throws AuthenticationException {
+    @PostMapping("/userForm/delete")
+    public ResponseEntity<MemberResponseForm> deleteUser(HttpServletRequest request){
         try{
             String authToken= request.getHeader("login-token");
             String refreshToken = request.getHeader("refresh-token");
-            Claims claims = Jwts.parser()
-                    .setSigningKey("test")
-                    .parseClaimsJws(authToken)
-                    .getBody();
+            UUID memberid = memberService.checkUserIdAndToken(authToken, refreshToken);
+            Member deleteMember = memberRepository.findById(memberid).get();
+            memberRepository.delete(deleteMember);
+            MemberResponseForm successForm = MemberResponseForm.builder()
+                    .state(HttpStatus.OK.value())
+                    .message("회원 탈퇴 성공")
+                    .data(MemberData.builder().Member(deleteMember).build())
+                    .build();
+            return ResponseEntity.ok().body(successForm);
+        }catch (RuntimeException | AuthenticationException e){
+            MemberResponseForm errorResponseForm = MemberResponseForm.builder()
+                    .message(e.getMessage()).state(HttpStatus.BAD_REQUEST.value()).build();
+            return ResponseEntity.badRequest().body(errorResponseForm);
+        }
+    }
+
+    @PostMapping("/userForm/update")
+    public ResponseEntity<MemberResponseForm> updateUser(@RequestPart(value = "metadata", required = true) Map<String, Object> updates, @RequestPart(value = "file", required = false) MultipartFile file, HttpServletRequest request) throws AuthenticationException {
+        try{
+            String authToken= request.getHeader("login-token");
+            String refreshToken = request.getHeader("refresh-token");
+            String DefaultProfile = "https://firebasestorage.googleapis.com/v0/b/caps-1edf8.appspot.com/o/DefaultProfile.PNG?alt=media&token=266e52f4-818f-4a20-970d-2d84ba48e5a1";
             UUID memberid = memberService.checkUserIdAndToken(authToken, refreshToken);
             Member oldMember = memberRepository.findById(memberid)
                     .orElseThrow(() -> new RuntimeException("해당하는 회원이 존재하지 않습니다."));
@@ -145,8 +167,13 @@ public class MemberController {
                     field.set(oldMember, value);
                 }
             }
+            if(file != null){
+                if(!oldMember.getProfileImageUrl().equals(DefaultProfile)){
+                    fileService.deleteFile(fileDataRepository.findByImageURL(oldMember.getProfileImageUrl()).get());
+                }
+                oldMember.setProfileImageUrl(fileService.uploadProfile(file, memberid).getImageURL());
+            }
             memberRepository.save(oldMember);
-            //Member updateMember = memberService.update(memberid, post);
             MemberResponseForm successForm = MemberResponseForm.builder()
                     .message("유저 업데이트 성공")
                     .state(HttpStatus.OK.value())
@@ -156,7 +183,7 @@ public class MemberController {
             MemberResponseForm errorResponseForm = MemberResponseForm.builder()
                     .message(e.getMessage()).state(HttpStatus.BAD_REQUEST.value()).build();
             return ResponseEntity.badRequest().body(errorResponseForm);
-        } catch (IllegalAccessException e) {
+        } catch (IllegalAccessException | IOException e) {
             throw new RuntimeException(e);
         }
     }
@@ -198,7 +225,7 @@ public class MemberController {
             List<PostResponseForm> responseForms = new ArrayList<>();
             for (PostMember postMember : postMembers) {
                 List<String> filenames = postMember.getFileDataList().stream()
-                        .map(FileData::getFileName)
+                        .map(FileData::getImageURL)
                         .collect(Collectors.toList());
                 PostResponseForm responseForm = PostResponseForm.builder()
                         .message("포스트 전체 조회가 완료되었습니다.")
@@ -276,6 +303,8 @@ public class MemberController {
             PostResponseForm errorResponseForm = PostResponseForm.builder()
                     .message(e.getMessage()).state(HttpStatus.BAD_REQUEST.value()).build();
             return ResponseEntity.badRequest().body(errorResponseForm);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
         }
     }
 
@@ -351,7 +380,7 @@ public class MemberController {
         try {
             PostMember postMember = postMemberRepository.findByPostId(postid).get();
             List<String> filenames = postMember.getFileDataList().stream()
-                    .map(FileData::getFileName)
+                    .map(FileData::getImageURL)
                     .collect(Collectors.toList());
             PostResponseForm responseForm = PostResponseForm.builder()
                     .message("포스트 조회가 완료되었습니다.")

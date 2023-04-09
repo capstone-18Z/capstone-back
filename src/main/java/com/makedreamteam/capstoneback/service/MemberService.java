@@ -169,6 +169,8 @@ public class MemberService {
             throw new DatabaseException("데이터베이스 처리 중 오류가 발생했습니다.");
         } catch (JwtException ex) {
             throw new TokenException(ex.getMessage());
+        } catch (IOException e) {
+            throw new RuntimeException(e);
         }
     }
 
@@ -298,7 +300,7 @@ public class MemberService {
                         memberKeyword.setPostMember(member);
                     }
                 member.setMember(byId.get());
-
+                member.setNickname(byId.get().getNickname());
                 // post 저장
                 PostMember saved=postMemberRepository.save(member);
 

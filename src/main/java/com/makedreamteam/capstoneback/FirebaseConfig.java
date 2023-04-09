@@ -15,11 +15,6 @@ import java.io.InputStream;
 
 @Configuration
 public class FirebaseConfig {
-    @Value("${app.firebase-configuration-file}")
-    private String keyPath;
-    @Value("${app.firebase-bucket}")
-    private String bucketPath;
-
     @Bean
     public FirebaseApp firebaseApp() throws IOException {
         InputStream serviceAccount = getClass().getResourceAsStream("/serviceAccountKey.json");
