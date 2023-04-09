@@ -143,7 +143,9 @@ public class TeamService{
                 teamKeyword.setTeam(team);
             }
             team.setTeamId(updatedTeam.getTeamId());
-            team.setImagePaths(imageURL);
+            team.setImagePaths(imageURL
+
+            );
             team.setTeamLeader(updatedTeam.getTeamLeader());
             Team savedTeam = springDataTeamRepository.save(team);
             return ResponseForm.builder().data(TeamData.builder().team(savedTeam).build()).build();

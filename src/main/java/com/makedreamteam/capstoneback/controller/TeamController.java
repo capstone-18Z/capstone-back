@@ -112,7 +112,7 @@ public class TeamController {
             String refreshToken = request.getHeader("refresh-token");
             String accessToken = request.getHeader("login-token");
             List<String> imageUrls = null;
-            if (images != null)
+            if (images.size() != 0)
                 imageUrls = teamService.uploadFile(images);
             team.setImagePaths(imageUrls != null ? imageUrls : null);
             ResponseForm responseForm = teamService.addPostTeam(team, accessToken, refreshToken);
