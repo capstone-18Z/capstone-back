@@ -88,6 +88,7 @@ public class MatchingUserToTeamService {
             //매칭이 완료외었으므로 해당 대기인원 data는 삭제한다
 
             //waitingListRepository.delete(waitingList);
+
             waitingListRepository.delete(waitingList);
             //이후, 팀멤버 테이블에 해당 사용자를 추가
 
@@ -147,15 +148,18 @@ public class MatchingUserToTeamService {
 
     public ResponseForm fuckYouMatch(UUID waitingListId, String accessToken, String refreshToken) {
         if(jwtTokenProvider.isValidAccessToken(accessToken)){
-            Optional<WaitingListOfMatchingUserToTeam> byId = waitingListRepository.findById(waitingListId);
-            if(byId.isEmpty()){
+            WaitingListOfMatchingUserToTeam waitingListOfMatchingUserToTeam = waitingListRepository.findById(waitingListId).orElseThrow(() -> {
                 throw new RuntimeException("매칭 대기 리스트가 존재하지 않습니다.");
-            }
-            WaitingListOfMatchingUserToTeam waitingList=byId.get();
+            });
 
-            Team team = waitingList.getTeam();
+            Team team = waitingListOfMatchingUserToTeam.getTeam();
+
+            team.getRequestList().removeIf(req -> req.equals(waitingListOfMatchingUserToTeam));
+
             //매칭이 완료외었으므로 해당 대기인원 data는 삭제한다
-            waitingListRepository.delete(waitingList);
+            waitingListRepository.delete(waitingListOfMatchingUserToTeam);
+            springDataTeamRepository.save(team);
+
             return ResponseForm.builder().message("해당 요청을 거절했습니다.").build();
         }else{
             return checkRefreshToken(refreshToken);

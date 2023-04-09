@@ -1,5 +1,10 @@
 package com.makedreamteam.capstoneback.service;
 
+import com.google.cloud.storage.Blob;
+import com.google.cloud.storage.BlobId;
+import com.google.cloud.storage.Bucket;
+import com.google.cloud.storage.Storage;
+import com.google.firebase.cloud.StorageClient;
 import com.makedreamteam.capstoneback.JwtTokenProvider;
 import com.makedreamteam.capstoneback.domain.*;
 import com.makedreamteam.capstoneback.exception.*;
@@ -22,7 +27,10 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import javax.naming.AuthenticationException;
+import java.io.ByteArrayInputStream;
 import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -44,7 +52,8 @@ public class TeamService{
 
     @Autowired
     private final RefreshTokenRepository refreshTokenRepository;
-
+    @Autowired
+    private Storage storage;
 
     private JwtTokenProvider jwtTokenProvider;
 
@@ -119,17 +128,22 @@ public class TeamService{
         }
 
     }
-    public ResponseForm update(UUID teamId,Team team,String accessToken,String refreshToken) {
+    public ResponseForm update(UUID teamId,Team team,List<MultipartFile> images,String accessToken,String refreshToken) throws IOException {
         if(jwtTokenProvider.isValidAccessToken(accessToken)){
             Optional<Team> optionalTeam = springDataTeamRepository.findById(teamId);
             if(optionalTeam.isEmpty()){
                 throw new RuntimeException("springDataTeamRepository.findById(team.getTeamId()) is empty");
             }
             Team updatedTeam=optionalTeam.get();
+
+            //이미지를 삭제한다
+            deleteFile(updatedTeam.getImagePaths());
+            List<String> imageURL=uploadFile(images);
             for(TeamKeyword teamKeyword : team.getTeamKeywords()){
                 teamKeyword.setTeam(team);
             }
             team.setTeamId(updatedTeam.getTeamId());
+            team.setImagePaths(imageURL);
             team.setTeamLeader(updatedTeam.getTeamLeader());
             Team savedTeam = springDataTeamRepository.save(team);
             return ResponseForm.builder().data(TeamData.builder().team(savedTeam).build()).build();
@@ -252,5 +266,32 @@ public class TeamService{
         file.getParentFile().mkdirs();
         imageFile.transferTo(file);
         return filePath;
+    }
+
+    public List<String> uploadFile(List<MultipartFile> files) throws IOException {
+        List<String> images=new ArrayList<>();
+        for (MultipartFile file : files){
+            Bucket bucket= StorageClient.getInstance().bucket("caps-1edf8.appspot.com");
+            InputStream content =new ByteArrayInputStream(file.getBytes());
+            Blob blob=bucket.create(System.currentTimeMillis() + "_" +file.getOriginalFilename(),content,file.getContentType());
+            String imageUrl = "https://firebasestorage.googleapis.com/v0/b/" + bucket.getName() + "/o/" + blob.getName()+"?alt=media";
+            images.add(imageUrl);
+        }
+        return images;
+    }
+    public void deleteFile(List<String> files){
+        for(String url : files){
+            String[] urlArr = url.split("/"); // "/"를 기준으로 문자열 분리
+            String fileName = urlArr[urlArr.length - 1].split("\\?")[0];
+            System.out.println("fileName = "+fileName);
+            BlobId blobId = BlobId.of("caps-1edf8.appspot.com", fileName);
+            boolean deleted = storage.delete(blobId);
+            if (deleted) {
+                System.out.println("삭제됨");
+            } else {
+                System.out.println("삭제안됨");
+            }
+        }
+
     }
 }

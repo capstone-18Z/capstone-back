@@ -42,8 +42,7 @@ public class FileService {
 
     @Autowired
     private final FileDataRepository fileDataRepository;
-    @Autowired
-    private Storage storage;
+
 
 
     @PersistenceContext
@@ -52,8 +51,6 @@ public class FileService {
     @Value("${app.upload.dir:classpath:/static/upload}")
     private String uploadDir;
 
-    @Value("${app.firebase-bucket}")
-    private String firebaseBucket;
 
     public FileData uploadFile(MultipartFile file, UUID uid, Long postid) throws IOException {
         String originalFileName = file.getOriginalFilename();
@@ -87,17 +84,7 @@ public class FileService {
         return fileDataRepository.save(fileData);
     }
 
-    public List<String> uploadFile(List<MultipartFile> files) throws IOException {
-        List<String> images=new ArrayList<>();
-        for (MultipartFile file : files){
-            Bucket bucket=StorageClient.getInstance().bucket("caps-1edf8.appspot.com");
-            InputStream content =new ByteArrayInputStream(file.getBytes());
-            Blob blob=bucket.create(file.getOriginalFilename(),content,file.getContentType());
-            String imageUrl = "https://firebasestorage.googleapis.com/v0/b/" + bucket.getName() + "/o/" + blob.getName()+"?alt=media";
-            images.add(imageUrl);
-        }
-        return images;
-    }
+
 
     public void deleteFile(FileData file){
         String filePath = uploadDir + "/" + file.getFileName();

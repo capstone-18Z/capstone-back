@@ -70,7 +70,7 @@ public class MatchingUserToTeamController {
     }
 
     @PostMapping("/{waitingId}/fuckyou")
-    public ResponseEntity<ResponseForm> fuckyouMatch( @PathVariable UUID waitingId, HttpServletRequest request){
+    public ResponseEntity<ResponseForm> fuckyouMatch(@PathVariable UUID waitingId, HttpServletRequest request){
         String accessToken= request.getHeader("login-token");
         String refreshToken= request.getHeader("refresh-token");
         try {
