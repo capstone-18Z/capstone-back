@@ -82,7 +82,7 @@ public class TeamController {
 
     //팀 정보 수정
     @PostMapping(value = "/{teamId}/update", consumes = "multipart/form-data")
-    public ResponseEntity<ResponseForm> updateTeamInfo(@PathVariable UUID teamId,@RequestPart("team") Team updateForm, @RequestPart("images") List<MultipartFile> images,HttpServletRequest request) {
+    public ResponseEntity<ResponseForm> updateTeamInfo(@PathVariable UUID teamId,@RequestPart("team") Team updateForm, @RequestPart("images") MultipartFile[] images,HttpServletRequest request) {
         String accessToken= request.getHeader("login-token");
         String refreshToken= request.getHeader("refresh-token");
         try {
@@ -107,7 +107,7 @@ public class TeamController {
         }
     }
     @PostMapping(value = "/new",consumes = "multipart/form-data")
-    public ResponseEntity<ResponseForm> createTeam(@RequestPart("images") List<MultipartFile> images,@RequestPart("team") Team team,HttpServletRequest request) throws TokenException, DatabaseException, IOException {
+    public ResponseEntity<ResponseForm> createTeam(@RequestPart("images") MultipartFile[] images,@RequestPart("team") Team team,HttpServletRequest request) throws TokenException, DatabaseException, IOException {
         try {
             String refreshToken = request.getHeader("refresh-token");
             String accessToken = request.getHeader("login-token");
