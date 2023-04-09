@@ -44,6 +44,12 @@ public class FileService {
     private final FileDataRepository fileDataRepository;
 
 
+    @Autowired
+    private final ProfileDataRepository profileDataRepository;
+
+    @Autowired
+    private Storage storage;
+
 
     @PersistenceContext
     private EntityManager entityManager;
@@ -80,11 +86,60 @@ public class FileService {
         fileData.setFileType(fileType);
         fileData.setOriginalName(originalFileName);
         fileData.setUploadDate(LocalDateTime.now());
+        fileData.setImageURL(imageUrl);
 
         return fileDataRepository.save(fileData);
     }
 
 
+
+    public ProfileData uploadProfile(MultipartFile file, UUID uid) throws IOException {
+        String originalFileName = file.getOriginalFilename();
+        String extension = originalFileName.substring(originalFileName.lastIndexOf(".") + 1);
+        String fileName = System.currentTimeMillis() + "_" + originalFileName;
+
+        Bucket bucket=StorageClient.getInstance().bucket("caps-1edf8.appspot.com");
+        InputStream content =new ByteArrayInputStream(file.getBytes());
+        Blob blob=bucket.create(fileName,content,file.getContentType());
+        String imageUrl = "https://firebasestorage.googleapis.com/v0/b/" + bucket.getName() + "/o/" + blob.getName()+"?alt=media";
+
+        FileType fileType;
+        switch (extension.toLowerCase()) {
+            case "jpg":
+            case "jpeg":
+            case "png":
+                fileType = FileType.IMAGE;
+                break;
+            case "pdf":
+                fileType = FileType.PDF;
+                break;
+            default:
+                fileType = FileType.OTHER;
+        }
+
+        ProfileData profileData = new ProfileData();
+        profileData.setMember(memberRepository.findById(uid).get());
+        profileData.setFileName(fileName);
+        profileData.setFileType(fileType);
+        profileData.setOriginalName(originalFileName);
+        profileData.setUploadDate(LocalDateTime.now());
+        profileData.setImageURL(imageUrl);
+
+        return profileDataRepository.save(profileData);
+    }
+
+
+    public List<String> uploadFile(List<MultipartFile> files) throws IOException {
+        List<String> images=new ArrayList<>();
+        for (MultipartFile file : files){
+            Bucket bucket=StorageClient.getInstance().bucket("caps-1edf8.appspot.com");
+            InputStream content = new ByteArrayInputStream(file.getBytes());
+            Blob blob=bucket.create(file.getOriginalFilename(),content,file.getContentType());
+            String imageUrl = "https://firebasestorage.googleapis.com/v0/b/" + bucket.getName() + "/o/" + blob.getName()+"?alt=media";
+            images.add(imageUrl);
+        }
+        return images;
+    }
 
     public void deleteFile(FileData file){
         String filePath = uploadDir + "/" + file.getFileName();

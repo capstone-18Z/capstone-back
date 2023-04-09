@@ -4,7 +4,6 @@ import jakarta.persistence.*;
 import lombok.*;
 
 import java.time.LocalDateTime;
-import java.util.UUID;
 
 
 @Getter
@@ -14,7 +13,7 @@ import java.util.UUID;
 @AllArgsConstructor
 @Entity
 @Builder
-public class FileData {
+public class ProfileData {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id")
@@ -23,10 +22,6 @@ public class FileData {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "member_id")
     private Member member;
-
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "post_id")
-    private PostMember post;
 
     @Column(name = "filename")
     private String fileName;
