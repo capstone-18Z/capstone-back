@@ -80,35 +80,15 @@ public class TeamController {
 
     }
 
-
-    @PostMapping("/new")
-    public ResponseEntity<ResponseForm> addNewTeam(@RequestBody Team form , HttpServletRequest request) {
-        try {
-
-            String authToken = request.getHeader("login-token");
-            String refreshToken=request.getHeader("refresh-token");
-            ResponseForm responseForm =  teamService.addPostTeam(form, authToken,refreshToken);
-
-            return ResponseEntity.status(HttpStatus.CREATED).body(responseForm);
-        } catch (RuntimeException | TokenException | DatabaseException e) {
-            ResponseForm errorResponse = ResponseForm.builder()
-                    .message("Failed to create team: " + e.getMessage())
-                    .state(HttpStatus.INTERNAL_SERVER_ERROR.value())
-                    .build();
-            return ResponseEntity.badRequest().body(errorResponse);
-        }
-    }
-
-
     //팀 정보 수정
-    @PostMapping("/{teamId}/update")
-    public ResponseEntity<ResponseForm> updateTeamInfo(@PathVariable UUID teamId,@RequestBody Team updateForm, HttpServletRequest request) {
+    @PostMapping(value = "/{teamId}/update", consumes = "multipart/form-data")
+    public ResponseEntity<ResponseForm> updateTeamInfo(@PathVariable UUID teamId,@RequestPart("team") Team updateForm, @RequestPart("images") List<MultipartFile> images,HttpServletRequest request) {
         String accessToken= request.getHeader("login-token");
         String refreshToken= request.getHeader("refresh-token");
         try {
-            ResponseForm update = teamService.update(teamId,updateForm, accessToken,refreshToken);
+            ResponseForm update = teamService.update(teamId,updateForm, images,accessToken,refreshToken);
             return ResponseEntity.ok().body(update);
-        }catch (NullPointerException e){
+        }catch (NullPointerException | IOException e){
             ResponseForm build = ResponseForm.builder().message(e.getMessage()).build();
             return ResponseEntity.badRequest().body(build);
         }
@@ -126,14 +106,14 @@ public class TeamController {
             return ResponseEntity.badRequest().body(error);
         }
     }
-    @PostMapping(value = "/teams/new",consumes = "multipart/form-data")
+    @PostMapping(value = "/new",consumes = "multipart/form-data")
     public ResponseEntity<ResponseForm> createTeam(@RequestPart("images") List<MultipartFile> images,@RequestPart("team") Team team,HttpServletRequest request) throws TokenException, DatabaseException, IOException {
         try {
             String refreshToken = request.getHeader("refresh-token");
             String accessToken = request.getHeader("login-token");
             List<String> imageUrls = null;
             if (images != null)
-                imageUrls = fileService.uploadFile(images);
+                imageUrls = teamService.uploadFile(images);
             team.setImagePaths(imageUrls != null ? imageUrls : null);
             ResponseForm responseForm = teamService.addPostTeam(team, accessToken, refreshToken);
             return ResponseEntity.ok(responseForm);

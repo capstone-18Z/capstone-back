@@ -110,7 +110,6 @@ public class Team{
     @ColumnDefault("0")
     private int sqllang;
 
-
     @OneToMany(mappedBy = "team", cascade = CascadeType.ALL, orphanRemoval = true,fetch = FetchType.EAGER)
     private List<TeamKeyword> teamKeywords = new ArrayList<>();
 
