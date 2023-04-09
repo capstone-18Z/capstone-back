@@ -2,13 +2,11 @@ package com.makedreamteam.capstoneback.service;
 
 import com.google.cloud.storage.*;
 import com.google.firebase.cloud.StorageClient;
-import com.makedreamteam.capstoneback.domain.FileData;
-import com.makedreamteam.capstoneback.domain.FileType;
-import com.makedreamteam.capstoneback.domain.PostMember;
-import com.makedreamteam.capstoneback.domain.Team;
+import com.makedreamteam.capstoneback.domain.*;
 import com.makedreamteam.capstoneback.repository.FileDataRepository;
 import com.makedreamteam.capstoneback.repository.MemberRepository;
 import com.makedreamteam.capstoneback.repository.PostMemberRepository;
+import com.makedreamteam.capstoneback.repository.ProfileDataRepository;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import lombok.RequiredArgsConstructor;
@@ -62,8 +60,11 @@ public class FileService {
         String originalFileName = file.getOriginalFilename();
         String extension = originalFileName.substring(originalFileName.lastIndexOf(".") + 1);
         String fileName = System.currentTimeMillis() + "_" + originalFileName;
-        Path path = Paths.get(uploadDir + "/" + fileName);
-        Files.write(path, file.getBytes());
+
+        Bucket bucket=StorageClient.getInstance().bucket("caps-1edf8.appspot.com");
+        InputStream content =new ByteArrayInputStream(file.getBytes());
+        Blob blob=bucket.create(fileName,content,file.getContentType());
+        String imageUrl = "https://firebasestorage.googleapis.com/v0/b/" + bucket.getName() + "/o/" + blob.getName()+"?alt=media";
 
         FileType fileType;
         switch (extension.toLowerCase()) {

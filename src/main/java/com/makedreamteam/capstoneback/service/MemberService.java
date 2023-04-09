@@ -169,9 +169,7 @@ public class MemberService {
             throw new DatabaseException("데이터베이스 처리 중 오류가 발생했습니다.");
         } catch (JwtException ex) {
             throw new TokenException(ex.getMessage());
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
+        } 
     }
 
 

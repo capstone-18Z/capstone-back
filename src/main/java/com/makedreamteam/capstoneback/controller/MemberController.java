@@ -303,8 +303,6 @@ public class MemberController {
             PostResponseForm errorResponseForm = PostResponseForm.builder()
                     .message(e.getMessage()).state(HttpStatus.BAD_REQUEST.value()).build();
             return ResponseEntity.badRequest().body(errorResponseForm);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
         }
     }
 
