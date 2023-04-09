@@ -128,18 +128,19 @@ public class TeamController {
     }
     @PostMapping(value = "/teams/new",consumes = "multipart/form-data")
     public ResponseEntity<ResponseForm> createTeam(@RequestPart("images") List<MultipartFile> images,@RequestPart("team") Team team,HttpServletRequest request) throws TokenException, DatabaseException, IOException {
-
-        String refreshToken= request.getHeader("refresh-token");
-        String accessToken= request.getHeader("login-token");
-        List<String> imageUrls=null;
-        if(images!=null)
-            imageUrls = fileService.uploadFile(images);
-        team.setImagePaths(imageUrls != null ? imageUrls : null);
-        ResponseForm responseForm = teamService.addPostTeam(team, accessToken, refreshToken);
-
-
-
-        return ResponseEntity.ok(responseForm);
+        try {
+            String refreshToken = request.getHeader("refresh-token");
+            String accessToken = request.getHeader("login-token");
+            List<String> imageUrls = null;
+            if (images != null)
+                imageUrls = fileService.uploadFile(images);
+            team.setImagePaths(imageUrls != null ? imageUrls : null);
+            ResponseForm responseForm = teamService.addPostTeam(team, accessToken, refreshToken);
+            return ResponseEntity.ok(responseForm);
+        }catch (RuntimeException e){
+            ResponseForm error= ResponseForm.builder().message(e.getMessage()).build();
+            return ResponseEntity.ok().body(error);
+        }
     }
 
 

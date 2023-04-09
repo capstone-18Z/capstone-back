@@ -1,5 +1,7 @@
 package com.makedreamteam.capstoneback.service;
 
+import com.google.cloud.storage.*;
+import com.google.firebase.cloud.StorageClient;
 import com.makedreamteam.capstoneback.domain.FileData;
 import com.makedreamteam.capstoneback.domain.FileType;
 import com.makedreamteam.capstoneback.domain.PostMember;
@@ -16,8 +18,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -38,12 +42,18 @@ public class FileService {
 
     @Autowired
     private final FileDataRepository fileDataRepository;
+    @Autowired
+    private Storage storage;
+
 
     @PersistenceContext
     private EntityManager entityManager;
 
     @Value("${app.upload.dir:classpath:/static/upload}")
     private String uploadDir;
+
+    @Value("${app.firebase-bucket}")
+    private String firebaseBucket;
 
     public FileData uploadFile(MultipartFile file, UUID uid, Long postid) throws IOException {
         String originalFileName = file.getOriginalFilename();
@@ -79,15 +89,13 @@ public class FileService {
 
     public List<String> uploadFile(List<MultipartFile> files) throws IOException {
         List<String> images=new ArrayList<>();
-        for(MultipartFile file : files) {
-            String originalFileName = file.getOriginalFilename();
-            String extension = originalFileName.substring(originalFileName.lastIndexOf(".") + 1);
-            String fileName = String.valueOf(UUID.randomUUID())+originalFileName;
-            images.add(fileName);
-            Path path = Paths.get(uploadDir + "/" + fileName);
-            Files.write(path, file.getBytes());
+        for (MultipartFile file : files){
+            Bucket bucket=StorageClient.getInstance().bucket("caps-1edf8.appspot.com");
+            InputStream content =new ByteArrayInputStream(file.getBytes());
+            Blob blob=bucket.create(file.getOriginalFilename(),content,file.getContentType());
+            String imageUrl = "https://firebasestorage.googleapis.com/v0/b/" + bucket.getName() + "/o/" + blob.getName()+"?alt=media";
+            images.add(imageUrl);
         }
-
         return images;
     }
 
