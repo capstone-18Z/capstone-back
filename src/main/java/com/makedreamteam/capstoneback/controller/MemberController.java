@@ -202,14 +202,6 @@ public class MemberController {
         return ResponseEntity.ok(memberService.checkNicknameDuplicate(nickname));
     }
 
-    @GetMapping("/post/recommand")
-    public List<Team> TeamRecommand(HttpServletRequest request) throws AuthenticationException {
-        String authToken= request.getHeader("login-token");
-        String refreshToken = request.getHeader("refresh-token");
-        UUID uid = memberService.checkUserIdAndToken(authToken, refreshToken);
-        return memberService.recommendTeams(uid, 2);
-    }
-
     @GetMapping("/post/{postid}/recommand2")
     public List<Team> TeamRecommandbyKeyword(@PathVariable Long postid,HttpServletRequest request) throws AuthenticationException {
         String authToken= request.getHeader("login-token");

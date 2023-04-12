@@ -27,6 +27,15 @@ public class Member {
     @GeneratedValue
     private UUID id;
 
+    @OneToOne(mappedBy = "member")
+    private MemberLang memberLang;
+
+    @OneToOne(mappedBy = "member")
+    private MemberFramework memberFramework;
+
+    @OneToOne(mappedBy = "member")
+    private MemberDB memberDB;
+
     @Column(length = 100, unique = true, nullable = false, columnDefinition="VARCHAR(255) CHARACTER SET utf8 COLLATE utf8_general_ci")
     private String email;
     private String password;
@@ -36,46 +45,6 @@ public class Member {
 
     @Enumerated(EnumType.STRING)
     private Role role;
-
-    @Column
-    @ColumnDefault("0")
-    private int python;
-
-    @Column
-    @ColumnDefault("0")
-    private int c;
-
-    @Column
-    @ColumnDefault("0")
-    private int java;
-
-    @Column
-    @ColumnDefault("0")
-    private int cpp;
-
-    @Column
-    @ColumnDefault("0")
-    private int cs;
-
-    @Column
-    @ColumnDefault("0")
-    private int vb;
-
-    @Column
-    @ColumnDefault("0")
-    private int javascript;
-
-    @Column
-    @ColumnDefault("0")
-    private int assembly;
-
-    @Column
-    @ColumnDefault("0")
-    private int php;
-
-    @Column
-    @ColumnDefault("0")
-    private int sqllang;
 
     @Column
     private String profileImageUrl;

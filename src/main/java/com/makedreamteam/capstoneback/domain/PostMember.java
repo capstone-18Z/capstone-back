@@ -30,51 +30,12 @@ public class PostMember {
 
     @Column
     private String nickname;
+
     @Column
     private String title;
+
     @Column(columnDefinition = "LONGTEXT")
     private String detail;
-    @Column
-    private int field;//1 : 프론트  2 : 백 ,  3 : 구분없음
-    @Column
-    @ColumnDefault("0")
-    private int python;
-
-    @Column
-    @ColumnDefault("0")
-    private int c;
-
-    @Column
-    @ColumnDefault("0")
-    private int java;
-
-    @Column
-    @ColumnDefault("0")
-    private int cpp;
-
-    @Column
-    @ColumnDefault("0")
-    private int cs;
-
-    @Column
-    @ColumnDefault("0")
-    private int vb;
-
-    @Column
-    @ColumnDefault("0")
-    private int javascript;
-
-    @Column
-    @ColumnDefault("0")
-    private int assembly;
-
-    @Column
-    @ColumnDefault("0")
-    private int php;
-
-    @Column
-    @ColumnDefault("0")
-    private int sqllang;
 
     @OneToMany(mappedBy = "postMember", cascade = CascadeType.ALL, orphanRemoval = true,fetch = FetchType.EAGER)
     private List<MemberKeyword> memberKeywords = new ArrayList<>();
