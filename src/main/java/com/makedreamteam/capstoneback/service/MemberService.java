@@ -225,7 +225,7 @@ public class MemberService {
         for(Team lang : teams){
             Optional<Team> team = springDataTeamRepository.findById(lang.getTeamId());
             if(team.isPresent()) {
-                weight.put(team.get(), lang.getC() * member.getC() + lang.getSqllang() * member.getSqllang() + lang.getCpp() * member.getCpp() + lang.getVb() * member.getVb() + lang.getCs() * member.getCs() + lang.getPhp() * member.getPhp() + lang.getPython() * member.getPython() + lang.getAssembly() * member.getAssembly() + lang.getJavascript() * member.getJavascript() + lang.getJava() * member.getJava());
+               // weight.put(team.get(), lang.getC() * member.getC() + lang.getSqllang() * member.getSqllang() + lang.getCpp() * member.getCpp() + lang.getVb() * member.getVb() + lang.getCs() * member.getCs() + lang.getPhp() * member.getPhp() + lang.getPython() * member.getPython() + lang.getAssembly() * member.getAssembly() + lang.getJavascript() * member.getJavascript() + lang.getJava() * member.getJava());
             }
             else
                 System.out.println("springDataTeamRepository.findById(lang.getTeamid()) is null");

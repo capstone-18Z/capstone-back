@@ -66,7 +66,7 @@ public class Team{
 
     @Column(columnDefinition = "VARCHAR(255) CHARACTER SET utf8 COLLATE utf8_general_ci")
     private String detail;
-
+/*
     @Column
     private int period;
 
@@ -108,7 +108,7 @@ public class Team{
 
     @Column
     @ColumnDefault("0")
-    private int sqllang;
+    private int sqllang;*/
 
     @OneToMany(mappedBy = "team", cascade = CascadeType.ALL, orphanRemoval = true,fetch = FetchType.EAGER)
     private List<TeamKeyword> teamKeywords = new ArrayList<>();
@@ -116,12 +116,15 @@ public class Team{
     @OneToMany(mappedBy = "team", cascade = CascadeType.ALL, orphanRemoval = true,fetch = FetchType.EAGER)
     private List<WaitingListOfMatchingUserToTeam> requestList=new ArrayList<>();
 
+
     @JsonProperty("teamKeywords")
     public List<String> getKeywordValues() {
         return teamKeywords.stream().map(TeamKeyword::getValue).collect(Collectors.toList());
     }
     @ElementCollection(fetch = FetchType.EAGER)
     private List<String> imagePaths;
+
+
 
     public void addKeyword(TeamKeyword teamKeyword) {
         this.teamKeywords.add(teamKeyword);

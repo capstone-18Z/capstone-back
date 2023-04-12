@@ -98,8 +98,8 @@ public class TeamService{
 
                 //String newToken = checkTokenResponsForm.getNewToken();
                 List<Team> teams = springDataTeamRepository.findByTeamLeader(teamLeader);
-                if (teams.size() == 3) {
-                    throw new RuntimeException("4개 이상의 팀을 만들 수 없습니다.");
+                if (teams.size() == 100) {
+                    throw new RuntimeException("99개 이상의 팀을 만들 수 없습니다.");
                 }
                 List<TeamKeyword> teamKeywords=team.getTeamKeywords();
                 if(teamKeywords!=null)
