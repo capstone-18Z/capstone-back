@@ -41,20 +41,16 @@ public class FileService {
     @Autowired
     private final FileDataRepository fileDataRepository;
 
-
     @Autowired
     private final ProfileDataRepository profileDataRepository;
 
     @Autowired
     private Storage storage;
 
+    private final String bucketName = "caps-1edf8.appspot.com";
 
     @PersistenceContext
     private EntityManager entityManager;
-
-    @Value("${app.upload.dir:classpath:/static/upload}")
-    private String uploadDir;
-
 
     public FileData uploadFile(MultipartFile file, UUID uid, Long postid) throws IOException {
         String originalFileName = file.getOriginalFilename();
@@ -91,7 +87,6 @@ public class FileService {
 
         return fileDataRepository.save(fileData);
     }
-
 
 
     public ProfileData uploadProfile(MultipartFile file, UUID uid) throws IOException {
@@ -142,11 +137,31 @@ public class FileService {
         return images;
     }
 
-    public void deleteFile(FileData file){
-        String filePath = uploadDir + "/" + file.getFileName();
-        File deleteFile = new File(filePath);
-        if (deleteFile.exists()) {
-            deleteFile.delete();
+    public void deleteFile(FileData file) throws IOException {
+        String filePath = file.getFileName();
+
+        try {
+            BlobId blobId = BlobId.of("caps-1edf8.appspot.com", filePath);
+            boolean deleted = storage.delete(blobId);
+            if (deleted) {
+                System.out.println("Firebase Storage의 파일이 삭제되었습니다: " + filePath);
+
+                // Bucket에서도 파일 삭제
+                Bucket bucket = StorageClient.getInstance().bucket(bucketName);
+                Blob blob = bucket.get(filePath);
+                if (blob != null) {
+                    blob.delete();
+                    System.out.println("Bucket의 파일이 삭제되었습니다: " + filePath);
+                }
+            } else {
+                throw new IOException("Firebase Storage의 파일 삭제에 실패하였습니다: " + filePath);
+            }
+        } catch (StorageException e) {
+            System.out.println("Firebase Storage 파일 삭제에 실패했습니다. 이유: " + e.getMessage());
+            throw new IOException("Firebase Storage의 파일 삭제에 실패하였습니다: " + filePath);
+        } catch (Exception e) {
+            System.out.println("파일 삭제 중 오류가 발생했습니다. 이유: " + e.getMessage());
+            throw new IOException("파일 삭제 중 오류가 발생했습니다.");
         }
 
         entityManager.remove(entityManager.contains(file) ? file : entityManager.merge(file));
