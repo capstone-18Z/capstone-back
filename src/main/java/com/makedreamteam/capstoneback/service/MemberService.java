@@ -211,48 +211,6 @@ public class MemberService {
         }
     }
 
-    public List<Team> recommendTeams(UUID userId, int count) {
-
-        Optional<Member> optionalmember = memberRepository.findById(userId);
-        if(optionalmember.isEmpty()){
-            throw new RuntimeException("유저가 존재하지 않습니다.("+userId+")");
-        }
-        List<Team> teams = new ArrayList<>();
-        List<Team> postTeams=springDataTeamRepository.findAll();
-        for (Team postTeam : postTeams){
-            teams.add(springDataTeamRepository.findById(postTeam.getTeamId()).get());
-        }
-        Member member = optionalmember.get();
-        HashMap<Team, Integer> weight = new HashMap<>();
-        for(Team lang : teams){
-            Optional<Team> team = springDataTeamRepository.findById(lang.getTeamId());
-            if(team.isPresent()) {
-                weight.put(team.get(), lang.getC() * member.getC() + lang.getSqllang() * member.getSqllang() + lang.getCpp() * member.getCpp() + lang.getVb() * member.getVb() + lang.getCs() * member.getCs() + lang.getPhp() * member.getPhp() + lang.getPython() * member.getPython() + lang.getAssembly() * member.getAssembly() + lang.getJavascript() * member.getJavascript() + lang.getJava() * member.getJava());
-            }
-            else
-                System.out.println("springDataTeamRepository.findById(lang.getTeamid()) is null");
-        }
-        List<Map.Entry<Team, Integer>> sortedList = new ArrayList<>(weight.entrySet());
-
-
-        Collections.sort(sortedList, new Comparator<Map.Entry<Team, Integer>>() {
-            @Override
-            public int compare(Map.Entry<Team, Integer> o1, Map.Entry<Team, Integer> o2) {
-                return o2.getValue().compareTo(o1.getValue());
-            }
-        });
-
-        List<Team> result= sortedList.stream()
-                .map(map->map.getKey()).limit(count).collect(Collectors.toList());
-
-        System.out.println("----정렬 결과---");
-        for (Team team: result){
-            System.out.println("team.getTeamId() = " + team.getTeamId());
-        }
-        System.out.println("-------------------");
-        return result;
-    }
-
     public List<Team> recommendTeamsByKeyword(Long postid, int count) {
         //recommend는 위에서 토큰 인증을 진행했기때문에 따로 토큰의 유효성검사를 하지 않는다
         Optional<PostMember> optionalPostMember=postMemberRepository.findById(postid);
