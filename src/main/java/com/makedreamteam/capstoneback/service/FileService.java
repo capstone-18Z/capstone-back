@@ -47,6 +47,7 @@ public class FileService {
     @Autowired
     private Storage storage;
 
+    private final String bucketName = "caps-1edf8.appspot.com";
 
     @PersistenceContext
     private EntityManager entityManager;

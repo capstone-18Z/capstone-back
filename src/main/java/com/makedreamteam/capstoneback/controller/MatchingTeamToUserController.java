@@ -14,8 +14,6 @@ import java.util.UUID;
 public class MatchingTeamToUserController {
     private final MatchingTeamToUserService matchingTeamToUserService;
 
-
-
     public MatchingTeamToUserController(MatchingTeamToUserService matchingTeamToUserService) {
         this.matchingTeamToUserService = matchingTeamToUserService;
     }

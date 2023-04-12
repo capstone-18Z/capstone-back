@@ -169,7 +169,7 @@ public class MatchingUserToTeamService {
     public ResponseForm findTeamWaitingList(UUID teamId, String accessToken, String refreshToken) {
         if(jwtTokenProvider.isValidAccessToken(accessToken)){
             Team team = springDataTeamRepository.findById(teamId).orElseThrow(() -> {
-                throw new RuntimeException("팀이 존재하지 않스비다");
+                throw new RuntimeException("팀이 존재하지 않습니다");
             });
             List<WaitingListOfMatchingUserToTeam> allByTeamId = team.getRequestList();
             return ResponseForm.builder().message("해당 팀의 모든 신청자리스트를 반환합니다.").data(allByTeamId).build();
