@@ -62,7 +62,7 @@ public class MatchingTeamToUserService {
             Team team=springDataTeamRepository.findById(waitingListOfMatchingTeamToUser.getTeamId()).orElseThrow(()->{
                 throw new RuntimeException("팀이 존재하지 않습니다");
             });
-            Team updatedTeam = settingTeamMember(team, waitingListOfMatchingTeamToUser.getField());
+            Team updatedTeam = settingTeamMember(team);
             waitingListTeamToUserRepository.delete(waitingListOfMatchingTeamToUser);
             springDataTeamRepository.save(updatedTeam);
             return ResponseForm.builder().message("정상적으로 팀원을 추가했습니다.").build();
@@ -90,27 +90,12 @@ public class MatchingTeamToUserService {
             return ResponseForm.builder().message("RefreshToken 이 만료되었습니다, 다시 로그인 해주세요").build();
         }
     }
-    public Team settingTeamMember(Team team, int field){
-        int wantedBack=team.getWantedBackEndMember();
-        int wantedFront=team.getWantedFrontMember();
-        int wantedBasic=team.getWantedBasicMember();
-        int currentBack=team.getCurrentBackMember();
-        int currentFront=team.getCurrentFrontMember();
-        int currentBasic=team.getCurrentBasicMember();
-        switch (field) {
-            case 1 -> {
-                team.setWantedFrontMember(wantedFront - 1);
-                team.setCurrentFrontMember(currentFront + 1);
-            }
-            case 2 -> {
-                team.setWantedBackEndMember(wantedBack - 1);
-                team.setCurrentBackMember(currentBack + 1);
-            }
-            case 3 -> {
-                team.setWantedBasicMember(wantedBasic - 1);
-                team.setCurrentBasicMember(currentBasic + 1);
-            }
-        }
+    public Team settingTeamMember(Team team){
+        byte wantTeamMemberCount=team.getWantTeamMemberCount();
+        byte currentTeamMemberCount=team.getCurrentTeamMemberCount();
+        team.setWantTeamMemberCount((byte) (wantTeamMemberCount-1));
+        team.setCurrentTeamMemberCount((byte) (currentTeamMemberCount+1));
+
         return team;
     }
 }

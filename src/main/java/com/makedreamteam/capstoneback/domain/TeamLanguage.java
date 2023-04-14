@@ -2,8 +2,10 @@ package com.makedreamteam.capstoneback.domain;
 
 import jakarta.persistence.*;
 import lombok.*;
+import net.minidev.json.annotate.JsonIgnore;
 import org.hibernate.annotations.ColumnDefault;
 
+import java.io.Serializable;
 import java.util.UUID;
 
 
@@ -15,12 +17,9 @@ import java.util.UUID;
 @Builder
 public class TeamLanguage {
     @Id
-    @GeneratedValue
-    private UUID id;
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
 
-    @OneToOne
-    @JoinColumn(name="team")
-    private Team team;
 
     @ColumnDefault("0")
     private int c;
@@ -57,4 +56,9 @@ public class TeamLanguage {
 
     @ColumnDefault("0")
     private int R;
+
+    @OneToOne
+    @MapsId
+    @JoinColumn(name = "teamId")
+    private Team team;
 }

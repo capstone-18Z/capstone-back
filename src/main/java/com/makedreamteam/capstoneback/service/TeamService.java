@@ -96,8 +96,8 @@ public class TeamService{
 
                 //String newToken = checkTokenResponsForm.getNewToken();
                 List<Team> teams = springDataTeamRepository.findByTeamLeader(teamLeader);
-                if (teams.size() == 100) {
-                    throw new RuntimeException("99개 이상의 팀을 만들 수 없습니다.");
+                if (teams.size() == 99) {
+                    throw new RuntimeException("100개 이상의 팀을 만들 수 없습니다.");
                 }
                 team.setTeamLeader(teamLeader);
 
@@ -209,30 +209,6 @@ public class TeamService{
             return ResponseForm.builder().message("RefreshToken 이 만료되었습니다, 다시 로그인 해주세요").build();
         }
     }
-
-    public void addNewTeamWithImage(MultipartFile[] imageFiles, Team team, String refreshToken, String accessToken) throws Exception {
-        if(jwtTokenProvider.isValidAccessToken(accessToken)){
-            List<String> imagePaths = new ArrayList<>();
-
-            for (MultipartFile imageFile : imageFiles) {
-                String imagePath = saveImageToLocal(imageFile);
-                imagePaths.add(imagePath);
-            }
-            team.setImagePaths(imagePaths);
-            springDataTeamRepository.save(team);
-        }else {
-            checkRefreshToken(refreshToken);
-        }
-    }
-    private String saveImageToLocal(MultipartFile imageFile) throws Exception {
-        String fileName = imageFile.getOriginalFilename();
-        String filePath = "C:/images/" + fileName;
-        File file = new File(filePath);
-        file.getParentFile().mkdirs();
-        imageFile.transferTo(file);
-        return filePath;
-    }
-
     public List<String> uploadFile(List<MultipartFile> files) throws IOException {
         List<String> images=new ArrayList<>();
         for (MultipartFile file : files){
@@ -259,7 +235,44 @@ public class TeamService{
         }
 
     }
-    public Team addNewTeam(Team team){
-        return springDataTeamRepository.save(team);
+    public Team testAddNewTeam(Team team,List<MultipartFile> images){
+        try {
+            if(images!=null){
+                List<String> image = uploadFile(images);
+                team.setImagePaths(image);
+            }
+            //teamlanguae와 양방향 설정
+            TeamLanguage teamLanguage=team.getTeamLanguage();
+            teamLanguage.setTeam(team);
+            team.setTeamLanguage(teamLanguage);
+
+            //teamFramwork와 양방향 설정
+            TeamFramework teamFramework=team.getTeamFramework();
+            teamFramework.setTeam(team);
+            team.setTeamFramework(teamFramework);
+
+            //teamkeyword와 양방향 설정
+            List<TeamKeyword> teamKeywords=team.getTeamKeywords();
+            for (TeamKeyword teamKeyword : teamKeywords){
+                teamKeyword.setTeam(team);
+            }
+            team.setTeamKeywords(teamKeywords);
+
+
+
+            //
+            return springDataTeamRepository.save(team);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public Team testUpdate(UUID teamId, Team updateForm, List<MultipartFile> images) {
+        Team team = springDataTeamRepository.findById(teamId).orElseThrow(() -> {
+            return null;
+        });
+        updateForm.setTeamId(teamId);
+
+        return springDataTeamRepository.save(updateForm);
     }
 }

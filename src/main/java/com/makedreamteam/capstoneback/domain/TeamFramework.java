@@ -5,6 +5,7 @@ import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.ColumnDefault;
 
+import java.io.Serializable;
 import java.util.UUID;
 
 @Entity
@@ -13,10 +14,10 @@ import java.util.UUID;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-public class TeamFramework {
+public class TeamFramework{
     @Id
-    @GeneratedValue
-    private UUID id;
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
 
     @ColumnDefault("0")
     private int react;
@@ -43,6 +44,8 @@ public class TeamFramework {
     private int tdmax;
 
     @OneToOne
-    @JoinColumn(name="team")
+    @MapsId
+    @JoinColumn(name = "teamId")
     private Team team;
+
 }

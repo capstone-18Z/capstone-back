@@ -1,10 +1,13 @@
 package com.makedreamteam.capstoneback.domain;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
 import lombok.*;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.hibernate.annotations.ColumnDefault;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -20,7 +23,7 @@ import java.util.stream.Collectors;
 public class Team{
     @Id
     @GeneratedValue
-    @Column(columnDefinition = "BINARY(16)" ,name="team_id")
+    @Column(columnDefinition = "BINARY(16)")
     private UUID teamId;
 
     @Column
@@ -66,33 +69,25 @@ public class Team{
     @Column
     private String purposeDetail2;
 
-    @OneToOne(cascade = CascadeType.ALL)
+
+    @OneToOne(mappedBy = "team" ,cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+    @JsonIgnoreProperties({"team"})
     private TeamLanguage teamLanguage;
 
-    @OneToOne(cascade = CascadeType.ALL)
+    @OneToOne(mappedBy = "team" ,cascade = CascadeType.ALL)
+    @JsonIgnoreProperties({"team"})
     private TeamFramework teamFramework;
 
 
 
     @ElementCollection(fetch = FetchType.EAGER)
     private List<String> imagePaths;
-    public void setWaitingListTeam(WaitingListOfMatchingUserToTeam waitingListOfMatchingUserToTeam){waitingListOfMatchingUserToTeam.setTeam(this);}
 
     @JsonProperty("teamKeywords")
     public List<String> getKeywordValues() {
         return teamKeywords.stream().map(TeamKeyword::getValue).collect(Collectors.toList());
     }
-    public void addKeyword(TeamKeyword teamKeyword) {
-        this.teamKeywords.add(teamKeyword);
-        teamKeyword.setTeam(this);
-    }
 
-    public void removeKeyword(TeamKeyword teamKeyword) {
-        this.teamKeywords.remove(teamKeyword);
-        teamKeyword.setTeam(null);
-    }
 
-    public void setKeywordTeam(TeamKeyword teamKeyword){
-        teamKeyword.setTeam(this);
-    }
+
 }

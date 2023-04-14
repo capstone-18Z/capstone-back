@@ -24,27 +24,19 @@ import java.util.*;
 public class TeamController {
 
     private final TeamService teamService;
-    private final JwtTokenProvider jwtTokenProvider;
-    private final ImageStorageService imageStorage;
-    private final FileService fileService;
 
     @Autowired
-    public TeamController(TeamService postTeamService, JwtTokenProvider jwtTokenProvider, ImageStorageService imageStorage, FileService fileService) {
+    public TeamController(TeamService postTeamService) {
         this.teamService = postTeamService;
-        this.jwtTokenProvider = jwtTokenProvider;
-        this.imageStorage = imageStorage;
-        this.fileService = fileService;
     }
 
     @GetMapping("")
     public ResponseEntity<ResponseForm> allPost(HttpServletRequest request) {
-        //check login
         try {
             String authToken = request.getHeader("login-token");
             String refreshToken=request.getHeader("refresh-token");
             List<Team> recommendTeams = null;
             List<Team> teams = teamService.allPosts(authToken,refreshToken);
-
             ResponseForm responseForm = ResponseForm.builder().message("모든 팀을 조회합니다").state(HttpStatus.OK.value()).data(TeamData.builder().recommendList(recommendTeams).allTeamList(teams).build()).build();
             return ResponseEntity.ok().body(responseForm);
         } catch (RuntimeException e) {
@@ -61,10 +53,10 @@ public class TeamController {
             String refreshToken = request.getHeader("refresh-token");
             String accessToken = request.getHeader("login-token");
 
-            List<String> imageUrls = null;
             if (images != null) {
                 team.setImagePaths(teamService.uploadFile(images));
             }
+
             ResponseForm responseForm = teamService.addPostTeam(team, accessToken, refreshToken);
             return ResponseEntity.ok(responseForm);
         }catch (RuntimeException e){
@@ -91,11 +83,11 @@ public class TeamController {
 //                TeamData teamData=(TeamData) team.getData();
 //                teamData.setRecommendList(members);
 //                team.setData(teamData);
-//                return ResponseEntity.badRequest().body(team);
+//                return ResponseEntity.ok().body(team);
 //            }
-            else{
-                return ResponseEntity.badRequest().body(team);
-            }
+
+            return ResponseEntity.ok().body(team);
+
 
     }
 
@@ -127,10 +119,14 @@ public class TeamController {
     }
 
     @PostMapping(value = "/test/add" , consumes = "multipart/form-data")
-    public Team addTestTeam(@RequestPart("team") Team team){
-       return teamService.addNewTeam(team);
+    public Team addTestTeam(@RequestPart("team") Team team,@RequestPart(value = "images",required = false) List<MultipartFile> images)   {
+        return teamService.testAddNewTeam(team,images);
     }
 
+    @PostMapping(value = "/test/{teamId}/update", consumes = "multipart/form-data")
+    public Team testUpdateTeamInfo(@PathVariable UUID teamId,@RequestPart("team") Team updateForm, @RequestPart(value = "images", required = false) List<MultipartFile> images) {
+            return  teamService.testUpdate(teamId,updateForm, images);
 
+    }
 
 }

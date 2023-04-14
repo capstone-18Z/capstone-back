@@ -50,6 +50,9 @@ public class MatchingUserToTeamService {
             UUID userId=UUID.fromString((String)userInfo.get("userId"));
             Team team = springDataTeamRepository.findById(teamId)
                     .orElseThrow(() -> new RuntimeException("존재하지 않는 팀입니다."));
+            if(team.getWantTeamMemberCount()==0){
+                return ResponseForm.builder().message("더이상 팀원을 받을 수 없습니다.").build();
+            }
             List<WaitingListOfMatchingUserToTeam> allByUserId = waitingListRepository.findAllByUserId(userId);
             for(WaitingListOfMatchingUserToTeam waiting : allByUserId){
                 if(team.equals(waiting.getTeam()))
@@ -78,9 +81,10 @@ public class MatchingUserToTeamService {
                 throw new RuntimeException("매칭 대기 리스트가 존재하지 않습니다.");
             });
             UUID userId=waitingList.getUserId();
-            int field=waitingList.getField();
             Team team = waitingList.getTeam();
-
+            if(team.getWantTeamMemberCount()==0){
+                return  ResponseForm.builder().message("더이상 팀원을 추가할수없습니다.").build();
+            }
             team.getRequestList().removeIf(req -> req.equals(waitingList));
 
             TeamMember teamMember= TeamMember.builder().teamId(team.getTeamId()).teamLeader(team.getTeamLeader()).userId(userId).build();
@@ -91,10 +95,8 @@ public class MatchingUserToTeamService {
 
             waitingListRepository.delete(waitingList);
             //이후, 팀멤버 테이블에 해당 사용자를 추가
-
             teamMemberRepository.save(teamMember);
-
-            springDataTeamRepository.save(settingTeamMember(team, field));
+            springDataTeamRepository.save(settingTeamMember(team));
 
 
             return ResponseForm.builder().message("사용자를 팀에 추가했습니다").build();
@@ -122,27 +124,12 @@ public class MatchingUserToTeamService {
             return ResponseForm.builder().message("RefreshToken 이 만료되었습니다, 다시 로그인 해주세요").build();
         }
     }
-    public Team settingTeamMember(Team team, int field){
-        int wantedBack=team.getWantedBackEndMember();
-        int wantedFront=team.getWantedFrontMember();
-        int wantedBasic=team.getWantedBasicMember();
-        int currentBack=team.getCurrentBackMember();
-        int currentFront=team.getCurrentFrontMember();
-        int currentBasic=team.getCurrentBasicMember();
-        switch (field) {
-            case 1 -> {
-                team.setWantedFrontMember(wantedFront - 1);
-                team.setCurrentFrontMember(currentFront + 1);
-            }
-            case 2 -> {
-                team.setWantedBackEndMember(wantedBack - 1);
-                team.setCurrentBackMember(currentBack + 1);
-            }
-            case 3 -> {
-                team.setWantedBasicMember(wantedBasic - 1);
-                team.setCurrentBasicMember(currentBasic + 1);
-            }
-        }
+    public Team settingTeamMember(Team team){
+        byte wantTeamMemberCount=team.getWantTeamMemberCount();
+        byte currentTeamMemberCount=team.getCurrentTeamMemberCount();
+        team.setWantTeamMemberCount((byte) (wantTeamMemberCount-1));
+        team.setCurrentTeamMemberCount((byte) (currentTeamMemberCount+1));
+
         return team;
     }
 
