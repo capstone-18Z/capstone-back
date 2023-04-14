@@ -55,6 +55,24 @@ public class TeamController {
 
     }
 
+    @PostMapping(value = "/new",consumes = "multipart/form-data")
+    public ResponseEntity<ResponseForm> createTeam(@RequestPart(value = "images", required = false) List<MultipartFile> images, @RequestPart("team") Team team, HttpServletRequest request) throws TokenException, DatabaseException, IOException {
+        try {
+            String refreshToken = request.getHeader("refresh-token");
+            String accessToken = request.getHeader("login-token");
+
+            List<String> imageUrls = null;
+            if (images != null) {
+                team.setImagePaths(teamService.uploadFile(images));
+            }
+            ResponseForm responseForm = teamService.addPostTeam(team, accessToken, refreshToken);
+            return ResponseEntity.ok(responseForm);
+        }catch (RuntimeException e){
+            ResponseForm error= ResponseForm.builder().message(e.getMessage()).build();
+            return ResponseEntity.ok().body(error);
+        }
+    }
+
     @GetMapping("/search/{title}")//제목으로 포스트 검색
     public ResponseEntity<ResponseForm> searchPostByTitle(@PathVariable String title,HttpServletRequest request) {
        return null;
@@ -68,13 +86,13 @@ public class TeamController {
             if(team.getData()==null){//team의  data가 null이라면 오류
                 return ResponseEntity.badRequest().body(team);
             }
-            if(team.isUpdatable()){//team이 업데이트 가능하다면 추천목록또한 같이 보낸다
-                List<PostMember> members = teamService.recommendUsers(id, 5);
-                TeamData teamData=(TeamData) team.getData();
-                teamData.setRecommendList(members);
-                team.setData(teamData);
-                return ResponseEntity.badRequest().body(team);
-            }
+//            if(team.isUpdatable()){//team이 업데이트 가능하다면 추천목록또한 같이 보낸다
+//                List<PostMember> members = teamService.recommendUsers(id, 5);
+//                TeamData teamData=(TeamData) team.getData();
+//                teamData.setRecommendList(members);
+//                team.setData(teamData);
+//                return ResponseEntity.badRequest().body(team);
+//            }
             else{
                 return ResponseEntity.badRequest().body(team);
             }
@@ -107,23 +125,12 @@ public class TeamController {
             return ResponseEntity.badRequest().body(error);
         }
     }
-    @PostMapping(value = "/new",consumes = "multipart/form-data")
-    public ResponseEntity<ResponseForm> createTeam(@RequestPart(value = "images", required = false) List<MultipartFile> images, @RequestPart("team") Team team, HttpServletRequest request) throws TokenException, DatabaseException, IOException {
-        try {
-            String refreshToken = request.getHeader("refresh-token");
-            String accessToken = request.getHeader("login-token");
 
-            List<String> imageUrls = null;
-            if (images != null) {
-                team.setImagePaths(teamService.uploadFile(images));
-            }
-            ResponseForm responseForm = teamService.addPostTeam(team, accessToken, refreshToken);
-            return ResponseEntity.ok(responseForm);
-        }catch (RuntimeException e){
-            ResponseForm error= ResponseForm.builder().message(e.getMessage()).build();
-            return ResponseEntity.ok().body(error);
-        }
+    @PostMapping(value = "/test/add" , consumes = "multipart/form-data")
+    public Team addTestTeam(@RequestPart("team") Team team){
+       return teamService.addNewTeam(team);
     }
+
 
 
 }

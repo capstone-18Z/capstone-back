@@ -47,8 +47,7 @@ public class TeamService{
     @Autowired
     private final PostMemberRepository postMemberRepository;
 
-    @Autowired
-    private final KeywordRepository keywordRepository;
+
 
     @Autowired
     private final RefreshTokenRepository refreshTokenRepository;
@@ -58,12 +57,11 @@ public class TeamService{
     private JwtTokenProvider jwtTokenProvider;
 
 
-    public TeamService(SpringDataTeamRepository springDataTeamRepository, TeamMemberRepository teamMemberRepository, MemberRepository memberRepository, PostMemberRepository postMemberRepository, KeywordRepository keywordRepository, RefreshTokenRepository refreshTokenRepository, JwtTokenProvider jwtTokenProvider) {
+    public TeamService(SpringDataTeamRepository springDataTeamRepository, TeamMemberRepository teamMemberRepository, MemberRepository memberRepository, PostMemberRepository postMemberRepository,  RefreshTokenRepository refreshTokenRepository, JwtTokenProvider jwtTokenProvider) {
         this.springDataTeamRepository = springDataTeamRepository;
         this.teamMemberRepository = teamMemberRepository;
         this.memberRepository = memberRepository;
         this.postMemberRepository = postMemberRepository;
-        this.keywordRepository = keywordRepository;
         this.refreshTokenRepository = refreshTokenRepository;
         this.jwtTokenProvider = jwtTokenProvider;
     }
@@ -83,7 +81,7 @@ public class TeamService{
         //이후 accesstoke재발급필요 문구 전달
 
         try {
-           // checkTokenResponsForm checkTokenResponsForm = checkUserIdAndToken(authToken, refreshToken);
+
             //임시
             if(jwtTokenProvider.isValidAccessToken(authToken)){//accesstoken 유효
                 //addPost 진행
@@ -101,11 +99,6 @@ public class TeamService{
                 if (teams.size() == 100) {
                     throw new RuntimeException("99개 이상의 팀을 만들 수 없습니다.");
                 }
-                List<TeamKeyword> teamKeywords=team.getTeamKeywords();
-                if(teamKeywords!=null)
-                    for (TeamKeyword teamKeyword : teamKeywords){
-                        teamKeyword.setTeam(team);
-                    }
                 team.setTeamLeader(teamLeader);
 
                 // 팀 저장
@@ -141,9 +134,7 @@ public class TeamService{
             if(images!=null) {
                 team.setImagePaths(uploadFile(images));
             }
-            for(TeamKeyword teamKeyword : team.getTeamKeywords()){
-                teamKeyword.setTeam(team);
-            }
+
             team.setTeamId(updatedTeam.getTeamId());
 
             team.setTeamLeader(updatedTeam.getTeamLeader());
@@ -185,34 +176,6 @@ public class TeamService{
         } catch (EmptyResultDataAccessException e) {
             throw new RuntimeException("Failed to retrieve Team information from the database", e);
         }
-    }
-    public List<PostMember> recommendUsers(UUID teamId, int count) {
-        //recommend는 위에서 토큰 인증을 진행했기때문에 따로 토큰의 유효성검사를 하지 않는다
-
-
-            Optional<Team> optionalTeam=springDataTeamRepository.findById(teamId);
-            if(optionalTeam.isEmpty()){
-                throw new RuntimeException("팀이 존재하지 않습니다.("+teamId+")");
-            }
-
-
-            Team team=optionalTeam.get();
-            Map<PostMember, Long> postMemberSimilarityMap = postMemberRepository.findAll().stream()
-                    .collect(Collectors.toMap(Function.identity(),
-                            postMember -> postMember.getMemberKeywords().stream()
-                                    .filter(memberKeyword -> team.getTeamKeywords().stream()
-                                            .anyMatch(teamKeyword -> teamKeyword.getValue().equals(memberKeyword.getValue())))
-                                    .count()));
-
-            // Map 객체를 유사도 기준으로 내림차순 정렬합니다.
-            List<PostMember> sortedPostMembers = postMemberSimilarityMap.entrySet().stream()
-                    .sorted(Map.Entry.<PostMember, Long>comparingByValue().reversed())
-                    .map(Map.Entry::getKey)
-                    .limit(count)
-                    .collect(Collectors.toList());
-            return sortedPostMembers;
-
-
     }
     public ResponseForm delete(UUID teamId,String authToken,String refreshToken) {
         if(jwtTokenProvider.isValidAccessToken(authToken)){
@@ -295,5 +258,8 @@ public class TeamService{
             }
         }
 
+    }
+    public Team addNewTeam(Team team){
+        return springDataTeamRepository.save(team);
     }
 }

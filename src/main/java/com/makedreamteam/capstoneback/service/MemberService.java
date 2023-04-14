@@ -211,29 +211,29 @@ public class MemberService {
         }
     }
 
-    public List<Team> recommendTeamsByKeyword(Long postid, int count) {
-        //recommend는 위에서 토큰 인증을 진행했기때문에 따로 토큰의 유효성검사를 하지 않는다
-        Optional<PostMember> optionalPostMember=postMemberRepository.findById(postid);
-        if(optionalPostMember.isEmpty()){
-            throw new RuntimeException("팀이 존재하지 않습니다.("+postid+")");
-        }
-
-        PostMember postMember = optionalPostMember.get();
-        Map<Team, Long> teamSimilarityMap = springDataTeamRepository.findAll().stream()
-                .collect(Collectors.toMap(Function.identity(),
-                        team -> team.getTeamKeywords().stream()
-                                .filter(teamKeyword -> postMember.getMemberKeywords().stream()
-                                        .anyMatch(memberKeyword -> memberKeyword.getValue().equals(teamKeyword.getValue())))
-                                .count()));
-
-        // Map 객체를 유사도 기준으로 내림차순 정렬합니다.
-        List<Team> sortedTeams = teamSimilarityMap.entrySet().stream()
-                .sorted(Map.Entry.<Team, Long>comparingByValue().reversed())
-                .map(Map.Entry::getKey)
-                .limit(count)
-                .collect(Collectors.toList());
-        return sortedTeams;
-    }
+//    public List<Team> recommendTeamsByKeyword(Long postid, int count) {
+//        //recommend는 위에서 토큰 인증을 진행했기때문에 따로 토큰의 유효성검사를 하지 않는다
+//        Optional<PostMember> optionalPostMember=postMemberRepository.findById(postid);
+//        if(optionalPostMember.isEmpty()){
+//            throw new RuntimeException("팀이 존재하지 않습니다.("+postid+")");
+//        }
+//
+//        PostMember postMember = optionalPostMember.get();
+//        Map<Team, Long> teamSimilarityMap = springDataTeamRepository.findAll().stream()
+//                .collect(Collectors.toMap(Function.identity(),
+//                        team -> team.getTeamKeywords().stream()
+//                                .filter(teamKeyword -> postMember.getMemberKeywords().stream()
+//                                        .anyMatch(memberKeyword -> memberKeyword.getValue().equals(teamKeyword.getValue())))
+//                                .count()));
+//
+//        // Map 객체를 유사도 기준으로 내림차순 정렬합니다.
+//        List<Team> sortedTeams = teamSimilarityMap.entrySet().stream()
+//                .sorted(Map.Entry.<Team, Long>comparingByValue().reversed())
+//                .map(Map.Entry::getKey)
+//                .limit(count)
+//                .collect(Collectors.toList());
+//        return sortedTeams;
+//    }
 
     public PostResponseForm testAddNewMember(PostMember member, String authToken, String refreshToken) throws RefreshTokenExpiredException, TokenException, DatabaseException {
 

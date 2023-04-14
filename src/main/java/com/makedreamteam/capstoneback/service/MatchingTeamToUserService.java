@@ -47,7 +47,7 @@ public class MatchingTeamToUserService {
             Team team=springDataTeamRepository.findById(teamId).orElseThrow(()->{
                 throw new RuntimeException("팀이 존재하지 않습니다");
             });
-            WaitingListOfMatchingTeamToUser waitingListOfMatchingTeamToUser= WaitingListOfMatchingTeamToUser.builder().teamId(teamId).memberPostId(postId).field(postMember.getField()).build();
+            WaitingListOfMatchingTeamToUser waitingListOfMatchingTeamToUser= WaitingListOfMatchingTeamToUser.builder().teamId(teamId).memberPostId(postId).build();
             WaitingListOfMatchingTeamToUser save = waitingListTeamToUserRepository.save(waitingListOfMatchingTeamToUser);
             return ResponseForm.builder().message("팀원 신청을 완료했습니다").data(save).build();
         }else{

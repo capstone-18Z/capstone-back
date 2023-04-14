@@ -207,7 +207,8 @@ public class MemberController {
         String authToken= request.getHeader("login-token");
         String refreshToken = request.getHeader("refresh-token");
         UUID uid = memberService.checkUserIdAndToken(authToken, refreshToken);
-        return memberService.recommendTeamsByKeyword(postid, 2);
+        //return memberService.recommendTeamsByKeyword(postid, 2);
+        return null;
     }
 
     @GetMapping("/post")

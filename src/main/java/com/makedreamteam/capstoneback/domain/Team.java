@@ -27,35 +27,17 @@ public class Team{
     private UUID teamLeader;
 
     @Column
-    @ColumnDefault("0")
-    private int wantedBasicMember;
+    private byte wantTeamMemberCount;
 
     @Column
-    @ColumnDefault("0")
-    private int currentBasicMember;
-
-    @Column
-    @ColumnDefault("0")
-    private int currentFrontMember;
-
-    @Column
-    @ColumnDefault("0")
-    private int currentBackMember;
-
-    @Column
-    @ColumnDefault("0")
-    private int wantedFrontMember;
-
-    @Column
-    @ColumnDefault("0")
-    private int wantedBackEndMember;
+    private byte currentTeamMemberCount;
 
     @Column
     private int field;// 1: 캡스톤 2: 일반 교과목
 
     @Column(columnDefinition = "VARCHAR(255) CHARACTER SET utf8 COLLATE utf8_general_ci")
     private String title;
-    @Column(columnDefinition = "VARCHAR(255) CHARACTER SET utf8 COLLATE utf8_general_ci")
+    @Column(columnDefinition = "VARCHAR(12) CHARACTER SET utf8 COLLATE utf8_general_ci")
     private String writer;
 
     @Column(columnDefinition = "VARCHAR(255) CHARACTER SET utf8 COLLATE utf8_general_ci")
@@ -66,66 +48,40 @@ public class Team{
 
     @Column(columnDefinition = "VARCHAR(255) CHARACTER SET utf8 COLLATE utf8_general_ci")
     private String detail;
-/*
-    @Column
-    private int period;
 
-    @Column
-    @ColumnDefault("0")
-    private int python;
-
-    @Column
-    @ColumnDefault("0")
-    private int c;
-
-    @Column
-    @ColumnDefault("0")
-    private int java;
-
-    @Column
-    @ColumnDefault("0")
-    private int cpp;
-
-    @Column
-    @ColumnDefault("0")
-    private int cs;
-
-    @Column
-    @ColumnDefault("0")
-    private int vb;
-
-    @Column
-    @ColumnDefault("0")
-    private int javascript;
-
-    @Column
-    @ColumnDefault("0")
-    private int assembly;
-
-    @Column
-    @ColumnDefault("0")
-    private int php;
-
-    @Column
-    @ColumnDefault("0")
-    private int sqllang;*/
-
-    @OneToMany(mappedBy = "team", cascade = CascadeType.ALL, orphanRemoval = true,fetch = FetchType.EAGER)
-    private List<TeamKeyword> teamKeywords = new ArrayList<>();
 
     @OneToMany(mappedBy = "team", cascade = CascadeType.ALL, orphanRemoval = true,fetch = FetchType.EAGER)
     private List<WaitingListOfMatchingUserToTeam> requestList=new ArrayList<>();
 
+    @OneToMany(mappedBy = "team", cascade = CascadeType.ALL, orphanRemoval = true,fetch = FetchType.EAGER)
+    private List<TeamKeyword> teamKeywords = new ArrayList<>();
+
+
+    @Column
+    private String purpose;
+
+    @Column
+    private String purposeDetail1;
+
+    @Column
+    private String purposeDetail2;
+
+    @OneToOne(cascade = CascadeType.ALL)
+    private TeamLanguage teamLanguage;
+
+    @OneToOne(cascade = CascadeType.ALL)
+    private TeamFramework teamFramework;
+
+
+
+    @ElementCollection(fetch = FetchType.EAGER)
+    private List<String> imagePaths;
+    public void setWaitingListTeam(WaitingListOfMatchingUserToTeam waitingListOfMatchingUserToTeam){waitingListOfMatchingUserToTeam.setTeam(this);}
 
     @JsonProperty("teamKeywords")
     public List<String> getKeywordValues() {
         return teamKeywords.stream().map(TeamKeyword::getValue).collect(Collectors.toList());
     }
-    @ElementCollection(fetch = FetchType.EAGER)
-    private List<String> imagePaths;
-
-
-
     public void addKeyword(TeamKeyword teamKeyword) {
         this.teamKeywords.add(teamKeyword);
         teamKeyword.setTeam(this);
@@ -139,6 +95,4 @@ public class Team{
     public void setKeywordTeam(TeamKeyword teamKeyword){
         teamKeyword.setTeam(this);
     }
-    public void setWaitingListTeam(WaitingListOfMatchingUserToTeam waitingListOfMatchingUserToTeam){waitingListOfMatchingUserToTeam.setTeam(this);}
-
 }
