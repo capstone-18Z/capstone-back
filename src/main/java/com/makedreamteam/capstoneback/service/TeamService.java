@@ -151,6 +151,8 @@ public class TeamService{
             return checkRefreshToken(refreshToken);
         }
     }
+
+
     public ResponseForm findByTitleContaining(String title){
         return null;
     }
@@ -184,7 +186,7 @@ public class TeamService{
             throw new RuntimeException("Failed to retrieve Team information from the database", e);
         }
     }
-    public List<PostMember> recommendUsers(UUID teamId, int count) {
+    public List<Member> recommendUsers(UUID teamId, int count) {
         //recommend는 위에서 토큰 인증을 진행했기때문에 따로 토큰의 유효성검사를 하지 않는다
 
 
@@ -195,20 +197,20 @@ public class TeamService{
 
 
             Team team=optionalTeam.get();
-            Map<PostMember, Long> postMemberSimilarityMap = postMemberRepository.findAll().stream()
+            Map<Member, Long> memberSimilarityMap = memberRepository.findAll().stream()
                     .collect(Collectors.toMap(Function.identity(),
-                            postMember -> postMember.getMemberKeywords().stream()
+                            member -> member.getMemberKeywords().stream()
                                     .filter(memberKeyword -> team.getTeamKeywords().stream()
                                             .anyMatch(teamKeyword -> teamKeyword.getValue().equals(memberKeyword.getValue())))
                                     .count()));
 
             // Map 객체를 유사도 기준으로 내림차순 정렬합니다.
-            List<PostMember> sortedPostMembers = postMemberSimilarityMap.entrySet().stream()
-                    .sorted(Map.Entry.<PostMember, Long>comparingByValue().reversed())
+            List<Member> sortedMembers = memberSimilarityMap.entrySet().stream()
+                    .sorted(Map.Entry.<Member, Long>comparingByValue().reversed())
                     .map(Map.Entry::getKey)
                     .limit(count)
                     .collect(Collectors.toList());
-            return sortedPostMembers;
+            return sortedMembers;
 
 
     }

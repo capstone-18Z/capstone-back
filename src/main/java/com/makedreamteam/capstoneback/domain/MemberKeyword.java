@@ -24,8 +24,8 @@ public class MemberKeyword {
     private String value;
 
     @ManyToOne(fetch = FetchType.EAGER)
-    @JoinColumn(name = "post_id")
+    @JoinColumn(name = "member_id")
     @JsonIgnore
-    private PostMember postMember;
+    private Member member;
 
 }

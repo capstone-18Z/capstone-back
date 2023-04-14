@@ -198,16 +198,8 @@ public class MemberController {
         return ResponseEntity.ok(memberService.checkEmailDuplicate(email));
     }
     @GetMapping("/check_nickname/{nickname}/exists")
-    public ResponseEntity<Boolean> checkNicknameDuplicate(@PathVariable String nickname){
+    public ResponseEntity<Boolean> checkNicknameDuplicate(@PathVariable String nickname) {
         return ResponseEntity.ok(memberService.checkNicknameDuplicate(nickname));
-    }
-
-    @GetMapping("/post/{postid}/recommand2")
-    public List<Team> TeamRecommandbyKeyword(@PathVariable Long postid,HttpServletRequest request) throws AuthenticationException {
-        String authToken= request.getHeader("login-token");
-        String refreshToken = request.getHeader("refresh-token");
-        UUID uid = memberService.checkUserIdAndToken(authToken, refreshToken);
-        return memberService.recommendTeamsByKeyword(postid, 2);
     }
 
     @GetMapping("/post")

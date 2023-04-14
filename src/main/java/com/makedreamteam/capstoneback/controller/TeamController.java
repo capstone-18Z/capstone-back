@@ -1,6 +1,7 @@
 package com.makedreamteam.capstoneback.controller;
 
 import com.makedreamteam.capstoneback.JwtTokenProvider;
+import com.makedreamteam.capstoneback.domain.Member;
 import com.makedreamteam.capstoneback.domain.PostMember;
 import com.makedreamteam.capstoneback.domain.Team;
 import com.makedreamteam.capstoneback.exception.*;
@@ -68,7 +69,7 @@ public class TeamController {
                 return ResponseEntity.badRequest().body(team);
             }
             if(team.isUpdatable()){//team이 업데이트 가능하다면 추천목록또한 같이 보낸다
-                List<PostMember> members = teamService.recommendUsers(id, 5);
+                List<Member> members = teamService.recommendUsers(id, 5);
                 TeamData teamData=(TeamData) team.getData();
                 teamData.setRecommendList(members);
                 team.setData(teamData);
