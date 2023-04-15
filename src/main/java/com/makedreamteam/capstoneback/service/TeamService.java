@@ -47,8 +47,7 @@ public class TeamService{
     @Autowired
     private final PostMemberRepository postMemberRepository;
 
-    @Autowired
-    private final KeywordRepository keywordRepository;
+
 
     @Autowired
     private final RefreshTokenRepository refreshTokenRepository;
@@ -58,12 +57,11 @@ public class TeamService{
     private JwtTokenProvider jwtTokenProvider;
 
 
-    public TeamService(SpringDataTeamRepository springDataTeamRepository, TeamMemberRepository teamMemberRepository, MemberRepository memberRepository, PostMemberRepository postMemberRepository, KeywordRepository keywordRepository, RefreshTokenRepository refreshTokenRepository, JwtTokenProvider jwtTokenProvider) {
+    public TeamService(SpringDataTeamRepository springDataTeamRepository, TeamMemberRepository teamMemberRepository, MemberRepository memberRepository, PostMemberRepository postMemberRepository,  RefreshTokenRepository refreshTokenRepository, JwtTokenProvider jwtTokenProvider) {
         this.springDataTeamRepository = springDataTeamRepository;
         this.teamMemberRepository = teamMemberRepository;
         this.memberRepository = memberRepository;
         this.postMemberRepository = postMemberRepository;
-        this.keywordRepository = keywordRepository;
         this.refreshTokenRepository = refreshTokenRepository;
         this.jwtTokenProvider = jwtTokenProvider;
     }
@@ -83,7 +81,7 @@ public class TeamService{
         //이후 accesstoke재발급필요 문구 전달
 
         try {
-           // checkTokenResponsForm checkTokenResponsForm = checkUserIdAndToken(authToken, refreshToken);
+
             //임시
             if(jwtTokenProvider.isValidAccessToken(authToken)){//accesstoken 유효
                 //addPost 진행
@@ -98,14 +96,9 @@ public class TeamService{
 
                 //String newToken = checkTokenResponsForm.getNewToken();
                 List<Team> teams = springDataTeamRepository.findByTeamLeader(teamLeader);
-                if (teams.size() == 3) {
-                    throw new RuntimeException("4개 이상의 팀을 만들 수 없습니다.");
+                if (teams.size() == 100) {
+                    throw new RuntimeException("99개 이상의 팀을 만들 수 없습니다.");
                 }
-                List<TeamKeyword> teamKeywords=team.getTeamKeywords();
-                if(teamKeywords!=null)
-                    for (TeamKeyword teamKeyword : teamKeywords){
-                        teamKeyword.setTeam(team);
-                    }
                 team.setTeamLeader(teamLeader);
 
                 // 팀 저장
@@ -138,12 +131,12 @@ public class TeamService{
 
             //이미지를 삭제한다
             deleteFile(updatedTeam.getImagePaths());
-            List<String> imageURL=uploadFile(images);
-            for(TeamKeyword teamKeyword : team.getTeamKeywords()){
-                teamKeyword.setTeam(team);
+            if(images!=null) {
+                team.setImagePaths(uploadFile(images));
             }
+
             team.setTeamId(updatedTeam.getTeamId());
-            team.setImagePaths(imageURL);
+
             team.setTeamLeader(updatedTeam.getTeamLeader());
             Team savedTeam = springDataTeamRepository.save(team);
             return ResponseForm.builder().data(TeamData.builder().team(savedTeam).build()).build();
@@ -151,8 +144,6 @@ public class TeamService{
             return checkRefreshToken(refreshToken);
         }
     }
-
-
     public ResponseForm findByTitleContaining(String title){
         return null;
     }
@@ -186,34 +177,74 @@ public class TeamService{
             throw new RuntimeException("Failed to retrieve Team information from the database", e);
         }
     }
-    public List<Member> recommendUsers(UUID teamId, int count) {
-        //recommend는 위에서 토큰 인증을 진행했기때문에 따로 토큰의 유효성검사를 하지 않는다
+    public List<Member> recommendMembers(UUID teamid, int maxRecommendation) {
+        // 추천할 멤버들을 담을 리스트
+        List<Member> recommendedMembers = new ArrayList<>();
+        List<Member> members = memberRepository.findAll();
+        Team team = springDataTeamRepository.findById(teamid).get();
 
-
-            Optional<Team> optionalTeam=springDataTeamRepository.findById(teamId);
-            if(optionalTeam.isEmpty()){
-                throw new RuntimeException("팀이 존재하지 않습니다.("+teamId+")");
+        // 멤버들 간의 스코어를 계산하고 스코어순으로 정렬
+        Map<Member, Integer> memberScoreMap = new HashMap<>();
+        for (Member member : members) {
+            if(member.getId().equals(team.getTeamId())) { // 리더는 제외
+                continue;
             }
+            int langScore = calculateScore(member, team, "Lang");
+            int frameworkScore = calculateScore(member, team, "Framework");
+            int dbScore = calculateScore(member, team, "DB");
+            int totalScore = langScore + frameworkScore + dbScore;
+            memberScoreMap.put(member, totalScore);
+        }
+        List<Map.Entry<Member, Integer>> sortedMemberScoreList = new ArrayList<>(memberScoreMap.entrySet());
+        sortedMemberScoreList.sort(Collections.reverseOrder(Map.Entry.comparingByValue()));
 
+// 스코어순으로 추천할 멤버들을 리스트에 추가
+        for (Map.Entry<Member, Integer> entry : sortedMemberScoreList) {
+            recommendedMembers.add(entry.getKey());
+            if (recommendedMembers.size() >= maxRecommendation) {
+                break;
+            }
+        }
 
-            Team team=optionalTeam.get();
-            Map<Member, Long> memberSimilarityMap = memberRepository.findAll().stream()
-                    .collect(Collectors.toMap(Function.identity(),
-                            member -> member.getMemberKeywords().stream()
-                                    .filter(memberKeyword -> team.getTeamKeywords().stream()
-                                            .anyMatch(teamKeyword -> teamKeyword.getValue().equals(memberKeyword.getValue())))
-                                    .count()));
-
-            // Map 객체를 유사도 기준으로 내림차순 정렬합니다.
-            List<Member> sortedMembers = memberSimilarityMap.entrySet().stream()
-                    .sorted(Map.Entry.<Member, Long>comparingByValue().reversed())
-                    .map(Map.Entry::getKey)
-                    .limit(count)
-                    .collect(Collectors.toList());
-            return sortedMembers;
-
-
+        return recommendedMembers;
     }
+
+    // Lang, Framework, DB 엔티티의 스코어를 계산하는 메서드
+    private int calculateScore(Member member, Team team, String method) {
+        int score = 0;
+        if(method.equals("Lang")) {
+            score += Math.abs(member.getMemberLang().getC() - team.getTeamLang().getC());
+            score += Math.abs(member.getMemberLang().getCpp() - team.getTeamLang().getCpp());
+            score += Math.abs(member.getMemberLang().getCs() - team.getTeamLang().getCs());
+            score += Math.abs(member.getMemberLang().getJava() - team.getTeamLang().getJava());
+            score += Math.abs(member.getMemberLang().getHtml() - team.getTeamLang().getHtml());
+            score += Math.abs(member.getMemberLang().getR() - team.getTeamLang().getR());
+            score += Math.abs(member.getMemberLang().getJavascript() - team.getTeamLang().getJavascript());
+            score += Math.abs(member.getMemberLang().getSql_Lang() - team.getTeamLang().getSql_Lang());
+            score += Math.abs(member.getMemberLang().getPython() - team.getTeamLang().getPython());
+            score += Math.abs(member.getMemberLang().getKotlin() - team.getTeamLang().getKotlin());
+            score += Math.abs(member.getMemberLang().getSwift() - team.getTeamLang().getSwift());
+            score += Math.abs(member.getMemberLang().getTypescript() - team.getTeamLang().getTypescript());
+        }
+        else if(method.equals("Framework")){
+            score += Math.abs(member.getMemberFramework().getAndroid() - team.getTeamFramework().getAndroid());
+            score += Math.abs(member.getMemberFramework().getSpring() - team.getTeamFramework().getSpring());
+            score += Math.abs(member.getMemberFramework().getNode() - team.getTeamFramework().getNode());
+            score += Math.abs(member.getMemberFramework().getUnity() - team.getTeamFramework().getUnity());
+            score += Math.abs(member.getMemberFramework().getTdmax() - team.getTeamFramework().getTdmax());
+            score += Math.abs(member.getMemberFramework().getReact() - team.getTeamFramework().getReact());
+            score += Math.abs(member.getMemberFramework().getUnreal() - team.getTeamFramework().getUnreal());
+            score += Math.abs(member.getMemberFramework().getXcode() - team.getTeamFramework().getXcode());
+        }
+        else{
+            score += Math.abs(member.getMemberDB().getD_design() - team.getTeamDB().getD_design());
+            score += Math.abs(member.getMemberDB().getMsq() - team.getTeamDB().getMsq());
+            score += Math.abs(member.getMemberDB().getMariadb() - team.getTeamDB().getMariadb());
+            score += Math.abs(member.getMemberDB().getMongodb() - team.getTeamDB().getMongodb());
+        }
+        return score;
+    }
+
     public ResponseForm delete(UUID teamId,String authToken,String refreshToken) {
         if(jwtTokenProvider.isValidAccessToken(authToken)){
             Optional<Team> optionalTeam = springDataTeamRepository.findById(teamId);
@@ -295,5 +326,8 @@ public class TeamService{
             }
         }
 
+    }
+    public Team addNewTeam(Team team){
+        return springDataTeamRepository.save(team);
     }
 }

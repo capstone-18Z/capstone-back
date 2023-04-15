@@ -58,6 +58,14 @@ public class MemberService {
     @Autowired
     private JwtTokenProvider jwtTokenProvider;
 
+    @Autowired
+    private final MemberLangRepository memberLangRepository;
+    @Autowired
+    private final MemberFrameworkRepository memberFrameworkRepository;
+    @Autowired
+    private final MemberDatabaseRepository memberDatabaseRepository;
+
+
 
     public PostMember PostJoin(PostMember post, String authToken){
         if(authToken==null)
@@ -72,8 +80,23 @@ public class MemberService {
     }
     public Member MemberJoin(Member post){
         try{
-            if(checkEmailDuplicate(post.getEmail())==false && checkNicknameDuplicate(post.getNickname())==false) {
+            if(!checkEmailDuplicate(post.getEmail()) && !checkNicknameDuplicate(post.getNickname())) {
                 Member save = memberRepository.save(post);
+                MemberLang memberLang = new MemberLang();
+                MemberFramework memberFramework = new MemberFramework();
+                MemberDatabase memberDatabase = new MemberDatabase();
+                memberLang.setMember(save);
+                memberFramework.setMember(save);
+                memberDatabase.setMember(save);
+                memberLangRepository.save(memberLang);
+                memberFrameworkRepository.save(memberFramework);
+                memberDatabaseRepository.save(memberDatabase);
+                /*
+                save.setMemberLang(memberLang);
+                save.setMemberFramework(memberFramework);
+                save.setMemberDB(memberDatabase);
+                */
+                System.out.println("저장이 완료되었습니다!");
                 return save;
             }
             else if (checkNicknameDuplicate(post.getNickname())){

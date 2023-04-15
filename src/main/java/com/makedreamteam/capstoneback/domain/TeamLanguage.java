@@ -2,25 +2,25 @@ package com.makedreamteam.capstoneback.domain;
 
 import jakarta.persistence.*;
 import lombok.*;
-import org.checkerframework.checker.units.qual.C;
 import org.hibernate.annotations.ColumnDefault;
 
 import java.util.UUID;
 
-@Getter
-@Setter
-@NoArgsConstructor
-@AllArgsConstructor
+
 @Entity
+@Getter
+@AllArgsConstructor
+@NoArgsConstructor
+@Setter
 @Builder
-public class MemberLang {
+public class TeamLanguage {
     @Id
     @GeneratedValue
     private UUID id;
 
-    @OneToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "member_id")
-    private Member member;
+    @OneToOne
+    @JoinColumn(name="team")
+    private Team team;
 
     @ColumnDefault("0")
     private int c;
@@ -57,8 +57,4 @@ public class MemberLang {
 
     @ColumnDefault("0")
     private int R;
-
-    /*public MemberLang(Member member) {
-        this.member = member;
-    }*/
 }

@@ -12,17 +12,17 @@ import java.util.UUID;
 @AllArgsConstructor
 @Entity
 @Builder
-public class MemberDB {
+public class MemberDatabase {
     @Id
+    @GeneratedValue
     private UUID id;
 
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "member_id")
-    @MapsId // Member 엔티티의 id 필드와 매핑
     private Member member;
 
     @ColumnDefault("0")
-    private int mysql;
+    private int msq;
 
     @ColumnDefault("0")
     private int mariadb;
@@ -31,5 +31,9 @@ public class MemberDB {
     private int mongodb;
 
     @ColumnDefault("0")
-    private int schema;
+    private int d_design;
+
+    /*public MemberDatabase(Member member) {
+        this.member = member;
+    }*/
 }

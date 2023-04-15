@@ -53,7 +53,6 @@ public class MatchingUserToTeamController {
             ResponseForm error=ResponseForm.builder().message(e.getMessage()).build();
             return ResponseEntity.badRequest().body(error);
         }
-
     }
 
     @PostMapping("/{teamId}/waiting-list")

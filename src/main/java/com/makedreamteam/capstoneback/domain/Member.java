@@ -3,18 +3,10 @@ package com.makedreamteam.capstoneback.domain;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
-import lombok.ToString;
-import org.hibernate.annotations.ColumnDefault;
-import org.springframework.web.multipart.MultipartFile;
+import lombok.*;
 
 @Getter
 @Setter
@@ -29,14 +21,17 @@ public class Member {
     @GeneratedValue
     private UUID id;
 
-    @OneToOne(mappedBy = "member")
+    @OneToOne(mappedBy = "member", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
+    @JsonIgnoreProperties({"member"})
     private MemberLang memberLang;
 
-    @OneToOne(mappedBy = "member")
+    @OneToOne(mappedBy = "member", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
+    @JsonIgnoreProperties({"member"})
     private MemberFramework memberFramework;
 
-    @OneToOne(mappedBy = "member")
-    private MemberDB memberDB;
+    @OneToOne(mappedBy = "member", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
+    @JsonIgnoreProperties({"member"})
+    private MemberDatabase memberDB;
 
     @Column(length = 100, unique = true, nullable = false, columnDefinition="VARCHAR(255) CHARACTER SET utf8 COLLATE utf8_general_ci")
     private String email;
@@ -54,13 +49,8 @@ public class Member {
     @OneToMany(mappedBy = "member", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
     private List<PostMember> postMemberList = new ArrayList<>();
 
-    @OneToMany(mappedBy = "postMember", cascade = CascadeType.ALL, orphanRemoval = true,fetch = FetchType.EAGER)
+    @OneToMany(mappedBy = "member", cascade = CascadeType.ALL, orphanRemoval = true,fetch = FetchType.EAGER)
     private List<MemberKeyword> memberKeywords = new ArrayList<>();
-
-    @JsonProperty("memberKeywords")
-    public List<String> getKeywordValues() {
-        return memberKeywords.stream().map(MemberKeyword::getValue).collect(Collectors.toList());
-    }
 
     public void addKeyword(MemberKeyword memberKeywords) {
         this.memberKeywords.add(memberKeywords);

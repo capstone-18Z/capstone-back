@@ -1,12 +1,7 @@
 package com.makedreamteam.capstoneback.controller;
 
-import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Field;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.nio.file.StandardCopyOption;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -14,33 +9,23 @@ import com.makedreamteam.capstoneback.JwtTokenProvider;
 import com.makedreamteam.capstoneback.domain.*;
 import com.makedreamteam.capstoneback.exception.*;
 import com.makedreamteam.capstoneback.form.PostResponseForm;
-import com.makedreamteam.capstoneback.form.ResponseForm;
 import com.makedreamteam.capstoneback.repository.FileDataRepository;
 import com.makedreamteam.capstoneback.repository.MemberRepository;
 import com.makedreamteam.capstoneback.repository.PostMemberRepository;
-import com.makedreamteam.capstoneback.repository.ProfileDataRepository;
 import com.makedreamteam.capstoneback.service.FileService;
 import com.makedreamteam.capstoneback.service.MemberService;
 import com.makedreamteam.capstoneback.service.TeamService;
-import io.jsonwebtoken.Claims;
-import io.jsonwebtoken.Jws;
-import io.jsonwebtoken.Jwts;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.platform.commons.logging.Logger;
 import org.junit.platform.commons.logging.LoggerFactory;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.ui.Model;
-import org.springframework.util.StringUtils;
-import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.*;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.multipart.MultipartFile;
-import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import javax.naming.AuthenticationException;
 
@@ -198,7 +183,7 @@ public class MemberController {
         return ResponseEntity.ok(memberService.checkEmailDuplicate(email));
     }
     @GetMapping("/check_nickname/{nickname}/exists")
-    public ResponseEntity<Boolean> checkNicknameDuplicate(@PathVariable String nickname) {
+    public ResponseEntity<Boolean> checkNicknameDuplicate(@PathVariable String nickname){
         return ResponseEntity.ok(memberService.checkNicknameDuplicate(nickname));
     }
 
