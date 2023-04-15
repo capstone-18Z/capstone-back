@@ -15,16 +15,18 @@ import java.util.UUID;
 @Builder
 public class TeamFramework {
     @Id
-    private UUID id;
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
 
     @ColumnDefault("0")
     private int react;
 
     @ColumnDefault("0")
-    private int android;
+    private int androidStudio;
 
     @ColumnDefault("0")
-    private int node;
+    private int nodejs;
 
     @ColumnDefault("0")
     private int xcode;
@@ -36,13 +38,12 @@ public class TeamFramework {
     private int unity;
 
     @ColumnDefault("0")
-    private int unreal;
+    private int unrealEngine;
 
     @ColumnDefault("0")
     private int tdmax;
 
     @OneToOne
     @JoinColumn(name="team")
-    @MapsId
     private Team team;
 }

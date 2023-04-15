@@ -16,7 +16,7 @@ public class TeamKeyword {
 
     @Id
     @JsonIgnore
-    @GeneratedValue
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @Column(columnDefinition = "VARCHAR(255) CHARACTER SET utf8 COLLATE utf8_general_ci")
@@ -29,5 +29,5 @@ public class TeamKeyword {
 
 
 
-    // Getter, Setter, Constructor, etc.
+
 }

@@ -14,6 +14,7 @@ import com.makedreamteam.capstoneback.form.TeamData;
 import com.makedreamteam.capstoneback.form.checkTokenResponsForm;
 import com.makedreamteam.capstoneback.repository.*;
 import io.jsonwebtoken.*;
+import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -54,7 +55,8 @@ public class TeamService{
     private final RefreshTokenRepository refreshTokenRepository;
     @Autowired
     private Storage storage;
-
+    @Autowired
+    private EntityManager entityManager;
     private JwtTokenProvider jwtTokenProvider;
 
 
@@ -267,26 +269,32 @@ public class TeamService{
                 List<String> imagesPath = uploadFile(images);
                 team.setImagePaths(imagesPath);
             }
-            //teamKeyword 양방향 관계 설정
-            List<TeamKeyword> keywords=team.getTeamKeywords();
-            for (TeamKeyword tk : keywords){
-                tk.setTeam(team);
+
+            if(team.getTeamKeywords()!=null) {
+                List<TeamKeyword> keywords = team.getTeamKeywords();
+                for (TeamKeyword tk : keywords) {
+                    tk.setTeam(team);
+                }
             }
 
             //team language 양방향 설정
-            TeamLanguage teamLanguage=team.getTeamLanguage();
-            teamLanguage.setTeam(team);
-            team.setTeamLanguage(teamLanguage);
-
+            if(team.getTeamLanguage()!=null) {
+                TeamLanguage teamLanguage = team.getTeamLanguage();
+                teamLanguage.setTeam(team);
+                team.setTeamLanguage(teamLanguage);
+            }
             //team framework 양방향 설정
-            TeamFramework teamFramework=team.getTeamFramework();
-            teamFramework.setTeam(team);
-            team.setTeamFramework(teamFramework);
-
+            if(team.getTeamFramework()!=null) {
+                TeamFramework teamFramework = team.getTeamFramework();
+                teamFramework.setTeam(team);
+                team.setTeamFramework(teamFramework);
+            }
             //team database 양방향 설정
-            TeamDatabase teamDatabase=team.getTeamDatabase();
-            teamDatabase.setTeam(team);
-            team.setTeamDatabase(teamDatabase);
+            if(team.getTeamDatabase()!=null) {
+                TeamDatabase teamDatabase = team.getTeamDatabase();
+                teamDatabase.setTeam(team);
+                team.setTeamDatabase(teamDatabase);
+            }
 
         } catch (IOException e) {
             throw new RuntimeException(e);
@@ -298,38 +306,52 @@ public class TeamService{
         try{
             Team originalTeam = springDataTeamRepository.findById(teamId).orElseThrow(() -> null);
             if(images!=null) {
+                if(originalTeam.getImagePaths()!=null)
+                    deleteFile(originalTeam.getImagePaths());
                 List<String> imagesPathFromClient = uploadFile(images);
                 team.setImagePaths(imagesPathFromClient);
-            }
-            //teamKeyword 양방향 관계 설정
-            List<TeamKeyword> keywords=team.getTeamKeywords();
-            for (TeamKeyword tk : keywords){
-                tk.setTeam(team);
+            }else{
+                if(originalTeam.getImagePaths()!=null)
+                    deleteFile(originalTeam.getImagePaths());
             }
 
+            if(team.getTeamKeywords()!=null) {
+                List<TeamKeyword> keywords = team.getTeamKeywords();
+                for (TeamKeyword tk : keywords) {
+                    tk.setTeam(team);
+                }
+
+            }
             //team language 양방향 설정
-            TeamLanguage teamLanguage=team.getTeamLanguage();
-            teamLanguage.setTeam(team);
-            team.setTeamLanguage(teamLanguage);
-
+            if(team.getTeamLanguage()!=null) {
+                TeamLanguage teamLanguage = new TeamLanguage();
+                teamLanguage=team.getTeamLanguage();
+                teamLanguage.setTeam(team);
+                team.setTeamLanguage(teamLanguage);
+            }
             //team framework 양방향 설정
-            TeamFramework teamFramework=team.getTeamFramework();
-            teamFramework.setTeam(team);
-            team.setTeamFramework(teamFramework);
-
+            if(team.getTeamFramework()!=null) {
+                TeamFramework teamFramework = new TeamFramework();
+                teamFramework=team.getTeamFramework();
+                teamFramework.setTeam(team);
+                team.setTeamFramework(teamFramework);
+            }
             //team database 양방향 설정
-            TeamDatabase teamDatabase=team.getTeamDatabase();
-            teamDatabase.setTeam(team);
-            team.setTeamDatabase(teamDatabase);
+            if(team.getTeamDatabase()!=null) {
+                TeamDatabase teamDatabase = new TeamDatabase();
+                teamDatabase=team.getTeamDatabase();
+                teamDatabase.setTeam(team);
+                team.setTeamDatabase(teamDatabase);
+            }
+            team.setTeamId(teamId);
 
-            team.setTeamId(originalTeam.getTeamId());
+
 
             springDataTeamRepository.save(team);
-
+            return originalTeam;
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
-        return team;
     }
 
     public void deleteTest(UUID teamId) {
@@ -342,4 +364,6 @@ public class TeamService{
     public List<Map<String,Integer>> countOfKeyword(){
         return teamKeywordRepository.countOfKeyword();
     }
+
+
 }

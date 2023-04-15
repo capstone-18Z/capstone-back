@@ -15,11 +15,11 @@ import java.util.UUID;
 @Builder
 public class TeamLanguage {
     @Id
-    private UUID id;
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
 
     @OneToOne
     @JoinColumn(name="team")
-    @MapsId
     private Team team;
 
     @ColumnDefault("0")

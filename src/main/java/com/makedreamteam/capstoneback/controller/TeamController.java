@@ -60,8 +60,6 @@ public class TeamController {
         try {
             String refreshToken = request.getHeader("refresh-token");
             String accessToken = request.getHeader("login-token");
-
-            List<String> imageUrls = null;
             if (images != null) {
                 team.setImagePaths(teamService.uploadFile(images));
             }
@@ -145,4 +143,6 @@ public class TeamController {
     public List<Map<String,Integer>> countOfKeyword(){
         return teamService.countOfKeyword();
     }
+
+
 }

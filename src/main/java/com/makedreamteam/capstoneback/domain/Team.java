@@ -79,15 +79,15 @@ public class Team{
     @Column
     private String purposeDetail2;
 
-    @OneToOne(mappedBy = "team",cascade = CascadeType.ALL,orphanRemoval = true)
+    @OneToOne(mappedBy = "team",cascade = CascadeType.ALL ,orphanRemoval = true,fetch = FetchType.LAZY)
     @JsonIgnoreProperties({"team"})
     private TeamLanguage teamLanguage;
 
-    @OneToOne(mappedBy = "team",cascade = CascadeType.ALL,orphanRemoval = true)
+    @OneToOne(mappedBy = "team",cascade = CascadeType.ALL ,orphanRemoval = true,fetch = FetchType.LAZY)
     @JsonIgnoreProperties({"team"})
     private TeamFramework teamFramework;
 
-    @OneToOne(mappedBy = "team",cascade = CascadeType.ALL,orphanRemoval = true)
+    @OneToOne(mappedBy = "team",cascade = CascadeType.ALL ,orphanRemoval = true,fetch = FetchType.LAZY)
     @JsonIgnoreProperties({"team"})
     private TeamDatabase teamDatabase;
 
