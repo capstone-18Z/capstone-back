@@ -1,12 +1,7 @@
 package com.makedreamteam.capstoneback.controller;
 
-import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Field;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.nio.file.StandardCopyOption;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -14,33 +9,23 @@ import com.makedreamteam.capstoneback.JwtTokenProvider;
 import com.makedreamteam.capstoneback.domain.*;
 import com.makedreamteam.capstoneback.exception.*;
 import com.makedreamteam.capstoneback.form.PostResponseForm;
-import com.makedreamteam.capstoneback.form.ResponseForm;
 import com.makedreamteam.capstoneback.repository.FileDataRepository;
 import com.makedreamteam.capstoneback.repository.MemberRepository;
 import com.makedreamteam.capstoneback.repository.PostMemberRepository;
-import com.makedreamteam.capstoneback.repository.ProfileDataRepository;
 import com.makedreamteam.capstoneback.service.FileService;
 import com.makedreamteam.capstoneback.service.MemberService;
 import com.makedreamteam.capstoneback.service.TeamService;
-import io.jsonwebtoken.Claims;
-import io.jsonwebtoken.Jws;
-import io.jsonwebtoken.Jwts;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.platform.commons.logging.Logger;
 import org.junit.platform.commons.logging.LoggerFactory;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.ui.Model;
-import org.springframework.util.StringUtils;
-import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.*;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.multipart.MultipartFile;
-import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import javax.naming.AuthenticationException;
 
@@ -150,7 +135,7 @@ public class MemberController {
     }
 
     @PostMapping("/userForm/update")
-    public ResponseEntity<MemberResponseForm> updateUser(@RequestPart(value = "metadata", required = true) Map<String, Object> updates, @RequestPart(value = "file", required = false) MultipartFile file, HttpServletRequest request) throws AuthenticationException {
+    public ResponseEntity<MemberResponseForm> updateUser(@RequestPart(value = "metadata", required = true) Member member, @RequestPart(value = "file", required = false) MultipartFile file, HttpServletRequest request) throws AuthenticationException {
         try{
             String authToken= request.getHeader("login-token");
             String refreshToken = request.getHeader("refresh-token");
@@ -159,21 +144,7 @@ public class MemberController {
             Member oldMember = memberRepository.findById(memberid)
                     .orElseThrow(() -> new RuntimeException("해당하는 회원이 존재하지 않습니다."));
 
-            for (Field field : oldMember.getClass().getDeclaredFields()) {
-                String fieldName = field.getName();
-                if (updates.containsKey(fieldName)) {
-                    field.setAccessible(true);
-                    Object value = updates.get(fieldName);
-                    field.set(oldMember, value);
-                }
-            }
-            if(file != null){
-                if(!oldMember.getProfileImageUrl().equals(DefaultProfile)){
-                    fileService.deleteFile(fileDataRepository.findByImageURL(oldMember.getProfileImageUrl()).get());
-                }
-                oldMember.setProfileImageUrl(fileService.uploadProfile(file, memberid).getImageURL());
-            }
-            memberRepository.save(oldMember);
+            memberService.MemberUpdate(member, memberid, file);
             MemberResponseForm successForm = MemberResponseForm.builder()
                     .message("유저 업데이트 성공")
                     .state(HttpStatus.OK.value())
@@ -183,7 +154,7 @@ public class MemberController {
             MemberResponseForm errorResponseForm = MemberResponseForm.builder()
                     .message(e.getMessage()).state(HttpStatus.BAD_REQUEST.value()).build();
             return ResponseEntity.badRequest().body(errorResponseForm);
-        } catch (IllegalAccessException | IOException e) {
+        } catch (IOException e) {
             throw new RuntimeException(e);
         }
     }
@@ -200,15 +171,6 @@ public class MemberController {
     @GetMapping("/check_nickname/{nickname}/exists")
     public ResponseEntity<Boolean> checkNicknameDuplicate(@PathVariable String nickname){
         return ResponseEntity.ok(memberService.checkNicknameDuplicate(nickname));
-    }
-
-    @GetMapping("/post/{postid}/recommand2")
-    public List<Team> TeamRecommandbyKeyword(@PathVariable Long postid,HttpServletRequest request) throws AuthenticationException {
-        String authToken= request.getHeader("login-token");
-        String refreshToken = request.getHeader("refresh-token");
-        UUID uid = memberService.checkUserIdAndToken(authToken, refreshToken);
-        //return memberService.recommendTeamsByKeyword(postid, 2);
-        return null;
     }
 
     @GetMapping("/post")

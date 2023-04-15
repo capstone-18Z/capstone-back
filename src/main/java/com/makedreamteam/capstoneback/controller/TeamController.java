@@ -1,14 +1,17 @@
 package com.makedreamteam.capstoneback.controller;
 
 import com.makedreamteam.capstoneback.JwtTokenProvider;
+import com.makedreamteam.capstoneback.domain.Member;
 import com.makedreamteam.capstoneback.domain.PostMember;
 import com.makedreamteam.capstoneback.domain.Team;
 import com.makedreamteam.capstoneback.exception.*;
 import com.makedreamteam.capstoneback.form.*;
+import com.makedreamteam.capstoneback.repository.SpringDataTeamRepository;
 import com.makedreamteam.capstoneback.service.FileService;
 import com.makedreamteam.capstoneback.service.ImageStorageService;
 import com.makedreamteam.capstoneback.service.TeamService;
 import jakarta.servlet.http.HttpServletRequest;
+import lombok.RequiredArgsConstructor;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.*;
@@ -19,6 +22,7 @@ import java.io.IOException;
 import java.util.*;
 
 @RestController
+@RequiredArgsConstructor
 @CrossOrigin
 @RequestMapping(value = "/teams", produces = "application/json;charset=UTF-8")
 public class TeamController {
@@ -27,14 +31,7 @@ public class TeamController {
     private final JwtTokenProvider jwtTokenProvider;
     private final ImageStorageService imageStorage;
     private final FileService fileService;
-
-    @Autowired
-    public TeamController(TeamService postTeamService, JwtTokenProvider jwtTokenProvider, ImageStorageService imageStorage, FileService fileService) {
-        this.teamService = postTeamService;
-        this.jwtTokenProvider = jwtTokenProvider;
-        this.imageStorage = imageStorage;
-        this.fileService = fileService;
-    }
+    private final SpringDataTeamRepository springDataTeamRepository;
 
     @GetMapping("")
     public ResponseEntity<ResponseForm> allPost(HttpServletRequest request) {
@@ -84,13 +81,13 @@ public class TeamController {
             if(team.getData()==null){//team의  data가 null이라면 오류
                 return ResponseEntity.badRequest().body(team);
             }
-//            if(team.isUpdatable()){//team이 업데이트 가능하다면 추천목록또한 같이 보낸다
-//                List<PostMember> members = teamService.recommendUsers(id, 5);
-//                TeamData teamData=(TeamData) team.getData();
-//                teamData.setRecommendList(members);
-//                team.setData(teamData);
-//                return ResponseEntity.badRequest().body(team);
-//            }
+            if(team.isUpdatable()){//team이 업데이트 가능하다면 추천목록또한 같이 보낸다
+                List<Member> members = teamService.recommendMembers(id, 2);
+                TeamData teamData=(TeamData) team.getData();
+                teamData.setRecommendList(members);
+                team.setData(teamData);
+                return ResponseEntity.badRequest().body(team);
+            }
             else{
                 return ResponseEntity.badRequest().body(team);
             }

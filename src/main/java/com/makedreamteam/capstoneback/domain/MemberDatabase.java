@@ -12,13 +12,13 @@ import java.util.UUID;
 @AllArgsConstructor
 @Entity
 @Builder
-public class MemberDB {
+public class MemberDatabase {
     @Id
-    private UUID id;
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
 
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "member_id")
-    @MapsId
     private Member member;
 
     @ColumnDefault("0")

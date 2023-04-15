@@ -11,6 +11,7 @@ import com.makedreamteam.capstoneback.form.TeamData;
 import com.makedreamteam.capstoneback.form.checkTokenResponsForm;
 import com.makedreamteam.capstoneback.repository.*;
 import io.jsonwebtoken.*;
+import jakarta.persistence.EntityManager;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -58,6 +59,15 @@ public class MemberService {
     @Autowired
     private JwtTokenProvider jwtTokenProvider;
 
+    @Autowired
+    private final MemberLangRepository memberLangRepository;
+    @Autowired
+    private final MemberFrameworkRepository memberFrameworkRepository;
+    @Autowired
+    private final MemberDatabaseRepository memberDatabaseRepository;
+
+    @Autowired
+    private EntityManager entityManager;
 
     public PostMember PostJoin(PostMember post, String authToken){
         if(authToken==null)
@@ -72,8 +82,22 @@ public class MemberService {
     }
     public Member MemberJoin(Member post){
         try{
-            if(checkEmailDuplicate(post.getEmail())==false && checkNicknameDuplicate(post.getNickname())==false) {
+            if(!checkEmailDuplicate(post.getEmail()) && !checkNicknameDuplicate(post.getNickname())) {
                 Member save = memberRepository.save(post);
+
+                MemberLang memberLang = new MemberLang();
+                memberLang.setMember(save);
+                save.setMemberLang(memberLang);
+
+                MemberFramework memberFramework = new MemberFramework();
+                memberFramework.setMember(save);
+                save.setMemberFramework(memberFramework);
+
+                MemberDatabase memberDatabase = new MemberDatabase();
+                memberDatabase.setMember(save);
+                save.setMemberDB(memberDatabase);
+
+                System.out.println("저장이 완료되었습니다!");
                 return save;
             }
             else if (checkNicknameDuplicate(post.getNickname())){
@@ -85,6 +109,55 @@ public class MemberService {
         }catch (NullPointerException | DataIntegrityViolationException | JpaSystemException |
                 TransactionSystemException e) {
             throw new RuntimeException("Failed to add", e);
+        }
+    }
+
+    public void MemberUpdate(Member member, UUID uid, MultipartFile file) throws IOException {
+        try {
+            String defaultProfile = "https://firebasestorage.googleapis.com/v0/b/caps-1edf8.appspot.com/o/DefaultProfile.PNG?alt=media&token=266e52f4-818f-4a20-970d-2d84ba48e5a1";
+
+            // 기존의 Member 엔티티 가져오기
+            Member originalMember = memberRepository.findById(uid).get();
+            List<MemberKeyword> keywords = member.getMemberKeywords();
+            for (MemberKeyword tk : keywords) {
+                tk.setMember(member);
+            }
+
+            // MemberLang, MemberFramework, MemberDatabase 엔티티에서 Member 엔티티를 참조하도록 설정
+            if (member.getMemberLang() != null) {
+                MemberLang memberLang = member.getMemberLang();
+                memberLang.setMember(member);
+                member.setMemberLang(memberLang);
+            }
+            if (member.getMemberFramework() != null) {
+                MemberFramework memberFramework = member.getMemberFramework();
+                memberFramework.setMember(member);
+                member.setMemberFramework(memberFramework);
+            }
+            if (member.getMemberDB() != null) {
+                MemberDatabase memberDatabase = member.getMemberDB();
+                memberDatabase.setMember(member);
+                member.setMemberDB(memberDatabase);
+            }
+            // id, email, nickname은 기존의 Member 엔티티에서 가져오기
+            member.setId(originalMember.getId());
+            member.setEmail(originalMember.getEmail());
+            member.setPassword(originalMember.getPassword());
+            member.setRole(originalMember.getRole());
+
+            // 프로필 이미지가 업데이트되는 경우, 기존 이미지 파일 삭제하고 새로운 파일 업로드하기
+            if (file != null) {
+                if (!originalMember.getProfileImageUrl().equals(defaultProfile)) {
+                    fileService.deleteFile(originalMember.getProfileImageUrl());
+                    System.out.println("파일 삭제 실행");
+                }
+                member.setProfileImageUrl(fileService.uploadProfile(file, uid).getImageURL());
+                System.out.println("파일 저장실행");
+            }
+            // Member 엔티티 저장하기
+            memberRepository.save(member);
+        }catch (RuntimeException e){
+            throw new RuntimeException(e);
         }
     }
 
@@ -174,8 +247,6 @@ public class MemberService {
         }
     }
 
-
-
     public UUID checkUserIdAndToken(String authToken, String refreshToken) throws AuthenticationException {
         if(jwtTokenProvider.isValidAccessToken(authToken)) {//accesstoken 유효
             //addPost 진행
@@ -211,30 +282,6 @@ public class MemberService {
         }
     }
 
-//    public List<Team> recommendTeamsByKeyword(Long postid, int count) {
-//        //recommend는 위에서 토큰 인증을 진행했기때문에 따로 토큰의 유효성검사를 하지 않는다
-//        Optional<PostMember> optionalPostMember=postMemberRepository.findById(postid);
-//        if(optionalPostMember.isEmpty()){
-//            throw new RuntimeException("팀이 존재하지 않습니다.("+postid+")");
-//        }
-//
-//        PostMember postMember = optionalPostMember.get();
-//        Map<Team, Long> teamSimilarityMap = springDataTeamRepository.findAll().stream()
-//                .collect(Collectors.toMap(Function.identity(),
-//                        team -> team.getTeamKeywords().stream()
-//                                .filter(teamKeyword -> postMember.getMemberKeywords().stream()
-//                                        .anyMatch(memberKeyword -> memberKeyword.getValue().equals(teamKeyword.getValue())))
-//                                .count()));
-//
-//        // Map 객체를 유사도 기준으로 내림차순 정렬합니다.
-//        List<Team> sortedTeams = teamSimilarityMap.entrySet().stream()
-//                .sorted(Map.Entry.<Team, Long>comparingByValue().reversed())
-//                .map(Map.Entry::getKey)
-//                .limit(count)
-//                .collect(Collectors.toList());
-//        return sortedTeams;
-//    }
-
     public PostResponseForm testAddNewMember(PostMember member, String authToken, String refreshToken) throws RefreshTokenExpiredException, TokenException, DatabaseException {
 
         try {
@@ -252,11 +299,6 @@ public class MemberService {
                 }
 
                 //String newToken = checkTokenResponsForm.getNewToken();
-                List<MemberKeyword> memberKeywords=member.getMemberKeywords();
-                if(memberKeywords!=null)
-                    for (MemberKeyword memberKeyword : memberKeywords){
-                        memberKeyword.setPostMember(member);
-                    }
                 member.setMember(byId.get());
                 member.setNickname(byId.get().getNickname());
                 // post 저장
@@ -305,9 +347,6 @@ public class MemberService {
     }
 
     public MemberData doLogin(Member member) {
-
-
-
         //새로운 토큰 생성
         String loginToken= jwtTokenProvider.createAccessToken(member.getId(), member.getEmail(), member.getRole(),
                 member.getNickname());

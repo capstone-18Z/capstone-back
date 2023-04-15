@@ -14,11 +14,11 @@ import java.util.UUID;
 @Builder
 public class MemberFramework {
     @Id
-    private UUID id;
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
 
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "member_id")
-    @MapsId // Member 엔티티의 id 필드와 매핑
     private Member member;
 
     @ColumnDefault("0")

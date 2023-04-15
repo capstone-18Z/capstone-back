@@ -181,6 +181,74 @@ public class TeamService{
             throw new RuntimeException("Failed to retrieve Team information from the database", e);
         }
     }
+    public List<Member> recommendMembers(UUID teamid, int maxRecommendation) {
+        // 추천할 멤버들을 담을 리스트
+        List<Member> recommendedMembers = new ArrayList<>();
+        List<Member> members = memberRepository.findAll();
+        Team team = springDataTeamRepository.findById(teamid).get();
+
+        // 멤버들 간의 스코어를 계산하고 스코어순으로 정렬
+        Map<Member, Integer> memberScoreMap = new HashMap<>();
+        for (Member member : members) {
+            if(member.getId().equals(team.getTeamId())) { // 리더는 제외
+                continue;
+            }
+            int langScore = calculateScore(member, team, "Lang");
+            int frameworkScore = calculateScore(member, team, "Framework");
+            int dbScore = calculateScore(member, team, "DB");
+            int totalScore = langScore + frameworkScore + dbScore;
+            memberScoreMap.put(member, totalScore);
+        }
+        List<Map.Entry<Member, Integer>> sortedMemberScoreList = new ArrayList<>(memberScoreMap.entrySet());
+        sortedMemberScoreList.sort(Collections.reverseOrder(Map.Entry.comparingByValue()));
+
+// 스코어순으로 추천할 멤버들을 리스트에 추가
+        for (Map.Entry<Member, Integer> entry : sortedMemberScoreList) {
+            recommendedMembers.add(entry.getKey());
+            if (recommendedMembers.size() >= maxRecommendation) {
+                break;
+            }
+        }
+
+        return recommendedMembers;
+    }
+
+    // Lang, Framework, DB 엔티티의 스코어를 계산하는 메서드
+    private int calculateScore(Member member, Team team, String method) {
+        int score = 0;
+        if(method.equals("Lang")) {
+            score += Math.abs(member.getMemberLang().getC() - team.getTeamLanguage().getC());
+            score += Math.abs(member.getMemberLang().getCpp() - team.getTeamLanguage().getCpp());
+            score += Math.abs(member.getMemberLang().getCs() - team.getTeamLanguage().getCs());
+            score += Math.abs(member.getMemberLang().getJava() - team.getTeamLanguage().getJava());
+            score += Math.abs(member.getMemberLang().getHtml() - team.getTeamLanguage().getHtml());
+            score += Math.abs(member.getMemberLang().getR() - team.getTeamLanguage().getR());
+            score += Math.abs(member.getMemberLang().getJavascript() - team.getTeamLanguage().getJavascript());
+            score += Math.abs(member.getMemberLang().getSql_Lang() - team.getTeamLanguage().getSql_Lang());
+            score += Math.abs(member.getMemberLang().getPython() - team.getTeamLanguage().getPython());
+            score += Math.abs(member.getMemberLang().getKotlin() - team.getTeamLanguage().getKotlin());
+            score += Math.abs(member.getMemberLang().getSwift() - team.getTeamLanguage().getSwift());
+            score += Math.abs(member.getMemberLang().getTypescript() - team.getTeamLanguage().getTypescript());
+        }
+        else if(method.equals("Framework")){
+            score += Math.abs(member.getMemberFramework().getAndroid() - team.getTeamFramework().getAndroid());
+            score += Math.abs(member.getMemberFramework().getSpring() - team.getTeamFramework().getSpring());
+            score += Math.abs(member.getMemberFramework().getNode() - team.getTeamFramework().getNode());
+            score += Math.abs(member.getMemberFramework().getUnity() - team.getTeamFramework().getUnity());
+            score += Math.abs(member.getMemberFramework().getTdmax() - team.getTeamFramework().getTdmax());
+            score += Math.abs(member.getMemberFramework().getReact() - team.getTeamFramework().getReact());
+            score += Math.abs(member.getMemberFramework().getUnreal() - team.getTeamFramework().getUnreal());
+            score += Math.abs(member.getMemberFramework().getXcode() - team.getTeamFramework().getXcode());
+        }
+        else{
+            score += Math.abs(member.getMemberDB().getSchemaL() - team.getTeamDatabase().getSchemaL());
+            score += Math.abs(member.getMemberDB().getMysqlL() - team.getTeamDatabase().getMysqlL());
+            score += Math.abs(member.getMemberDB().getMariadbL() - team.getTeamDatabase().getMariadbL());
+            score += Math.abs(member.getMemberDB().getMongodbL() - team.getTeamDatabase().getMongodbL());
+        }
+        return score;
+    }
+
     public ResponseForm delete(UUID teamId,String authToken,String refreshToken) {
         if(jwtTokenProvider.isValidAccessToken(authToken)){
             Optional<Team> optionalTeam = springDataTeamRepository.findById(teamId);
