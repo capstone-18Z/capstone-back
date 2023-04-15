@@ -1,25 +1,26 @@
 package com.makedreamteam.capstoneback.domain;
 
+
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.ColumnDefault;
 
 import java.util.UUID;
 
-@Getter
+@Entity
 @Setter
+@Getter
 @NoArgsConstructor
 @AllArgsConstructor
-@Entity
 @Builder
-public class MemberDB {
+public class TeamDatabase {
     @Id
     private UUID id;
 
-    @OneToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "member_id")
+    @OneToOne
+    @JoinColumn(name = "team")
     @MapsId
-    private Member member;
+    private Team team;
 
     @ColumnDefault("0")
     private int mysqlL;

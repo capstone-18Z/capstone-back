@@ -126,11 +126,23 @@ public class TeamController {
         }
     }
 
+    //임시 코드
+
     @PostMapping(value = "/test/add" , consumes = "multipart/form-data")
-    public Team addTestTeam(@RequestPart("team") Team team){
-       return teamService.addNewTeam(team);
+    public Team addTestTeam(@RequestPart("team") Team team,@RequestPart(value = "images", required = false) List<MultipartFile> images){
+       return teamService.addNewTeam(team,images);
+    }
+    @PostMapping(value = "/test/{teamId}/update" , consumes = "multipart/form-data")
+    public Team updateTest(@RequestPart("team") Team team,@RequestPart(value = "images", required = false) List<MultipartFile> images,@PathVariable UUID teamId){
+        return teamService.updateTest(team,images,teamId);
+    }
+    @PostMapping("/test/{teamId}/delete")
+    public void deleteTest(@PathVariable UUID teamId){
+        teamService.deleteTest(teamId);
     }
 
-
-
+    @PostMapping("/test/count-keyword")
+    public List<Map<String,Integer>> countOfKeyword(){
+        return teamService.countOfKeyword();
+    }
 }

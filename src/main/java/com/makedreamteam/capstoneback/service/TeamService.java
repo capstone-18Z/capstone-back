@@ -47,7 +47,8 @@ public class TeamService{
     @Autowired
     private final PostMemberRepository postMemberRepository;
 
-
+    @Autowired
+    private final TeamKeywordRepository teamKeywordRepository;
 
     @Autowired
     private final RefreshTokenRepository refreshTokenRepository;
@@ -57,13 +58,14 @@ public class TeamService{
     private JwtTokenProvider jwtTokenProvider;
 
 
-    public TeamService(SpringDataTeamRepository springDataTeamRepository, TeamMemberRepository teamMemberRepository, MemberRepository memberRepository, PostMemberRepository postMemberRepository,  RefreshTokenRepository refreshTokenRepository, JwtTokenProvider jwtTokenProvider) {
+    public TeamService(SpringDataTeamRepository springDataTeamRepository, TeamMemberRepository teamMemberRepository, MemberRepository memberRepository, PostMemberRepository postMemberRepository,  RefreshTokenRepository refreshTokenRepository, JwtTokenProvider jwtTokenProvider,TeamKeywordRepository teamKeywordRepository) {
         this.springDataTeamRepository = springDataTeamRepository;
         this.teamMemberRepository = teamMemberRepository;
         this.memberRepository = memberRepository;
         this.postMemberRepository = postMemberRepository;
         this.refreshTokenRepository = refreshTokenRepository;
         this.jwtTokenProvider = jwtTokenProvider;
+        this.teamKeywordRepository=teamKeywordRepository;
     }
 
     //순서
@@ -259,7 +261,85 @@ public class TeamService{
         }
 
     }
-    public Team addNewTeam(Team team){
+    public Team addNewTeam(Team team,List<MultipartFile> images){
+        try {
+            if(images!=null) {
+                List<String> imagesPath = uploadFile(images);
+                team.setImagePaths(imagesPath);
+            }
+            //teamKeyword 양방향 관계 설정
+            List<TeamKeyword> keywords=team.getTeamKeywords();
+            for (TeamKeyword tk : keywords){
+                tk.setTeam(team);
+            }
+
+            //team language 양방향 설정
+            TeamLanguage teamLanguage=team.getTeamLanguage();
+            teamLanguage.setTeam(team);
+            team.setTeamLanguage(teamLanguage);
+
+            //team framework 양방향 설정
+            TeamFramework teamFramework=team.getTeamFramework();
+            teamFramework.setTeam(team);
+            team.setTeamFramework(teamFramework);
+
+            //team database 양방향 설정
+            TeamDatabase teamDatabase=team.getTeamDatabase();
+            teamDatabase.setTeam(team);
+            team.setTeamDatabase(teamDatabase);
+
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
         return springDataTeamRepository.save(team);
+    }
+
+    public Team updateTest(Team team, List<MultipartFile> images,UUID teamId) {
+        try{
+            Team originalTeam = springDataTeamRepository.findById(teamId).orElseThrow(() -> null);
+            if(images!=null) {
+                List<String> imagesPathFromClient = uploadFile(images);
+                team.setImagePaths(imagesPathFromClient);
+            }
+            //teamKeyword 양방향 관계 설정
+            List<TeamKeyword> keywords=team.getTeamKeywords();
+            for (TeamKeyword tk : keywords){
+                tk.setTeam(team);
+            }
+
+            //team language 양방향 설정
+            TeamLanguage teamLanguage=team.getTeamLanguage();
+            teamLanguage.setTeam(team);
+            team.setTeamLanguage(teamLanguage);
+
+            //team framework 양방향 설정
+            TeamFramework teamFramework=team.getTeamFramework();
+            teamFramework.setTeam(team);
+            team.setTeamFramework(teamFramework);
+
+            //team database 양방향 설정
+            TeamDatabase teamDatabase=team.getTeamDatabase();
+            teamDatabase.setTeam(team);
+            team.setTeamDatabase(teamDatabase);
+
+            team.setTeamId(originalTeam.getTeamId());
+
+            springDataTeamRepository.save(team);
+
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+        return team;
+    }
+
+    public void deleteTest(UUID teamId) {
+        Team team = springDataTeamRepository.findById(teamId).orElseThrow(() -> {
+            throw new RuntimeException("팀이 존재하지 않음");
+        });
+        springDataTeamRepository.delete(team);
+    }
+
+    public List<Map<String,Integer>> countOfKeyword(){
+        return teamKeywordRepository.countOfKeyword();
     }
 }

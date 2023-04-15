@@ -15,7 +15,6 @@ import java.util.UUID;
 @Builder
 public class TeamFramework {
     @Id
-    @GeneratedValue
     private UUID id;
 
     @ColumnDefault("0")
@@ -44,5 +43,6 @@ public class TeamFramework {
 
     @OneToOne
     @JoinColumn(name="team")
+    @MapsId
     private Team team;
 }
