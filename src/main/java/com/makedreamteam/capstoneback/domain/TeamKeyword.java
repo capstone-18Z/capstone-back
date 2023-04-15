@@ -15,16 +15,15 @@ import java.util.UUID;
 public class TeamKeyword {
 
     @Id
-    @GeneratedValue
-    @Column(columnDefinition = "BINARY(16)")
     @JsonIgnore
-    private UUID id;
+    @GeneratedValue
+    private Long id;
 
     @Column(columnDefinition = "VARCHAR(255) CHARACTER SET utf8 COLLATE utf8_general_ci")
     private String value;
 
     @ManyToOne(fetch = FetchType.EAGER)
-    @JoinColumn(name = "team_id")
+    @JoinColumn(name = "team")
     @JsonIgnore
     private Team team;
 

@@ -47,7 +47,8 @@ public class TeamService{
     @Autowired
     private final PostMemberRepository postMemberRepository;
 
-
+    @Autowired
+    private final TeamKeywordRepository teamKeywordRepository;
 
     @Autowired
     private final RefreshTokenRepository refreshTokenRepository;
@@ -57,13 +58,14 @@ public class TeamService{
     private JwtTokenProvider jwtTokenProvider;
 
 
-    public TeamService(SpringDataTeamRepository springDataTeamRepository, TeamMemberRepository teamMemberRepository, MemberRepository memberRepository, PostMemberRepository postMemberRepository,  RefreshTokenRepository refreshTokenRepository, JwtTokenProvider jwtTokenProvider) {
+    public TeamService(SpringDataTeamRepository springDataTeamRepository, TeamMemberRepository teamMemberRepository, MemberRepository memberRepository, PostMemberRepository postMemberRepository,  RefreshTokenRepository refreshTokenRepository, JwtTokenProvider jwtTokenProvider,TeamKeywordRepository teamKeywordRepository) {
         this.springDataTeamRepository = springDataTeamRepository;
         this.teamMemberRepository = teamMemberRepository;
         this.memberRepository = memberRepository;
         this.postMemberRepository = postMemberRepository;
         this.refreshTokenRepository = refreshTokenRepository;
         this.jwtTokenProvider = jwtTokenProvider;
+        this.teamKeywordRepository=teamKeywordRepository;
     }
 
     //순서
@@ -213,18 +215,18 @@ public class TeamService{
     private int calculateScore(Member member, Team team, String method) {
         int score = 0;
         if(method.equals("Lang")) {
-            score += Math.abs(member.getMemberLang().getC() - team.getTeamLang().getC());
-            score += Math.abs(member.getMemberLang().getCpp() - team.getTeamLang().getCpp());
-            score += Math.abs(member.getMemberLang().getCs() - team.getTeamLang().getCs());
-            score += Math.abs(member.getMemberLang().getJava() - team.getTeamLang().getJava());
-            score += Math.abs(member.getMemberLang().getHtml() - team.getTeamLang().getHtml());
-            score += Math.abs(member.getMemberLang().getR() - team.getTeamLang().getR());
-            score += Math.abs(member.getMemberLang().getJavascript() - team.getTeamLang().getJavascript());
-            score += Math.abs(member.getMemberLang().getSql_Lang() - team.getTeamLang().getSql_Lang());
-            score += Math.abs(member.getMemberLang().getPython() - team.getTeamLang().getPython());
-            score += Math.abs(member.getMemberLang().getKotlin() - team.getTeamLang().getKotlin());
-            score += Math.abs(member.getMemberLang().getSwift() - team.getTeamLang().getSwift());
-            score += Math.abs(member.getMemberLang().getTypescript() - team.getTeamLang().getTypescript());
+            score += Math.abs(member.getMemberLang().getC() - team.getTeamLanguage().getC());
+            score += Math.abs(member.getMemberLang().getCpp() - team.getTeamLanguage().getCpp());
+            score += Math.abs(member.getMemberLang().getCs() - team.getTeamLanguage().getCs());
+            score += Math.abs(member.getMemberLang().getJava() - team.getTeamLanguage().getJava());
+            score += Math.abs(member.getMemberLang().getHtml() - team.getTeamLanguage().getHtml());
+            score += Math.abs(member.getMemberLang().getR() - team.getTeamLanguage().getR());
+            score += Math.abs(member.getMemberLang().getJavascript() - team.getTeamLanguage().getJavascript());
+            score += Math.abs(member.getMemberLang().getSql_Lang() - team.getTeamLanguage().getSql_Lang());
+            score += Math.abs(member.getMemberLang().getPython() - team.getTeamLanguage().getPython());
+            score += Math.abs(member.getMemberLang().getKotlin() - team.getTeamLanguage().getKotlin());
+            score += Math.abs(member.getMemberLang().getSwift() - team.getTeamLanguage().getSwift());
+            score += Math.abs(member.getMemberLang().getTypescript() - team.getTeamLanguage().getTypescript());
         }
         else if(method.equals("Framework")){
             score += Math.abs(member.getMemberFramework().getAndroid() - team.getTeamFramework().getAndroid());
@@ -237,10 +239,10 @@ public class TeamService{
             score += Math.abs(member.getMemberFramework().getXcode() - team.getTeamFramework().getXcode());
         }
         else{
-            score += Math.abs(member.getMemberDB().getD_design() - team.getTeamDB().getD_design());
-            score += Math.abs(member.getMemberDB().getMsq() - team.getTeamDB().getMsq());
-            score += Math.abs(member.getMemberDB().getMariadb() - team.getTeamDB().getMariadb());
-            score += Math.abs(member.getMemberDB().getMongodb() - team.getTeamDB().getMongodb());
+            score += Math.abs(member.getMemberDB().getSchemaL() - team.getTeamDatabase().getSchemaL());
+            score += Math.abs(member.getMemberDB().getMysqlL() - team.getTeamDatabase().getMysqlL());
+            score += Math.abs(member.getMemberDB().getMariadbL() - team.getTeamDatabase().getMariadbL());
+            score += Math.abs(member.getMemberDB().getMongodbL() - team.getTeamDatabase().getMongodbL());
         }
         return score;
     }
@@ -327,7 +329,85 @@ public class TeamService{
         }
 
     }
-    public Team addNewTeam(Team team){
+    public Team addNewTeam(Team team,List<MultipartFile> images){
+        try {
+            if(images!=null) {
+                List<String> imagesPath = uploadFile(images);
+                team.setImagePaths(imagesPath);
+            }
+            //teamKeyword 양방향 관계 설정
+            List<TeamKeyword> keywords=team.getTeamKeywords();
+            for (TeamKeyword tk : keywords){
+                tk.setTeam(team);
+            }
+
+            //team language 양방향 설정
+            TeamLanguage teamLanguage=team.getTeamLanguage();
+            teamLanguage.setTeam(team);
+            team.setTeamLanguage(teamLanguage);
+
+            //team framework 양방향 설정
+            TeamFramework teamFramework=team.getTeamFramework();
+            teamFramework.setTeam(team);
+            team.setTeamFramework(teamFramework);
+
+            //team database 양방향 설정
+            TeamDatabase teamDatabase=team.getTeamDatabase();
+            teamDatabase.setTeam(team);
+            team.setTeamDatabase(teamDatabase);
+
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
         return springDataTeamRepository.save(team);
+    }
+
+    public Team updateTest(Team team, List<MultipartFile> images,UUID teamId) {
+        try{
+            Team originalTeam = springDataTeamRepository.findById(teamId).orElseThrow(() -> null);
+            if(images!=null) {
+                List<String> imagesPathFromClient = uploadFile(images);
+                team.setImagePaths(imagesPathFromClient);
+            }
+            //teamKeyword 양방향 관계 설정
+            List<TeamKeyword> keywords=team.getTeamKeywords();
+            for (TeamKeyword tk : keywords){
+                tk.setTeam(team);
+            }
+
+            //team language 양방향 설정
+            TeamLanguage teamLanguage=team.getTeamLanguage();
+            teamLanguage.setTeam(team);
+            team.setTeamLanguage(teamLanguage);
+
+            //team framework 양방향 설정
+            TeamFramework teamFramework=team.getTeamFramework();
+            teamFramework.setTeam(team);
+            team.setTeamFramework(teamFramework);
+
+            //team database 양방향 설정
+            TeamDatabase teamDatabase=team.getTeamDatabase();
+            teamDatabase.setTeam(team);
+            team.setTeamDatabase(teamDatabase);
+
+            team.setTeamId(originalTeam.getTeamId());
+
+            springDataTeamRepository.save(team);
+
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+        return team;
+    }
+
+    public void deleteTest(UUID teamId) {
+        Team team = springDataTeamRepository.findById(teamId).orElseThrow(() -> {
+            throw new RuntimeException("팀이 존재하지 않음");
+        });
+        springDataTeamRepository.delete(team);
+    }
+
+    public List<Map<String,Integer>> countOfKeyword(){
+        return teamKeywordRepository.countOfKeyword();
     }
 }

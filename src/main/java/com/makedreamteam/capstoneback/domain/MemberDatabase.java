@@ -14,26 +14,22 @@ import java.util.UUID;
 @Builder
 public class MemberDatabase {
     @Id
-    @GeneratedValue
-    private UUID id;
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
 
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "member_id")
     private Member member;
 
     @ColumnDefault("0")
-    private int msq;
+    private int mysqlL;
 
     @ColumnDefault("0")
-    private int mariadb;
+    private int mariadbL;
 
     @ColumnDefault("0")
-    private int mongodb;
+    private int mongodbL;
 
     @ColumnDefault("0")
-    private int d_design;
-
-    /*public MemberDatabase(Member member) {
-        this.member = member;
-    }*/
+    private int schemaL;
 }

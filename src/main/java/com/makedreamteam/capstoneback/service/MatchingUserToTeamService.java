@@ -94,6 +94,9 @@ public class MatchingUserToTeamService {
 
             teamMemberRepository.save(teamMember);
 
+            springDataTeamRepository.save(settingTeamMember(team));
+
+
             return ResponseForm.builder().message("사용자를 팀에 추가했습니다").build();
         }else{
             return checkRefreshToken(refreshToken);
@@ -118,6 +121,10 @@ public class MatchingUserToTeamService {
         else{//refreshtoken이  만료되었다면
             return ResponseForm.builder().message("RefreshToken 이 만료되었습니다, 다시 로그인 해주세요").build();
         }
+    }
+    public Team settingTeamMember(Team team){
+
+        return team;
     }
 
     public ResponseForm fuckYouMatch(UUID waitingListId, String accessToken, String refreshToken) {

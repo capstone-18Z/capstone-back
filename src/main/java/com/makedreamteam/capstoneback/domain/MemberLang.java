@@ -15,8 +15,8 @@ import java.util.UUID;
 @Builder
 public class MemberLang {
     @Id
-    @GeneratedValue
-    private UUID id;
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
 
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "member_id")
@@ -57,8 +57,4 @@ public class MemberLang {
 
     @ColumnDefault("0")
     private int R;
-
-    /*public MemberLang(Member member) {
-        this.member = member;
-    }*/
 }

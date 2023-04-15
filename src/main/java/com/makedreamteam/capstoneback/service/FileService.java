@@ -20,9 +20,6 @@ import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -166,5 +163,17 @@ public class FileService {
 
         entityManager.remove(entityManager.contains(file) ? file : entityManager.merge(file));
         entityManager.flush();
+    }
+    public void deleteFile(String file){
+        String[] urlArr = file.split("/"); // "/"를 기준으로 문자열 분리
+        String fileName = urlArr[urlArr.length - 1].split("\\?")[0];
+        System.out.println("fileName = "+fileName);
+        BlobId blobId = BlobId.of("caps-1edf8.appspot.com", fileName);
+        boolean deleted = storage.delete(blobId);
+        if (deleted) {
+            System.out.println("삭제됨");
+        } else {
+            System.out.println("삭제안됨");
+        }
     }
 }

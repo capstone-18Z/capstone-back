@@ -11,6 +11,7 @@ import com.makedreamteam.capstoneback.form.TeamData;
 import com.makedreamteam.capstoneback.form.checkTokenResponsForm;
 import com.makedreamteam.capstoneback.repository.*;
 import io.jsonwebtoken.*;
+import jakarta.persistence.EntityManager;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -65,7 +66,8 @@ public class MemberService {
     @Autowired
     private final MemberDatabaseRepository memberDatabaseRepository;
 
-
+    @Autowired
+    private EntityManager entityManager;
 
     public PostMember PostJoin(PostMember post, String authToken){
         if(authToken==null)
@@ -82,20 +84,19 @@ public class MemberService {
         try{
             if(!checkEmailDuplicate(post.getEmail()) && !checkNicknameDuplicate(post.getNickname())) {
                 Member save = memberRepository.save(post);
+
                 MemberLang memberLang = new MemberLang();
-                MemberFramework memberFramework = new MemberFramework();
-                MemberDatabase memberDatabase = new MemberDatabase();
                 memberLang.setMember(save);
-                memberFramework.setMember(save);
-                memberDatabase.setMember(save);
-                memberLangRepository.save(memberLang);
-                memberFrameworkRepository.save(memberFramework);
-                memberDatabaseRepository.save(memberDatabase);
-                /*
                 save.setMemberLang(memberLang);
+
+                MemberFramework memberFramework = new MemberFramework();
+                memberFramework.setMember(save);
                 save.setMemberFramework(memberFramework);
+
+                MemberDatabase memberDatabase = new MemberDatabase();
+                memberDatabase.setMember(save);
                 save.setMemberDB(memberDatabase);
-                */
+
                 System.out.println("저장이 완료되었습니다!");
                 return save;
             }
@@ -108,6 +109,55 @@ public class MemberService {
         }catch (NullPointerException | DataIntegrityViolationException | JpaSystemException |
                 TransactionSystemException e) {
             throw new RuntimeException("Failed to add", e);
+        }
+    }
+
+    public void MemberUpdate(Member member, UUID uid, MultipartFile file) throws IOException {
+        try {
+            String defaultProfile = "https://firebasestorage.googleapis.com/v0/b/caps-1edf8.appspot.com/o/DefaultProfile.PNG?alt=media&token=266e52f4-818f-4a20-970d-2d84ba48e5a1";
+
+            // 기존의 Member 엔티티 가져오기
+            Member originalMember = memberRepository.findById(uid).get();
+            List<MemberKeyword> keywords = member.getMemberKeywords();
+            for (MemberKeyword tk : keywords) {
+                tk.setMember(member);
+            }
+
+            // MemberLang, MemberFramework, MemberDatabase 엔티티에서 Member 엔티티를 참조하도록 설정
+            if (member.getMemberLang() != null) {
+                MemberLang memberLang = member.getMemberLang();
+                memberLang.setMember(member);
+                member.setMemberLang(memberLang);
+            }
+            if (member.getMemberFramework() != null) {
+                MemberFramework memberFramework = member.getMemberFramework();
+                memberFramework.setMember(member);
+                member.setMemberFramework(memberFramework);
+            }
+            if (member.getMemberDB() != null) {
+                MemberDatabase memberDatabase = member.getMemberDB();
+                memberDatabase.setMember(member);
+                member.setMemberDB(memberDatabase);
+            }
+            // id, email, nickname은 기존의 Member 엔티티에서 가져오기
+            member.setId(originalMember.getId());
+            member.setEmail(originalMember.getEmail());
+            member.setPassword(originalMember.getPassword());
+            member.setRole(originalMember.getRole());
+
+            // 프로필 이미지가 업데이트되는 경우, 기존 이미지 파일 삭제하고 새로운 파일 업로드하기
+            if (file != null) {
+                if (!originalMember.getProfileImageUrl().equals(defaultProfile)) {
+                    fileService.deleteFile(originalMember.getProfileImageUrl());
+                    System.out.println("파일 삭제 실행");
+                }
+                member.setProfileImageUrl(fileService.uploadProfile(file, uid).getImageURL());
+                System.out.println("파일 저장실행");
+            }
+            // Member 엔티티 저장하기
+            memberRepository.save(member);
+        }catch (RuntimeException e){
+            throw new RuntimeException(e);
         }
     }
 

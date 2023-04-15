@@ -135,7 +135,7 @@ public class MemberController {
     }
 
     @PostMapping("/userForm/update")
-    public ResponseEntity<MemberResponseForm> updateUser(@RequestPart(value = "metadata", required = true) Map<String, Object> updates, @RequestPart(value = "file", required = false) MultipartFile file, HttpServletRequest request) throws AuthenticationException {
+    public ResponseEntity<MemberResponseForm> updateUser(@RequestPart(value = "metadata", required = true) Member member, @RequestPart(value = "file", required = false) MultipartFile file, HttpServletRequest request) throws AuthenticationException {
         try{
             String authToken= request.getHeader("login-token");
             String refreshToken = request.getHeader("refresh-token");
@@ -144,21 +144,7 @@ public class MemberController {
             Member oldMember = memberRepository.findById(memberid)
                     .orElseThrow(() -> new RuntimeException("해당하는 회원이 존재하지 않습니다."));
 
-            for (Field field : oldMember.getClass().getDeclaredFields()) {
-                String fieldName = field.getName();
-                if (updates.containsKey(fieldName)) {
-                    field.setAccessible(true);
-                    Object value = updates.get(fieldName);
-                    field.set(oldMember, value);
-                }
-            }
-            if(file != null){
-                if(!oldMember.getProfileImageUrl().equals(DefaultProfile)){
-                    fileService.deleteFile(fileDataRepository.findByImageURL(oldMember.getProfileImageUrl()).get());
-                }
-                oldMember.setProfileImageUrl(fileService.uploadProfile(file, memberid).getImageURL());
-            }
-            memberRepository.save(oldMember);
+            memberService.MemberUpdate(member, memberid, file);
             MemberResponseForm successForm = MemberResponseForm.builder()
                     .message("유저 업데이트 성공")
                     .state(HttpStatus.OK.value())
@@ -168,7 +154,7 @@ public class MemberController {
             MemberResponseForm errorResponseForm = MemberResponseForm.builder()
                     .message(e.getMessage()).state(HttpStatus.BAD_REQUEST.value()).build();
             return ResponseEntity.badRequest().body(errorResponseForm);
-        } catch (IllegalAccessException | IOException e) {
+        } catch (IOException e) {
             throw new RuntimeException(e);
         }
     }

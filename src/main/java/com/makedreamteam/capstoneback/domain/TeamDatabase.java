@@ -1,34 +1,36 @@
 package com.makedreamteam.capstoneback.domain;
 
+
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.ColumnDefault;
+
 import java.util.UUID;
 
 @Entity
-@Getter
 @Setter
-@AllArgsConstructor
+@Getter
 @NoArgsConstructor
+@AllArgsConstructor
 @Builder
 public class TeamDatabase {
     @Id
-    @GeneratedValue
     private UUID id;
 
     @OneToOne
-    @JoinColumn(name="team")
+    @JoinColumn(name = "team")
+    @MapsId
     private Team team;
 
     @ColumnDefault("0")
-    private int msq;
+    private int mysqlL;
 
     @ColumnDefault("0")
-    private int mariadb;
+    private int mariadbL;
 
     @ColumnDefault("0")
-    private int mongodb;
+    private int mongodbL;
 
     @ColumnDefault("0")
-    private int d_design;
+    private int schemaL;
 }

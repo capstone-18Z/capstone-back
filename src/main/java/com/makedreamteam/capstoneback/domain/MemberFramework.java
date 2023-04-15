@@ -14,8 +14,8 @@ import java.util.UUID;
 @Builder
 public class MemberFramework {
     @Id
-    @GeneratedValue
-    private UUID id;
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
 
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "member_id")
@@ -44,9 +44,4 @@ public class MemberFramework {
 
     @ColumnDefault("0")
     private int tdmax;
-
-    /*public MemberFramework(Member member) {
-        this.member = member;
-    }*/
-
 }

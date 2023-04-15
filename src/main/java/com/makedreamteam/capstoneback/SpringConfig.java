@@ -5,8 +5,6 @@ import com.makedreamteam.capstoneback.service.TeamService;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.servlet.config.annotation.CorsRegistry;
-import org.springframework.web.servlet.config.annotation.EnableWebMvc;
-import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 @Configuration
@@ -24,24 +22,24 @@ public class SpringConfig implements WebMvcConfigurer {
     private final PostMemberRepository postMemberRepository;
 
 
-
+    private final TeamKeywordRepository teamKeywordRepository;
     private final RefreshTokenRepository refreshTokenRepository;
 
     private final JwtTokenProvider jwtTokenProvider;
 
-       public SpringConfig(SpringDataTeamRepository springDataTeamRepository, TeamMemberRepository teamMemberRepository, MemberRepository memberRepository, PostMemberRepository postMemberRepository, RefreshTokenRepository refreshTokenRepository, JwtTokenProvider jwtTokenProvider) {
+       public SpringConfig(SpringDataTeamRepository springDataTeamRepository, TeamMemberRepository teamMemberRepository, MemberRepository memberRepository, PostMemberRepository postMemberRepository,  RefreshTokenRepository refreshTokenRepository, JwtTokenProvider jwtTokenProvider,TeamKeywordRepository teamKeywordRepository) {
            this.springDataTeamRepository = springDataTeamRepository;
            this.teamMemberRepository = teamMemberRepository;
            this.memberRepository = memberRepository;
            this.postMemberRepository = postMemberRepository;
-
+           this.teamKeywordRepository = teamKeywordRepository;
            this.refreshTokenRepository = refreshTokenRepository;
            this.jwtTokenProvider = jwtTokenProvider;
        }
 
     @Bean
     public TeamService TeamService(){
-        return new TeamService(springDataTeamRepository, teamMemberRepository, memberRepository, postMemberRepository, refreshTokenRepository, jwtTokenProvider);
+        return new TeamService(springDataTeamRepository, teamMemberRepository, memberRepository, postMemberRepository, refreshTokenRepository, jwtTokenProvider,teamKeywordRepository);
 
     }
 

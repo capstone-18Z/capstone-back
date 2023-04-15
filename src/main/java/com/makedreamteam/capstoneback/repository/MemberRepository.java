@@ -16,5 +16,4 @@ public interface MemberRepository extends JpaRepository<Member, String> {
     boolean existsByNickname(String nickname);
     @Override
     List<Member> findAll();
-
 }
