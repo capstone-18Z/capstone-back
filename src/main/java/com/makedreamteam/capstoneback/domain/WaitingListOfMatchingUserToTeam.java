@@ -28,7 +28,7 @@ public class WaitingListOfMatchingUserToTeam {
     private int field;
 
     @ManyToOne(fetch = FetchType.EAGER)
-    @JoinColumn(name = "team_id")
+    @JoinColumn(name = "team_id",referencedColumnName = "teamId")
     @JsonIgnore
     private Team team;
 
