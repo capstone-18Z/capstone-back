@@ -16,7 +16,5 @@ public interface SpringDataTeamRepository extends JpaRepository<Team, UUID>  {
     List<Team> findAllByOrderByUpdateDateDesc();
 
 
-    @Query("select mD from Team t ,MemberKeyword mk,MemberDB mD, MemberFramework mF where t.teamKeywords in mk.")
-    List<Member> recommendMember(Member member);
 
 }

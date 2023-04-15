@@ -23,7 +23,7 @@ public class TeamKeyword {
     private String value;
 
     @ManyToOne(fetch = FetchType.EAGER)
-    @JoinColumn(name = "team_id")
+    @JoinColumn(name = "team")
     @JsonIgnore
     private Team team;
 
