@@ -35,4 +35,12 @@ public interface SpringDataTeamRepository extends JpaRepository<Team, UUID>  {
     @Query("select md.member,(md.mariadbL*td.mariadbL+md.mongodbL*td.mongodbL+md.mysqlL*td.mysqlL+md.schemaL*td.schemaL) from MemberDatabase md,TeamDatabase td WHERE td.team.teamId= :teamId and md.member.id in :memberId order by (md.mariadbL*td.mariadbL+md.mongodbL*td.mongodbL+md.mysqlL*td.mysqlL+md.schemaL*td.schemaL) desc ")
     List<Object[]> recommendMemberWithDatabase(@Param("memberId")List<UUID> memberId, @Param("teamId") UUID teamId, Pageable pageable);
 
+    @Query("select (t.typescript+t.swift+t.sql_Lang+t.R+t.python+t.kotlin+t.javascript+t.java+t.html+t.cs+t.c+t.cpp ) from TeamLanguage t where t.team.teamId =:teamId")
+    int getTeamLanguageTotalWeight(@Param("teamId")UUID teamId);
+
+    @Query("select (t.xcode+t.unrealEngine+t.unity+t.tdmax+t.spring+t.react+t.nodejs+t.androidStudio) from TeamFramework t where t.team.teamId =:teamId")
+    int getTeamFrameworkTotalWeight(@Param("teamId")UUID teamId);
+
+    @Query("select (t.schemaL+t.mysqlL+t.mongodbL+t.mariadbL) from TeamDatabase t where t.team.teamId =:teamId")
+    int getTeamDatabaseTotalWeight(@Param("teamId")UUID teamId);
 }

@@ -312,6 +312,12 @@ public class TeamService {
 
     public ResponseForm recommendMembers2(UUID teamId, String accessToken, String refreshToken) {
         Map<Member,Integer> result=new HashMap<>();
+        int limitFramework= springDataTeamRepository.getTeamFrameworkTotalWeight(teamId);
+        int limitDatabase= springDataTeamRepository.getTeamDatabaseTotalWeight(teamId);
+        Team team = springDataTeamRepository.findById(teamId).orElseThrow(() -> {
+            throw new RuntimeException("Sdf");
+        });
+
 
         Pageable pageable = PageRequest.of(0, 10);
         //team과 같은 키워드를 가진 member를 골라낸다
@@ -330,17 +336,42 @@ public class TeamService {
             result.put(m,weight);
         }
 
+
+        //가중치 도출해내고, 너무 작은 가중치의경우 리스트에서 제외시킨다
         List<Object[]> recommendMemberWithFramework = springDataTeamRepository.recommendMemberWithFramework(memberUUIDs, teamId, pageable);
         for (Object[] member : recommendMemberWithFramework) {
             Member m=(Member) member[0];
             int weight=(int) member[1];
-            result.put(m,result.get(m)+weight);
+            if(weight<limitFramework){
+                result.remove(m);
+                for(UUID id : memberUUIDs){
+                    if(id.equals(m.getId())){
+                        memberUUIDs.remove(id);
+                        break;
+                    }
+                }
+                System.out.println("프레임워크에서 필터링// 가중치 : "+weight +"   멤버 " + m.getId()+"를 리스트에서 제외합니다.( 제한 가중치 "+limitFramework+"보다 작습니다)");
+            }else {
+                result.put(m, result.get(m) + weight);
+            }
+
         }
-        List<Object[]> recommendMemberWithDatabase = springDataTeamRepository.recommendMemberWithDatabase(memberUUIDs, teamId, pageable);
+        List<Object[]> recommendMemberWithDatabase = springDataTeamRepository.recommendMemberWithDatabase(memberUUIDs, teamId, PageRequest.of(0, memberUUIDs.size()));
         for (Object[] member : recommendMemberWithDatabase) {
             Member m=(Member) member[0];
             int weight=(int) member[1];
-            result.put(m,result.get(m)+weight);
+            if(weight<limitDatabase){
+                result.remove(m);
+                for(UUID id : memberUUIDs){
+                    if(id.equals(m.getId())){
+                        memberUUIDs.remove(id);
+                        break;
+                    }
+                }
+                System.out.println("데이터베이스에서 필터링//  가중치 : "+weight +"  멤버 " + m.getId()+"를 리스트에서 제외합니다.( 제한 가중치 "+limitDatabase+"보다 작습니다)");
+            }else {
+                result.put(m, result.get(m) + weight);
+            }
         }
         List<Member> list = new ArrayList<>(result.keySet()); // KeySet을 리스트로 변환
         Collections.sort(list, new Comparator<Member>() {
@@ -356,7 +387,7 @@ public class TeamService {
         for (Member member : list) {
             System.out.println("Member: " + member + ", Value: " + result.get(member));
         }
-        List<Member> recommendFinal = new ArrayList<>();
+
 
 
         return ResponseForm.builder().message("추천 유저를 반환합니다").data(list).build();
