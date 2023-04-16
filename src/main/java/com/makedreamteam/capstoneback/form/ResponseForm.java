@@ -17,5 +17,4 @@ public class ResponseForm {
     private String message;
     private Object data;
     private boolean updatable;
-    private List<InputStreamResource> images;
 }

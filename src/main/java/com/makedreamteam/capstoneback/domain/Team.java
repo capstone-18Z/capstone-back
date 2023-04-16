@@ -63,11 +63,12 @@ public class Team{
     private String detail;
 
 
-    @OneToMany(mappedBy = "team", cascade = CascadeType.ALL, orphanRemoval = true,fetch = FetchType.LAZY)
+    @OneToMany(mappedBy = "team", cascade = CascadeType.ALL, orphanRemoval = true,fetch = FetchType.EAGER)
     private List<WaitingListOfMatchingUserToTeam> requestList=new ArrayList<>();
 
-    @OneToMany(mappedBy = "team", cascade = CascadeType.ALL, orphanRemoval = true,fetch = FetchType.LAZY)
-    private List<TeamKeyword> teamKeywords = new ArrayList<>();
+    @OneToOne(mappedBy = "team", cascade = CascadeType.ALL, orphanRemoval = true,fetch = FetchType.LAZY)
+    @JsonIgnoreProperties({"team"})
+    private TeamKeyword teamKeyword;
 
 
     @Column
@@ -92,23 +93,11 @@ public class Team{
     private TeamDatabase teamDatabase;
 
 
-    @ElementCollection(fetch = FetchType.LAZY)
+    @ElementCollection(fetch = FetchType.EAGER)
     private List<String> imagePaths;
     public void setWaitingListTeam(WaitingListOfMatchingUserToTeam waitingListOfMatchingUserToTeam){waitingListOfMatchingUserToTeam.setTeam(this);}
 
-    @JsonProperty("teamKeywords")
-    public List<String> getKeywordValues() {
-        return teamKeywords.stream().map(TeamKeyword::getValue).collect(Collectors.toList());
-    }
-    public void addKeyword(TeamKeyword teamKeyword) {
-        this.teamKeywords.add(teamKeyword);
-        teamKeyword.setTeam(this);
-    }
 
-    public void removeKeyword(TeamKeyword teamKeyword) {
-        this.teamKeywords.remove(teamKeyword);
-        teamKeyword.setTeam(null);
-    }
 
     public void setKeywordTeam(TeamKeyword teamKeyword){
         teamKeyword.setTeam(this);

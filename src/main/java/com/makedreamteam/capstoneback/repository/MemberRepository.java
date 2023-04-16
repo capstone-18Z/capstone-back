@@ -1,8 +1,6 @@
 package com.makedreamteam.capstoneback.repository;
 
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 
 import com.makedreamteam.capstoneback.domain.Member;
 import org.springframework.data.domain.Example;
@@ -25,5 +23,22 @@ public interface MemberRepository extends JpaRepository<Member, String> {
             "LEFT JOIN TeamKeyword tk ON t.teamId = tk.team " +
             "WHERE mk.value = tk.value")
     List<Object[]> findMemberKeywordsWithTeamKeywords();
+    @Query("SELECT  tk.team.teamId,mk.member.id FROM MemberKeyword mk JOIN TeamKeyword tk ON mk.value = tk.value")
+    List<Object[]> findMemberAndTeamKeywordValues();
+    default Map<UUID, List<UUID>> getMemberAndTeamKeywordValues() {
+        List<Object[]> result = findMemberAndTeamKeywordValues();
+        Map<UUID, List<UUID>> resultMap = new HashMap<>();
 
+        for (Object[] obj : result) {
+            UUID memberId = (UUID) obj[0];
+            UUID teamId = (UUID) obj[1];
+
+            if (!resultMap.containsKey(memberId)) {
+                resultMap.put(memberId, new ArrayList<>());
+            }
+            resultMap.get(memberId).add(teamId);
+        }
+
+        return resultMap;
+    }
 }
