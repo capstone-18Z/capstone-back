@@ -12,6 +12,7 @@ import com.makedreamteam.capstoneback.form.PostResponseForm;
 import com.makedreamteam.capstoneback.repository.FileDataRepository;
 import com.makedreamteam.capstoneback.repository.MemberRepository;
 import com.makedreamteam.capstoneback.repository.PostMemberRepository;
+import com.makedreamteam.capstoneback.service.ContestCrawlingService;
 import com.makedreamteam.capstoneback.service.FileService;
 import com.makedreamteam.capstoneback.service.MemberService;
 import com.makedreamteam.capstoneback.service.TeamService;
@@ -44,6 +45,7 @@ public class MemberController {
     private final FileService fileService;
     private final TeamService teamService;
     private final FileDataRepository fileDataRepository;
+    private final ContestCrawlingService contestCrawlingService;
 
     // 회원가입
     @PostMapping("/register")
@@ -110,7 +112,6 @@ public class MemberController {
                     .message(e.getMessage()).state(HttpStatus.BAD_REQUEST.value()).build();
             return ResponseEntity.badRequest().body(errorResponseForm);
         }
-
     }
 
     @PostMapping("/userForm/delete")
@@ -347,5 +348,10 @@ public class MemberController {
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
+    }
+
+    @GetMapping("/test")
+    public void testcode(){
+        contestCrawlingService.crawlContest();
     }
 }

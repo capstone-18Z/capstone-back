@@ -3,7 +3,6 @@ package com.makedreamteam.capstoneback.domain;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
-import org.hibernate.annotations.ColumnDefault;
 
 import java.util.UUID;
 
