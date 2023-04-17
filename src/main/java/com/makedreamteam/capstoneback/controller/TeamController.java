@@ -23,8 +23,8 @@ import java.util.*;
 public class TeamController {
     private final TeamService teamService;
 
-    @GetMapping("/page/{page}")
-    public ResponseEntity<ResponseForm> allPost(HttpServletRequest request, @PathVariable int page) {
+    @GetMapping("")
+    public ResponseEntity<ResponseForm> allPost(HttpServletRequest request, @RequestParam("page") int page) {
         //check login
         try {
             String authToken = request.getHeader("login-token");
@@ -88,6 +88,8 @@ public class TeamController {
     @PostMapping("/{teamId}/recommend")
     public ResponseEntity<ResponseForm> findRecommendMember(@PathVariable UUID teamId,@RequestHeader("login-token") String accessToken,@RequestHeader("refresh-token")String refreshToken){
         ResponseForm recommendList=teamService.recommendMembers2(teamId,accessToken,refreshToken);
+        //List<Member> members = teamService.recommendMembers(teamId, 5);
+        //return ResponseEntity.ok(ResponseForm.builder().data(members).build());
         return ResponseEntity.ok().body(recommendList);
     }
 
@@ -98,10 +100,7 @@ public class TeamController {
     }
 
 
-    @PostMapping("/test/count-keyword")
-    public List<Map<String, Integer>> countOfKeyword() {
-        return teamService.countOfKeyword();
-    }
+
 
 
 }

@@ -16,6 +16,8 @@ import lombok.*;
 @AllArgsConstructor
 @Entity
 @Builder
+@Table(indexes = {@Index(name = "idx_email", columnList = "email"),
+        @Index(name = "idx_nickname", columnList = "nickname")})
 public class Member {
     @Id
     @Column(columnDefinition = "BINARY(16)")
@@ -64,22 +66,22 @@ public class Member {
     @Column
     private String github;
 
-    @OneToMany(mappedBy = "member", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
+    @OneToMany(mappedBy = "member", cascade = CascadeType.REMOVE, orphanRemoval = true, fetch = FetchType.EAGER)
     private List<PostMember> postMemberList = new ArrayList<>();
 
     @OneToMany(mappedBy = "member", cascade = CascadeType.ALL, orphanRemoval = true,fetch = FetchType.EAGER)
-    private List<MemberKeyword> memberKeywords = new ArrayList<>();
+    private List</*MemberKeyword*/Keyword> memberKeywords = new ArrayList<>();
 
-    public void addKeyword(MemberKeyword memberKeywords) {
+    public void addKeyword(Keyword memberKeywords) {
         this.memberKeywords.add(memberKeywords);
         memberKeywords.setMember(this);
     }
 
-    public void removeKeyword(MemberKeyword memberKeywords) {
+    public void removeKeyword(Keyword memberKeywords) {
         this.memberKeywords.remove(memberKeywords);
         memberKeywords.setMember(null);
     }
-    public void setTeam(MemberKeyword memberKeywords){
+    public void setTeam(Keyword memberKeywords){
         memberKeywords.setMember(this);
     }
 

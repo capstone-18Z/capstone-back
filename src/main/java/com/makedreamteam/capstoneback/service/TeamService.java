@@ -7,37 +7,23 @@ import com.google.cloud.storage.Storage;
 import com.google.firebase.cloud.StorageClient;
 import com.makedreamteam.capstoneback.JwtTokenProvider;
 import com.makedreamteam.capstoneback.domain.*;
-import com.makedreamteam.capstoneback.exception.*;
 import com.makedreamteam.capstoneback.form.ResponseForm;
-import com.makedreamteam.capstoneback.form.ServiceReturn;
 import com.makedreamteam.capstoneback.form.TeamData;
-import com.makedreamteam.capstoneback.form.checkTokenResponsForm;
 import com.makedreamteam.capstoneback.repository.*;
 import io.jsonwebtoken.*;
-import jakarta.persistence.EntityManager;
-import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.dao.DataAccessException;
-import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.dao.EmptyResultDataAccessException;
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
-import org.springframework.orm.jpa.JpaSystemException;
-import org.springframework.transaction.TransactionSystemException;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
-import javax.naming.AuthenticationException;
 import java.io.ByteArrayInputStream;
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.*;
-import java.util.function.Function;
-import java.util.stream.Collectors;
 
 @Transactional
 @RequiredArgsConstructor
@@ -54,12 +40,18 @@ public class TeamService {
     private final TeamKeywordRepository teamKeywordRepository;
     @Autowired
     private final RefreshTokenRepository refreshTokenRepository;
+
+    @Autowired
+    private final MemberKeywordRepository memberKeywordRepository;
     @Autowired
     private Storage storage;
+
+    @Autowired
+    private final KeywordRepository keywordRepository;
     private JwtTokenProvider jwtTokenProvider;
 
 
-    public TeamService(SpringDataTeamRepository springDataTeamRepository, TeamMemberRepository teamMemberRepository, MemberRepository memberRepository, PostMemberRepository postMemberRepository, RefreshTokenRepository refreshTokenRepository, JwtTokenProvider jwtTokenProvider, TeamKeywordRepository teamKeywordRepository) {
+    public TeamService(SpringDataTeamRepository springDataTeamRepository, TeamMemberRepository teamMemberRepository, MemberRepository memberRepository, PostMemberRepository postMemberRepository, RefreshTokenRepository refreshTokenRepository, JwtTokenProvider jwtTokenProvider, TeamKeywordRepository teamKeywordRepository, MemberKeywordRepository memberKeywordRepository, KeywordRepository keywordRepository) {
         this.springDataTeamRepository = springDataTeamRepository;
         this.teamMemberRepository = teamMemberRepository;
         this.memberRepository = memberRepository;
@@ -67,6 +59,8 @@ public class TeamService {
         this.refreshTokenRepository = refreshTokenRepository;
         this.jwtTokenProvider = jwtTokenProvider;
         this.teamKeywordRepository = teamKeywordRepository;
+        this.memberKeywordRepository = memberKeywordRepository;
+        this.keywordRepository = keywordRepository;
     }
 
     public ResponseForm addNewTeam(Team team, List<MultipartFile> images, String authToken, String refreshToken) {
@@ -260,13 +254,12 @@ public class TeamService {
 
     }
 
-    public List<Map<String, Integer>> countOfKeyword() {
-        return teamKeywordRepository.countOfKeyword();
-    }
+
 
     public void setTeamRelation(Team team) {
         if (team.getTeamKeyword() != null) {
-            TeamKeyword keyword = team.getTeamKeyword();
+            //TeamKeyword keyword = team.getTeamKeyword();
+            Keyword keyword=team.getTeamKeyword();
             keyword.setTeam(team);
         }
         //team language 양방향 설정
@@ -311,17 +304,20 @@ public class TeamService {
     }
 
     public ResponseForm recommendMembers2(UUID teamId, String accessToken, String refreshToken) {
+
         Map<Member,Integer> result=new HashMap<>();
         int limitFramework= springDataTeamRepository.getTeamFrameworkTotalWeight(teamId);
         int limitDatabase= springDataTeamRepository.getTeamDatabaseTotalWeight(teamId);
         Team team = springDataTeamRepository.findById(teamId).orElseThrow(() -> {
             throw new RuntimeException("Sdf");
         });
-
+        long startTime2 = System.currentTimeMillis();
 
         Pageable pageable = PageRequest.of(0, 10);
         //team과 같은 키워드를 가진 member를 골라낸다
-        List<Member> memberAndTeamKeywordValues = springDataTeamRepository.findMemberAndTeamKeywordValues(teamId);
+        //List<Member> memberAndTeamKeywordValues = springDataTeamRepository.findMemberAndTeamKeywordValues2(teamId);
+        List<Member> memberAndTeamKeywordValues = keywordRepository.recommendMembers(team.getTeamKeyword().getValue(),team.getTeamLeader());
+        //List<Member> memberAndTeamKeywordValues=memberKeywordRepository.findSameKeywordToTeamKeyword(team.getTeamKeyword().getValue(),team.getTeamLeader());
         List<UUID> memberUUIDs = new ArrayList<>();
         for (Member member : memberAndTeamKeywordValues) {
             memberUUIDs.add(member.getId());
@@ -356,7 +352,7 @@ public class TeamService {
             }
 
         }
-        List<Object[]> recommendMemberWithDatabase = springDataTeamRepository.recommendMemberWithDatabase(memberUUIDs, teamId, PageRequest.of(0, memberUUIDs.size()));
+        List<Object[]> recommendMemberWithDatabase = springDataTeamRepository.recommendMemberWithDatabase(memberUUIDs, teamId, PageRequest.of(0, memberUUIDs.size()==0 ? 1 :  memberUUIDs.size()));
         for (Object[] member : recommendMemberWithDatabase) {
             Member m=(Member) member[0];
             int weight=(int) member[1];
@@ -382,7 +378,9 @@ public class TeamService {
                 return value2.compareTo(value1); // 내림차순으로 정렬
             }
         });
-
+        long endTime2 = System.currentTimeMillis();
+        long elapsedTime2 = endTime2 - startTime2;
+        System.out.println("코드의 수행 시간(ms) : " + elapsedTime2);
         // 정렬된 리스트 출력
         for (Member member : list) {
             System.out.println("Member: " + member + ", Value: " + result.get(member));

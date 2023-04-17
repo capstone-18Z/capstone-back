@@ -12,15 +12,18 @@ import java.util.*;
 
 @Repository
 public interface SpringDataTeamRepository extends JpaRepository<Team, UUID>  {
-    List<Team> findByTitleContaining(String title);
     List<Team> findByTeamLeader(UUID userID);
-    List<Team> findAllByOrderByUpdateDateDesc();
-
-
 
     //team의 키워드와 member키워드가 같은 member 즉, 목적이 같은 맴버를 반환한다.
-    @Query("SELECT mk.member FROM  MemberKeyword mk, TeamKeyword tk  WHERE tk.team.teamId=:teamId and mk.value = tk.value and mk.member.id<>tk.team.teamLeader")
+    @Query("SELECT mk.member FROM  MemberKeyword mk INNER JOIN TeamKeyword tk ON mk.value = tk.value  WHERE tk.team.teamId=:teamId and mk.member.id<>tk.team.teamLeader")
     List<Member> findMemberAndTeamKeywordValues(@Param("teamId")UUID teamId);
+
+    @Query("SELECT mk.member FROM MemberKeyword mk " +
+            "WHERE EXISTS (" +
+            " SELECT 1 FROM TeamKeyword tk" +
+            " WHERE mk.value = tk.value AND tk.team.teamId=:teamId AND mk.member.id<>tk.team.teamLeader" +
+            ")")
+    List<Member> findMemberAndTeamKeywordValues2(@Param("teamId") UUID teamId);
 
 
     @Query("SELECT ml.member, (ml.c*tl.c + ml.cpp*tl.cpp+ml.cs*tl.cs+ml.html*tl.html+ml.java*tl.java+ml.javascript*tl.javascript+ml.kotlin*tl.kotlin+ml.python*tl.python+ml.R*tl.R+ml.sql_Lang*tl.sql_Lang+ml.swift*tl.swift+ml.typescript*tl.typescript) " +

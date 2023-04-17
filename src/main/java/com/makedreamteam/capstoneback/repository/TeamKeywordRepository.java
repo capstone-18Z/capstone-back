@@ -10,6 +10,5 @@ import java.util.Map;
 import java.util.UUID;
 
 public interface TeamKeywordRepository extends JpaRepository<TeamKeyword, Long> {
-    @Query("SELECT k.value AS keyword, COUNT(k) AS count FROM TeamKeyword k GROUP BY k.value")
-    List<Map<String,Integer>> countOfKeyword();
+
 }

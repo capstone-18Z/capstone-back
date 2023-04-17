@@ -118,8 +118,12 @@ public class MemberService {
 
             // 기존의 Member 엔티티 가져오기
             Member originalMember = memberRepository.findById(uid).get();
-            List<MemberKeyword> keywords = member.getMemberKeywords();
+            /*List<MemberKeyword> keywords = member.getMemberKeywords();
             for (MemberKeyword tk : keywords) {
+                tk.setMember(member);
+            }*/
+            List<Keyword> keywords = member.getMemberKeywords();
+            for (Keyword tk : keywords) {
                 tk.setMember(member);
             }
 

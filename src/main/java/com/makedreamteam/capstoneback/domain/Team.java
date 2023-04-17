@@ -48,15 +48,15 @@ public class Team{
     @Column
     private byte currentTeamMemberCount;
 
-    @Column(columnDefinition = "VARCHAR(255) CHARACTER SET utf8 COLLATE utf8_general_ci")
+    @Column(columnDefinition = "VARCHAR(50) CHARACTER SET utf8 COLLATE utf8_general_ci")
     private String title;
-    @Column(columnDefinition = "VARCHAR(12) CHARACTER SET utf8 COLLATE utf8_general_ci")
+    @Column(columnDefinition = "VARCHAR(20) CHARACTER SET utf8 COLLATE utf8_general_ci")
     private String writer;
 
-    @Column(columnDefinition = "VARCHAR(255) CHARACTER SET utf8 COLLATE utf8_general_ci")
+    @Column(columnDefinition = "VARCHAR(20) CHARACTER SET utf8 COLLATE utf8_general_ci")
     private String createDate;
 
-    @Column(columnDefinition = "VARCHAR(255) CHARACTER SET utf8 COLLATE utf8_general_ci")
+    @Column(columnDefinition = "VARCHAR(20) CHARACTER SET utf8 COLLATE utf8_general_ci")
     private String updateDate;
 
     @Column(columnDefinition = "VARCHAR(255) CHARACTER SET utf8 COLLATE utf8_general_ci")
@@ -68,16 +68,17 @@ public class Team{
 
     @OneToOne(mappedBy = "team", cascade = CascadeType.ALL, orphanRemoval = true,fetch = FetchType.LAZY)
     @JsonIgnoreProperties({"team"})
-    private TeamKeyword teamKeyword;
+    private /*TeamKeyword*/Keyword teamKeyword;
 
 
-    @Column
+
+    @Column(columnDefinition = "VARCHAR(15) CHARACTER SET utf8 COLLATE utf8_general_ci")
     private String purpose;
 
-    @Column
+    @Column(columnDefinition = "VARCHAR(10) CHARACTER SET utf8 COLLATE utf8_general_ci")
     private String purposeDetail1;
 
-    @Column
+    @Column(columnDefinition = "VARCHAR(2) CHARACTER SET utf8 COLLATE utf8_general_ci")
     private String purposeDetail2;
 
     @OneToOne(mappedBy = "team",cascade = CascadeType.ALL ,orphanRemoval = true,fetch = FetchType.LAZY)
@@ -95,11 +96,4 @@ public class Team{
 
     @ElementCollection(fetch = FetchType.EAGER)
     private List<String> imagePaths;
-    public void setWaitingListTeam(WaitingListOfMatchingUserToTeam waitingListOfMatchingUserToTeam){waitingListOfMatchingUserToTeam.setTeam(this);}
-
-
-
-    public void setKeywordTeam(TeamKeyword teamKeyword){
-        teamKeyword.setTeam(this);
-    }
 }
