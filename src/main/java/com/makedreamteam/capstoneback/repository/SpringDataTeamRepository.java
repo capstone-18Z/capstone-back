@@ -19,7 +19,7 @@ public interface SpringDataTeamRepository extends JpaRepository<Team, UUID>  {
 
 
     //team의 키워드와 member키워드가 같은 member 즉, 목적이 같은 맴버를 반환한다.
-    @Query("SELECT mk.member FROM  MemberKeyword mk, TeamKeyword tk  WHERE tk.team.teamId=:teamId and mk.value = tk.value and mk.member.id<>tk.team.teamLeader")
+    @Query("SELECT mk.member FROM  MemberKeyword mk, TeamKeyword tk  WHERE tk.team.teamId=:teamId and mk.category = tk.category and mk.field = tk.field and mk.sub = mk.sub and mk.member.id<>tk.team.teamLeader")
     List<Member> findMemberAndTeamKeywordValues(@Param("teamId")UUID teamId);
 
 

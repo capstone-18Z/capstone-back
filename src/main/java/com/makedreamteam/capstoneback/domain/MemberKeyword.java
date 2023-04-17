@@ -21,7 +21,13 @@ public class MemberKeyword {
     private UUID id;
 
     @Column(columnDefinition = "VARCHAR(255) CHARACTER SET utf8 COLLATE utf8_general_ci")
-    private String value;
+    private String category;
+
+    @Column(columnDefinition = "VARCHAR(255) CHARACTER SET utf8 COLLATE utf8_general_ci")
+    private String field;
+
+    @Column(columnDefinition = "VARCHAR(255) CHARACTER SET utf8 COLLATE utf8_general_ci")
+    private String sub;
 
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "member_id")

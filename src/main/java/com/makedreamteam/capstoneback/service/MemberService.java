@@ -362,6 +362,6 @@ public class MemberService {
         }
         else refreshTokenRepository.save(refreshTok);
 
-        return MemberData.builder().Token(Token.builder().accessToken(loginToken).refreshToken(refreshToken).build()).build();
+        return MemberData.builder().Member(member).Token(Token.builder().accessToken(loginToken).refreshToken(refreshToken).build()).build();
     }
 }

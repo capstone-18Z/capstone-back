@@ -260,10 +260,6 @@ public class TeamService {
 
     }
 
-    public List<Map<String, Integer>> countOfKeyword() {
-        return teamKeywordRepository.countOfKeyword();
-    }
-
     public void setTeamRelation(Team team) {
         if (team.getTeamKeyword() != null) {
             TeamKeyword keyword = team.getTeamKeyword();

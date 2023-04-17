@@ -98,10 +98,5 @@ public class TeamController {
     }
 
 
-    @PostMapping("/test/count-keyword")
-    public List<Map<String, Integer>> countOfKeyword() {
-        return teamService.countOfKeyword();
-    }
-
 
 }
