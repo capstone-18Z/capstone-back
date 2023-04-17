@@ -2,6 +2,7 @@ package com.makedreamteam.capstoneback.repository;
 
 import com.makedreamteam.capstoneback.domain.Member;
 import com.makedreamteam.capstoneback.domain.Team;
+import org.springframework.data.domain.Example;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -15,13 +16,10 @@ public interface SpringDataTeamRepository extends JpaRepository<Team, UUID>  {
     List<Team> findByTeamLeader(UUID userID);
 
     //team의 키워드와 member키워드가 같은 member 즉, 목적이 같은 맴버를 반환한다.
-    @Query("SELECT mk.member FROM  MemberKeyword mk INNER JOIN TeamKeyword tk ON mk.value = tk.value  WHERE tk.team.teamId=:teamId and mk.member.id<>tk.team.teamLeader")
-    List<Member> findMemberAndTeamKeywordValues(@Param("teamId")UUID teamId);
-
     @Query("SELECT mk.member FROM MemberKeyword mk " +
             "WHERE EXISTS (" +
             " SELECT 1 FROM TeamKeyword tk" +
-            " WHERE mk.value = tk.value AND tk.team.teamId=:teamId AND mk.member.id<>tk.team.teamLeader" +
+            " WHERE mk.category = tk.category and mk.field=tk.field and mk.sub=tk.sub AND tk.team.teamId=:teamId AND mk.member.id<>tk.team.teamLeader" +
             ")")
     List<Member> findMemberAndTeamKeywordValues2(@Param("teamId") UUID teamId);
 
@@ -46,4 +44,8 @@ public interface SpringDataTeamRepository extends JpaRepository<Team, UUID>  {
 
     @Query("select (t.schemaL+t.mysqlL+t.mongodbL+t.mariadbL) from TeamDatabase t where t.team.teamId =:teamId")
     int getTeamDatabaseTotalWeight(@Param("teamId")UUID teamId);
+
+
+    @Query("SELECT t FROM Team t ORDER BY t.updateDate DESC")
+    List<Team> getAllTeamOrderByUpdateDesc(Pageable pageable);
 }

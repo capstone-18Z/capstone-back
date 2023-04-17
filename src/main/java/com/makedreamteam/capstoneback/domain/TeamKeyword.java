@@ -1,29 +1,29 @@
 package com.makedreamteam.capstoneback.domain;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
-import org.hibernate.annotations.IndexColumn;
+import org.hibernate.annotations.ColumnDefault;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.UUID;
 
 @Entity
 @Setter
 @Getter
 @AllArgsConstructor
 @NoArgsConstructor
-@Table(indexes = {@Index(name = "idx_team_keyword_value", columnList = "value"),
-        @Index(name = "idx_team_keyword_team", columnList = "team")})
 @Builder
 public class TeamKeyword {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(columnDefinition = "VARCHAR(20) CHARACTER SET utf8 COLLATE utf8_general_ci")
-    private String value;
+    @Column(columnDefinition = "VARCHAR(15) CHARACTER SET utf8 COLLATE utf8_general_ci")
+    private String category;
+
+    @Column(columnDefinition = "VARCHAR(15) CHARACTER SET utf8 COLLATE utf8_general_ci")
+    private String field;
+
+    @Column(columnDefinition = "VARCHAR(4) CHARACTER SET utf8 COLLATE utf8_general_ci")
+    private String sub="none";
 
     @OneToOne
     @JoinColumn(name="team")

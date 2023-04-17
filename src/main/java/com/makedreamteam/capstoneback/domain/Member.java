@@ -70,18 +70,18 @@ public class Member {
     private List<PostMember> postMemberList = new ArrayList<>();
 
     @OneToMany(mappedBy = "member", cascade = CascadeType.ALL, orphanRemoval = true,fetch = FetchType.EAGER)
-    private List</*MemberKeyword*/Keyword> memberKeywords = new ArrayList<>();
+    private List<MemberKeyword> memberKeywords = new ArrayList<>();
 
-    public void addKeyword(Keyword memberKeywords) {
+    public void addKeyword(MemberKeyword memberKeywords) {
         this.memberKeywords.add(memberKeywords);
         memberKeywords.setMember(this);
     }
 
-    public void removeKeyword(Keyword memberKeywords) {
+    public void removeKeyword(MemberKeyword memberKeywords) {
         this.memberKeywords.remove(memberKeywords);
         memberKeywords.setMember(null);
     }
-    public void setTeam(Keyword memberKeywords){
+    public void setTeam(MemberKeyword memberKeywords){
         memberKeywords.setMember(this);
     }
 

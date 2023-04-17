@@ -8,6 +8,7 @@ import lombok.*;
 import org.hibernate.annotations.ColumnDefault;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -53,11 +54,11 @@ public class Team{
     @Column(columnDefinition = "VARCHAR(20) CHARACTER SET utf8 COLLATE utf8_general_ci")
     private String writer;
 
-    @Column(columnDefinition = "VARCHAR(20) CHARACTER SET utf8 COLLATE utf8_general_ci")
-    private String createDate;
+    @Column/*(columnDefinition = "VARCHAR(20) CHARACTER SET utf8 COLLATE utf8_general_ci")*/
+    private Date createDate;
 
-    @Column(columnDefinition = "VARCHAR(20) CHARACTER SET utf8 COLLATE utf8_general_ci")
-    private String updateDate;
+    @Column/*(columnDefinition = "VARCHAR(20) CHARACTER SET utf8 COLLATE utf8_general_ci")*/
+    private Date updateDate=new Date();
 
     @Column(columnDefinition = "VARCHAR(255) CHARACTER SET utf8 COLLATE utf8_general_ci")
     private String detail;
@@ -68,7 +69,7 @@ public class Team{
 
     @OneToOne(mappedBy = "team", cascade = CascadeType.ALL, orphanRemoval = true,fetch = FetchType.LAZY)
     @JsonIgnoreProperties({"team"})
-    private /*TeamKeyword*/Keyword teamKeyword;
+    private TeamKeyword teamKeyword;
 
 
 

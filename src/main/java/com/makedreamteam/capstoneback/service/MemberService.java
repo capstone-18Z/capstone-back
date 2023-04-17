@@ -122,8 +122,8 @@ public class MemberService {
             for (MemberKeyword tk : keywords) {
                 tk.setMember(member);
             }*/
-            List<Keyword> keywords = member.getMemberKeywords();
-            for (Keyword tk : keywords) {
+            List<MemberKeyword> keywords = member.getMemberKeywords();
+            for (MemberKeyword tk : keywords) {
                 tk.setMember(member);
             }
 

@@ -17,6 +17,7 @@ import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
+import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -26,7 +27,7 @@ import java.io.InputStream;
 import java.util.*;
 
 @Transactional
-@RequiredArgsConstructor
+@Service
 public class TeamService {
     @Autowired
     private final SpringDataTeamRepository springDataTeamRepository;
@@ -46,12 +47,11 @@ public class TeamService {
     @Autowired
     private Storage storage;
 
-    @Autowired
-    private final KeywordRepository keywordRepository;
+
     private JwtTokenProvider jwtTokenProvider;
 
 
-    public TeamService(SpringDataTeamRepository springDataTeamRepository, TeamMemberRepository teamMemberRepository, MemberRepository memberRepository, PostMemberRepository postMemberRepository, RefreshTokenRepository refreshTokenRepository, JwtTokenProvider jwtTokenProvider, TeamKeywordRepository teamKeywordRepository, MemberKeywordRepository memberKeywordRepository, KeywordRepository keywordRepository) {
+    public TeamService(SpringDataTeamRepository springDataTeamRepository, TeamMemberRepository teamMemberRepository, MemberRepository memberRepository, PostMemberRepository postMemberRepository, RefreshTokenRepository refreshTokenRepository, JwtTokenProvider jwtTokenProvider, TeamKeywordRepository teamKeywordRepository, MemberKeywordRepository memberKeywordRepository) {
         this.springDataTeamRepository = springDataTeamRepository;
         this.teamMemberRepository = teamMemberRepository;
         this.memberRepository = memberRepository;
@@ -60,7 +60,6 @@ public class TeamService {
         this.jwtTokenProvider = jwtTokenProvider;
         this.teamKeywordRepository = teamKeywordRepository;
         this.memberKeywordRepository = memberKeywordRepository;
-        this.keywordRepository = keywordRepository;
     }
 
     public ResponseForm addNewTeam(Team team, List<MultipartFile> images, String authToken, String refreshToken) {
@@ -153,7 +152,7 @@ public class TeamService {
     public List<Team> allPosts(String loginToken, String refreshToken, int page) {
         try {
             Pageable pageable = PageRequest.of(page - 1, 20);
-            List<Team> all = springDataTeamRepository.findAll(pageable).getContent();
+            List<Team> all = springDataTeamRepository.getAllTeamOrderByUpdateDesc(pageable);
             return all;
         } catch (EmptyResultDataAccessException e) {
             throw new RuntimeException("Failed to retrieve Team information from the database", e);
@@ -259,7 +258,7 @@ public class TeamService {
     public void setTeamRelation(Team team) {
         if (team.getTeamKeyword() != null) {
             //TeamKeyword keyword = team.getTeamKeyword();
-            Keyword keyword=team.getTeamKeyword();
+            TeamKeyword keyword=team.getTeamKeyword();
             keyword.setTeam(team);
         }
         //team language 양방향 설정
@@ -316,7 +315,7 @@ public class TeamService {
         Pageable pageable = PageRequest.of(0, 10);
         //team과 같은 키워드를 가진 member를 골라낸다
         //List<Member> memberAndTeamKeywordValues = springDataTeamRepository.findMemberAndTeamKeywordValues2(teamId);
-        List<Member> memberAndTeamKeywordValues = keywordRepository.recommendMembers(team.getTeamKeyword().getValue(),team.getTeamLeader());
+        List<Member> memberAndTeamKeywordValues = springDataTeamRepository.findMemberAndTeamKeywordValues2(teamId);
         //List<Member> memberAndTeamKeywordValues=memberKeywordRepository.findSameKeywordToTeamKeyword(team.getTeamKeyword().getValue(),team.getTeamLeader());
         List<UUID> memberUUIDs = new ArrayList<>();
         for (Member member : memberAndTeamKeywordValues) {
@@ -389,5 +388,8 @@ public class TeamService {
 
 
         return ResponseForm.builder().message("추천 유저를 반환합니다").data(list).build();
+    }
+    public long getTeamCount(){
+        return springDataTeamRepository.count();
     }
 }
