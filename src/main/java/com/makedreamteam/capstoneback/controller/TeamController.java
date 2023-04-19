@@ -88,9 +88,7 @@ public class TeamController {
     }
     @PostMapping("/{teamId}/recommend")
     public ResponseEntity<ResponseForm> findRecommendMember(@PathVariable UUID teamId,@RequestHeader("login-token") String accessToken,@RequestHeader("refresh-token")String refreshToken){
-        ResponseForm recommendList=teamService.recommendMembers2(teamId,accessToken,refreshToken);
-        //List<Member> members = teamService.recommendMembers(teamId, 5);
-        //return ResponseEntity.ok(ResponseForm.builder().data(members).build());
+        ResponseForm recommendList=teamService.recommendMembers(teamId,accessToken,refreshToken);
         return ResponseEntity.ok().body(recommendList);
     }
 

@@ -26,7 +26,7 @@ public interface SpringDataTeamRepository extends JpaRepository<Team, UUID>  {
 
     @Query("SELECT ml.member, (ml.c*tl.c + ml.cpp*tl.cpp+ml.cs*tl.cs+ml.html*tl.html+ml.java*tl.java+ml.javascript*tl.javascript+ml.kotlin*tl.kotlin+ml.python*tl.python+ml.R*tl.R+ml.sql_Lang*tl.sql_Lang+ml.swift*tl.swift+ml.typescript*tl.typescript) " +
             " FROM  MemberLang ml, TeamLanguage  tl  WHERE tl.team.teamId = :teamId and ml.member.id in :memberId order by (ml.c*tl.c + ml.cpp*tl.cpp+ml.cs*tl.cs+ml.html*tl.html+ml.java*tl.java+ml.javascript*tl.javascript+ml.kotlin*tl.kotlin+ml.python*tl.python+ml.R*tl.R+ml.sql_Lang*tl.sql_Lang+ml.swift*tl.swift+ml.typescript*tl.typescript) DESC,ml.member.id desc")
-    List<Object[]> recommedMemberWithLang(@Param("memberId")List<UUID> memberId, @Param("teamId") UUID teamId, Pageable pageable);
+    List<Object[]> recommendMemberWithLang(@Param("memberId")List<UUID> memberId, @Param("teamId") UUID teamId, Pageable pageable);
 
 
     @Query("SELECT mf.member,(mf.android*tf.androidStudio+mf.node*tf.nodejs+mf.react*tf.react+mf.spring*tf.spring+mf.tdmax*tf.tdmax+mf.unity*tf.unity+mf.unreal*tf.unrealEngine+mf.xcode*tf.xcode) from MemberFramework mf,TeamFramework  tf where tf.team.teamId = :teamId and mf.member.id in :memberId order by (mf.android*tf.androidStudio+mf.node*tf.nodejs+mf.react*tf.react+mf.spring*tf.spring+mf.tdmax*tf.tdmax+mf.unity*tf.unity+mf.unreal*tf.unrealEngine+mf.xcode*tf.xcode) DESC ")
@@ -46,6 +46,11 @@ public interface SpringDataTeamRepository extends JpaRepository<Team, UUID>  {
     int getTeamDatabaseTotalWeight(@Param("teamId")UUID teamId);
 
 
+
     @Query("SELECT t FROM Team t ORDER BY t.updateDate DESC")
     List<Team> getAllTeamOrderByUpdateDesc(Pageable pageable);
+
+
+    @Query("select 1 from TeamMember tm where  tm.teamId = :teamId and tm.userId in :userIds")
+    boolean isTeamMember(@Param("userIds") List<UUID> userIds,@Param("teamId")UUID teamId);
 }

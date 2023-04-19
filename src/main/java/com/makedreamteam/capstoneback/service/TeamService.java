@@ -34,16 +34,7 @@ public class TeamService {
     @Autowired
     private final TeamMemberRepository teamMemberRepository;
     @Autowired
-    private final MemberRepository memberRepository;
-    @Autowired
-    private final PostMemberRepository postMemberRepository;
-    @Autowired
-    private final TeamKeywordRepository teamKeywordRepository;
-    @Autowired
     private final RefreshTokenRepository refreshTokenRepository;
-
-    @Autowired
-    private final MemberKeywordRepository memberKeywordRepository;
     @Autowired
     private Storage storage;
 
@@ -51,15 +42,11 @@ public class TeamService {
     private JwtTokenProvider jwtTokenProvider;
 
 
-    public TeamService(SpringDataTeamRepository springDataTeamRepository, TeamMemberRepository teamMemberRepository, MemberRepository memberRepository, PostMemberRepository postMemberRepository, RefreshTokenRepository refreshTokenRepository, JwtTokenProvider jwtTokenProvider, TeamKeywordRepository teamKeywordRepository, MemberKeywordRepository memberKeywordRepository) {
+    public TeamService(SpringDataTeamRepository springDataTeamRepository, TeamMemberRepository teamMemberRepository,RefreshTokenRepository refreshTokenRepository, JwtTokenProvider jwtTokenProvider) {
         this.springDataTeamRepository = springDataTeamRepository;
         this.teamMemberRepository = teamMemberRepository;
-        this.memberRepository = memberRepository;
-        this.postMemberRepository = postMemberRepository;
         this.refreshTokenRepository = refreshTokenRepository;
         this.jwtTokenProvider = jwtTokenProvider;
-        this.teamKeywordRepository = teamKeywordRepository;
-        this.memberKeywordRepository = memberKeywordRepository;
     }
 
     public ResponseForm addNewTeam(Team team, List<MultipartFile> images, String authToken, String refreshToken) {
@@ -80,6 +67,9 @@ public class TeamService {
                 throw new RuntimeException(e);
             }
             Team savedTeam = springDataTeamRepository.save(team);
+            TeamMember teamMember=TeamMember.builder().teamId(savedTeam.getTeamId()).userId(savedTeam.getTeamLeader()).teamLeader(savedTeam.getTeamLeader()).build();
+            teamMemberRepository.save(teamMember);
+            System.out.println("유저 "+savedTeam.getTeamId()+"를 팀에 추가했습니다.");
             return ResponseForm.builder().state(HttpStatus.OK.value()).message("팀을 추가했습니다.").data(savedTeam).updatable(true).build();
         } else {
             return checkRefreshToken(refreshToken);
@@ -118,6 +108,9 @@ public class TeamService {
             Team team = springDataTeamRepository.findById(teamId).orElseThrow(() -> {
                 throw new RuntimeException("팀이 존재하지 않습니다.");
             });
+
+            List<UUID> allByTeamId = teamMemberRepository.findAllByTeamId(teamId);
+            teamMemberRepository.deleteAllById(allByTeamId);
             springDataTeamRepository.delete(team);
             return ResponseForm.builder().state(HttpStatus.OK.value()).message("팀을 삭제 했습니다.").build();
         } else {
@@ -136,10 +129,10 @@ public class TeamService {
                 //게시물을 만든 사용자와 게시물을 조회한 사용자의 ID를 비교
                 if (teambyId.get().getTeamLeader().equals(userid)) {
                     //같다면 update를 true
-                    return ResponseForm.builder().data(TeamData.builder().team(teambyId.get()).build()).updatable(true).message("팀 조회").build();
+                    return ResponseForm.builder().data(teambyId.get()).updatable(true).message("팀 조회").build();
                 }
                 //다르면 false
-                return ResponseForm.builder().data(TeamData.builder().team(teambyId.get()).build()).updatable(false).message("팀 조회").build();
+                return ResponseForm.builder().data(teambyId).updatable(false).message("팀 조회").build();
             }
             return ResponseForm.builder().message("팀이 존재하지 않습니다.").build();
 
@@ -158,73 +151,6 @@ public class TeamService {
             throw new RuntimeException("Failed to retrieve Team information from the database", e);
         }
     }
-
-    public List<Member> recommendMembers(UUID teamid, int maxRecommendation) {
-        // 추천할 멤버들을 담을 리스트
-        List<Member> recommendedMembers = new ArrayList<>();
-        List<Member> members = memberRepository.findAll();
-        Team team = springDataTeamRepository.findById(teamid).get();
-
-        // 멤버들 간의 스코어를 계산하고 스코어순으로 정렬
-        Map<Member, Integer> memberScoreMap = new HashMap<>();
-        for (Member member : members) {
-            if (member.getId().equals(team.getTeamId())) { // 리더는 제외
-                continue;
-            }
-            int langScore = calculateScore(member, team, "Lang");
-            int frameworkScore = calculateScore(member, team, "Framework");
-            int dbScore = calculateScore(member, team, "DB");
-            int totalScore = langScore + frameworkScore + dbScore;
-            memberScoreMap.put(member, totalScore);
-        }
-        List<Map.Entry<Member, Integer>> sortedMemberScoreList = new ArrayList<>(memberScoreMap.entrySet());
-        sortedMemberScoreList.sort(Collections.reverseOrder(Map.Entry.comparingByValue()));
-
-// 스코어순으로 추천할 멤버들을 리스트에 추가
-        for (Map.Entry<Member, Integer> entry : sortedMemberScoreList) {
-            recommendedMembers.add(entry.getKey());
-            if (recommendedMembers.size() >= maxRecommendation) {
-                break;
-            }
-        }
-
-        return recommendedMembers;
-    }
-
-    // Lang, Framework, DB 엔티티의 스코어를 계산하는 메서드
-    private int calculateScore(Member member, Team team, String method) {
-        int score = 0;
-        if (method.equals("Lang")) {
-            score += Math.abs(member.getMemberLang().getC() - team.getTeamLanguage().getC());
-            score += Math.abs(member.getMemberLang().getCpp() - team.getTeamLanguage().getCpp());
-            score += Math.abs(member.getMemberLang().getCs() - team.getTeamLanguage().getCs());
-            score += Math.abs(member.getMemberLang().getJava() - team.getTeamLanguage().getJava());
-            score += Math.abs(member.getMemberLang().getHtml() - team.getTeamLanguage().getHtml());
-            score += Math.abs(member.getMemberLang().getR() - team.getTeamLanguage().getR());
-            score += Math.abs(member.getMemberLang().getJavascript() - team.getTeamLanguage().getJavascript());
-            score += Math.abs(member.getMemberLang().getSql_Lang() - team.getTeamLanguage().getSql_Lang());
-            score += Math.abs(member.getMemberLang().getPython() - team.getTeamLanguage().getPython());
-            score += Math.abs(member.getMemberLang().getKotlin() - team.getTeamLanguage().getKotlin());
-            score += Math.abs(member.getMemberLang().getSwift() - team.getTeamLanguage().getSwift());
-            score += Math.abs(member.getMemberLang().getTypescript() - team.getTeamLanguage().getTypescript());
-        } else if (method.equals("Framework")) {
-            score += Math.abs(member.getMemberFramework().getAndroid() - team.getTeamFramework().getAndroidStudio());
-            score += Math.abs(member.getMemberFramework().getSpring() - team.getTeamFramework().getSpring());
-            score += Math.abs(member.getMemberFramework().getNode() - team.getTeamFramework().getNodejs());
-            score += Math.abs(member.getMemberFramework().getUnity() - team.getTeamFramework().getUnity());
-            score += Math.abs(member.getMemberFramework().getTdmax() - team.getTeamFramework().getTdmax());
-            score += Math.abs(member.getMemberFramework().getReact() - team.getTeamFramework().getReact());
-            score += Math.abs(member.getMemberFramework().getUnreal() - team.getTeamFramework().getUnrealEngine());
-            score += Math.abs(member.getMemberFramework().getXcode() - team.getTeamFramework().getXcode());
-        } else {
-            score += Math.abs(member.getMemberDB().getSchemaL() - team.getTeamDatabase().getSchemaL());
-            score += Math.abs(member.getMemberDB().getMysqlL() - team.getTeamDatabase().getMysqlL());
-            score += Math.abs(member.getMemberDB().getMariadbL() - team.getTeamDatabase().getMariadbL());
-            score += Math.abs(member.getMemberDB().getMongodbL() - team.getTeamDatabase().getMongodbL());
-        }
-        return score;
-    }
-
     public List<String> uploadFile(List<MultipartFile> files) throws IOException {
         List<String> images = new ArrayList<>();
         for (MultipartFile file : files) {
@@ -257,7 +183,6 @@ public class TeamService {
 
     public void setTeamRelation(Team team) {
         if (team.getTeamKeyword() != null) {
-            //TeamKeyword keyword = team.getTeamKeyword();
             TeamKeyword keyword=team.getTeamKeyword();
             keyword.setTeam(team);
         }
@@ -302,7 +227,7 @@ public class TeamService {
         }
     }
 
-    public ResponseForm recommendMembers2(UUID teamId, String accessToken, String refreshToken) {
+    public ResponseForm recommendMembers(UUID teamId, String accessToken, String refreshToken) {
 
         Map<Member,Integer> result=new HashMap<>();
         int limitFramework= springDataTeamRepository.getTeamFrameworkTotalWeight(teamId);
@@ -322,7 +247,7 @@ public class TeamService {
             memberUUIDs.add(member.getId());
         }
         //1차로 언어 가중치를 이용해 1~10순위 member를 가려낸다
-        List<Object[]> recommedMemberWithLang = springDataTeamRepository.recommedMemberWithLang(memberUUIDs, teamId, pageable);
+        List<Object[]> recommedMemberWithLang = springDataTeamRepository.recommendMemberWithLang(memberUUIDs, teamId, pageable);
         memberUUIDs.clear();
         for (Object[] member : recommedMemberWithLang) {
             Member m=(Member) member[0];
