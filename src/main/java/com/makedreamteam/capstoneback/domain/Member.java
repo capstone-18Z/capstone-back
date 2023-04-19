@@ -60,10 +60,10 @@ public class Member {
     @Enumerated(EnumType.STRING)
     private Role role;
 
-    @Column
+    @Column(columnDefinition = "LONGTEXT")
     private String profileImageUrl;
 
-    @Column
+    @Column(columnDefinition = "LONGTEXT")
     private String github;
 
     @OneToMany(mappedBy = "member", cascade = CascadeType.REMOVE, orphanRemoval = true, fetch = FetchType.EAGER)

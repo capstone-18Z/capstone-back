@@ -1,9 +1,6 @@
 package com.makedreamteam.capstoneback.domain;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
+import jakarta.persistence.*;
 import lombok.*;
 
 @Getter
@@ -23,6 +20,9 @@ public class Contest {
     private String host;
     private String target;
     private String dday;
+    @Column(columnDefinition = "LONGTEXT")
     private String imgUrl;
-
+    private String period;
+    private String AuditDate;
+    private String releaseDate;
 }
