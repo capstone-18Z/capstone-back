@@ -1,5 +1,6 @@
 package com.makedreamteam.capstoneback.form;
 
+import com.makedreamteam.capstoneback.domain.Comment;
 import lombok.Builder;
 import lombok.Data;
 import lombok.Getter;
@@ -18,5 +19,6 @@ public class PostResponseForm {
     private Long pid;
     private List<String> filenames;
     private boolean updatable;
+    private List<Comment> commentList;
 }
 

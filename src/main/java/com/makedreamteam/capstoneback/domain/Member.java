@@ -64,6 +64,9 @@ public class Member {
     @Column(columnDefinition = "LONGTEXT")
     private String github;
 
+    @Column
+    private int grade;
+
     @OneToMany(mappedBy = "member", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
     private List<PostMember> postMemberList = new ArrayList<>();
 
