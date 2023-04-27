@@ -17,4 +17,6 @@ public class ResponseForm {
     private String message;
     private Object data;
     private boolean updatable;
+    private Metadata metadata;
 }
+

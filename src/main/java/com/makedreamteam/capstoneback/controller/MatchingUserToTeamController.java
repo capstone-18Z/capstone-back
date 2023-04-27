@@ -10,6 +10,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
+import java.io.IOException;
 import java.util.UUID;
 
 @Controller
@@ -23,8 +24,6 @@ public class MatchingUserToTeamController {
         this.matchingUserToTeamService = teamMemberService;
     }
 
-    //팀에서 멤버에게 팀원 신청
-    //내가 user 상대가 team
     @PostMapping("/{teamId}/add")
     public ResponseEntity<ResponseForm> tryMatchTeamMember(HttpServletRequest request,@RequestBody WaitingListOfMatchingUserToTeam waitingListOfMatchingUserToTeam,@PathVariable UUID teamId){
        try{
@@ -35,6 +34,8 @@ public class MatchingUserToTeamController {
        }catch (RuntimeException e){
            ResponseForm error= ResponseForm.builder().message(e.getMessage()).build();
            return ResponseEntity.internalServerError().body(error);
+       } catch (IOException e) {
+           throw new RuntimeException(e);
        }
     }
     //멤버가 팀에게 매칭 신청

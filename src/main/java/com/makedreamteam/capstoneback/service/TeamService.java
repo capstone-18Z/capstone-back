@@ -317,4 +317,10 @@ public class TeamService {
     public long getTeamCount(){
         return springDataTeamRepository.count();
     }
+
+    public int getTotalPage() {
+        int pageSize=20;
+        int totalPage=(int)Math.ceil((double)springDataTeamRepository.getCountOfTeams()/pageSize);
+        return totalPage;
+    }
 }

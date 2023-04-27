@@ -50,6 +50,8 @@ public interface SpringDataTeamRepository extends JpaRepository<Team, UUID>  {
     @Query("SELECT t FROM Team t ORDER BY t.updateDate DESC")
     List<Team> getAllTeamOrderByUpdateDesc(Pageable pageable);
 
+    @Query("select count(t) from Team t")
+    long getCountOfTeams();
 
     @Query("select 1 from TeamMember tm where  tm.teamId = :teamId and tm.userId in :userIds")
     boolean isTeamMember(@Param("userIds") List<UUID> userIds,@Param("teamId")UUID teamId);

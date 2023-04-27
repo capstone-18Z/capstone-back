@@ -4,7 +4,8 @@ package com.makedreamteam.capstoneback.service;
 
 
 import com.makedreamteam.capstoneback.JwtTokenProvider;
-        import com.makedreamteam.capstoneback.domain.*;
+import com.makedreamteam.capstoneback.WebSocketConfig;
+import com.makedreamteam.capstoneback.domain.*;
         import com.makedreamteam.capstoneback.form.ResponseForm;
         import com.makedreamteam.capstoneback.repository.*;
         import io.jsonwebtoken.Claims;
@@ -12,7 +13,8 @@ import com.makedreamteam.capstoneback.JwtTokenProvider;
         import org.springframework.stereotype.Service;
         import org.springframework.transaction.annotation.Transactional;
 
-        import java.util.List;
+import java.io.IOException;
+import java.util.List;
         import java.util.Optional;
         import java.util.UUID;
 
@@ -34,6 +36,8 @@ public class MatchingUserToTeamService {
     @Autowired
     RefreshTokenRepository refreshTokenRepository;
 
+
+
     public MatchingUserToTeamService(TeamMemberRepository teamMemberRepository, WaitingListUserToTeamRepository waitingListRepository, SpringDataTeamRepository springDataTeamRepository, MemberRepository memberRepository){
         this.teamMemberRepository=teamMemberRepository;
         this.waitingListRepository=waitingListRepository;
@@ -44,7 +48,7 @@ public class MatchingUserToTeamService {
 
     //userId 중복 체크 필요
     //내가 :user 상대가 team
-    public ResponseForm matchTry(UUID teamId, WaitingListOfMatchingUserToTeam waitingListOfMatchingUserToTeam, String accessToken, String refreshToken) {
+    public ResponseForm matchTry(UUID teamId, WaitingListOfMatchingUserToTeam waitingListOfMatchingUserToTeam, String accessToken, String refreshToken) throws IOException {
         if(jwtTokenProvider.isValidAccessToken(accessToken)){
             Claims userInfo= jwtTokenProvider.getClaimsToken(accessToken);
             UUID userId=UUID.fromString((String)userInfo.get("userId"));
@@ -59,6 +63,8 @@ public class MatchingUserToTeamService {
                     .ifPresent(e->{
                         throw new RuntimeException("이미 같은팀에 속해있습니다.");
                     });
+            String teamLeader=team.getTeamLeader().toString();
+            WebSocketConfig.MyWebSocketHandler.sendNotificationToUser(teamLeader);
             waitingListOfMatchingUserToTeam.setUserId(userId);
             waitingListOfMatchingUserToTeam.setTeam(team);
             WaitingListOfMatchingUserToTeam savedData = waitingListRepository.save(waitingListOfMatchingUserToTeam);

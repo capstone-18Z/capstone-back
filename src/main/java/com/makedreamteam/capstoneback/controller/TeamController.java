@@ -31,8 +31,8 @@ public class TeamController {
             String refreshToken = request.getHeader("refresh-token");
             List<Team> recommendTeams = null;
             List<Team> teams = teamService.allPosts(authToken, refreshToken, page);
-            long count= teamService.getTeamCount();
-            ResponseForm responseForm = ResponseForm.builder().message("모든 팀을 조회합니다").state(HttpStatus.OK.value()).data(teams).build();
+            int totalPage=teamService.getTotalPage();
+            ResponseForm responseForm = ResponseForm.builder().metadata(Metadata.builder().currentPage(page).totalPage(totalPage).build()).message("모든 팀을 조회합니다").state(HttpStatus.OK.value()).data(teams).build();
             return ResponseEntity.ok().body(responseForm);
         } catch (RuntimeException e) {
             ResponseForm errorResponseForm = ResponseForm.builder()

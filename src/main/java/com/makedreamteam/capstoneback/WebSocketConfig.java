@@ -11,6 +11,7 @@ import org.springframework.web.socket.config.annotation.EnableWebSocket;
 import org.springframework.web.socket.config.annotation.WebSocketConfigurer;
 import org.springframework.web.socket.config.annotation.WebSocketHandlerRegistry;
 
+import java.io.IOException;
 import java.util.*;
 
 @Configuration
@@ -79,6 +80,17 @@ public class WebSocketConfig implements WebSocketConfigurer {
                 System.out.println("Removed session for user " + userId);
             } else {
                 System.out.println("Could not find user ID for session " + session.getId());
+            }
+        }
+
+        public static void sendNotificationToUser(String userId) throws IOException {
+            WebSocketSession session = sessions.get(userId);
+            if (session != null) {
+                String payload = "팀원 신청이 들어왔습니다.";
+                TextMessage message = new TextMessage(payload);
+                session.sendMessage(message);
+            } else {
+                System.out.println("Could not find session for user " + userId);
             }
         }
 
