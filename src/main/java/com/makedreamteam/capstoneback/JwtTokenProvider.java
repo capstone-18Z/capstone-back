@@ -10,6 +10,7 @@ import com.makedreamteam.capstoneback.form.ResponseForm;
 import io.jsonwebtoken.*;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.xml.bind.DatatypeConverter;
+import org.springframework.context.annotation.Bean;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UserDetails;

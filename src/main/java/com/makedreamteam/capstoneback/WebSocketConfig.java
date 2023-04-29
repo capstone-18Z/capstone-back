@@ -1,8 +1,11 @@
 package com.makedreamteam.capstoneback;
 
+import com.google.gson.Gson;
+import io.jsonwebtoken.Claims;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.web.bind.annotation.CrossOrigin;
@@ -18,8 +21,11 @@ import java.util.*;
 @EnableWebSocket
 @CrossOrigin
 @EnableAutoConfiguration
+@ComponentScan("com.makedreamteam.capstoneback")
 public class WebSocketConfig implements WebSocketConfigurer {
-    private static final Map<String,WebSocketSession> sessions = new HashMap<>();
+    private static final Map<UUID,WebSocketSession> sessions = new HashMap<>();
+    @Autowired
+    private JwtTokenProvider jwtTokenProvider;
 
     @Override
     public void registerWebSocketHandlers(WebSocketHandlerRegistry registry) {
@@ -28,13 +34,13 @@ public class WebSocketConfig implements WebSocketConfigurer {
 
 
 
-    public static class MyWebSocketHandler implements WebSocketHandler {
+    public class MyWebSocketHandler implements WebSocketHandler {
 
         @Override
         public void afterConnectionEstablished(WebSocketSession session) throws Exception {
             System.out.println("WebSocket connection established");
             String uuid = UUID.randomUUID().toString();
-            session.sendMessage(new TextMessage("{\"type\":\"uuid\",\"uuid\":\"" + uuid + "\",\"message\" : \"good\"}"));
+            session.sendMessage(new TextMessage("{\"type\":\"uuid\",\"uuid\":\"" + uuid + "\",\"message\" : \"어서오세요\"}"));
 
 
         }
@@ -47,7 +53,9 @@ public class WebSocketConfig implements WebSocketConfigurer {
 
                 // Check if the payload is an authentication message
                 if (payload.startsWith("AUTH:")) {
-                    String userId = payload.substring(5);
+                    String token = payload.substring(5);
+                    Claims userInfo = jwtTokenProvider.getClaimsToken(token);
+                    UUID userId=UUID.fromString((String)userInfo.get("userId"));
                     System.out.println("Received authentication message for user " + userId);
                     if(!sessions.containsValue(session))
                         sessions.put(userId, session);
@@ -74,7 +82,7 @@ public class WebSocketConfig implements WebSocketConfigurer {
         @Override
         public void afterConnectionClosed(WebSocketSession session, CloseStatus closeStatus) throws Exception {
             System.out.println("WebSocket connection closed with status " + closeStatus.getCode());
-            String userId = getUserIdFromSession(session);
+            UUID userId = getUserIdFromSession(session);
             if (userId != null) {
                 sessions.remove(userId);
                 System.out.println("Removed session for user " + userId);
@@ -83,10 +91,16 @@ public class WebSocketConfig implements WebSocketConfigurer {
             }
         }
 
-        public static void sendNotificationToUser(String userId) throws IOException {
+        public static void sendNotificationToUser(UUID userId) throws IOException {
+            System.out.println(userId+"에게 알람을 보냅니다");
             WebSocketSession session = sessions.get(userId);
             if (session != null) {
-                String payload = "팀원 신청이 들어왔습니다.";
+                Gson gson=new Gson();
+                Map<String,String> payloadMap=new HashMap<>();
+                payloadMap.put("type","notification");
+                payloadMap.put("message","팀원 신청이 왔습니다.");
+                String payload=gson.toJson(payloadMap);
+                //String payload = "{\"type\":\"notification\",\"message\" : \"팀원신청이 들어왔습니다.\"}";
                 TextMessage message = new TextMessage(payload);
                 session.sendMessage(message);
             } else {
@@ -94,8 +108,8 @@ public class WebSocketConfig implements WebSocketConfigurer {
             }
         }
 
-        private String getUserIdFromSession(WebSocketSession session) {
-            for (Map.Entry<String, WebSocketSession> entry : sessions.entrySet()) {
+        private UUID getUserIdFromSession(WebSocketSession session) {
+            for (Map.Entry<UUID, WebSocketSession> entry : sessions.entrySet()) {
                 if (entry.getValue().equals(session)) {
                     return entry.getKey();
                 }

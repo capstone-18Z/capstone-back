@@ -63,7 +63,7 @@ public class MatchingUserToTeamService {
                     .ifPresent(e->{
                         throw new RuntimeException("이미 같은팀에 속해있습니다.");
                     });
-            String teamLeader=team.getTeamLeader().toString();
+            UUID teamLeader=team.getTeamLeader();
             WebSocketConfig.MyWebSocketHandler.sendNotificationToUser(teamLeader);
             waitingListOfMatchingUserToTeam.setUserId(userId);
             waitingListOfMatchingUserToTeam.setTeam(team);
