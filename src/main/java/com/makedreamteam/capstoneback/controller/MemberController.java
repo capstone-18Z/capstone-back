@@ -97,10 +97,13 @@ public class MemberController {
         return memberRepository.findById(uid);
     }
 
-    @GetMapping("/userForm/view/{uid}")
-    public ResponseEntity<MemberResponseForm> getMemberinfo(@PathVariable UUID uid){
+    @GetMapping("/userForm")
+    public ResponseEntity<MemberResponseForm> inquireMember(HttpServletRequest request) throws AuthenticationException {
         try {
-            Member searchMember = memberRepository.findById(uid).get();
+            String authToken = request.getHeader("login-token");
+            String refreshToken = request.getHeader("refresh-token");
+            UUID memberid = memberService.checkUserIdAndToken(authToken, refreshToken);
+            Member searchMember = memberRepository.findById(memberid).get();
             MemberResponseForm successForm = MemberResponseForm.builder()
                     .message("유저 포스트 조회")
                     .state(HttpStatus.OK.value())
