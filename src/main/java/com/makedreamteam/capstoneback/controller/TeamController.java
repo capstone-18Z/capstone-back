@@ -94,8 +94,9 @@ public class TeamController {
 
 
     @GetMapping("/search/{title}")//제목으로 포스트 검색
-    public ResponseEntity<ResponseForm> searchPostByTitle(@PathVariable String title, HttpServletRequest request) {
-        return null;
+    public ResponseEntity<ResponseForm> searchPostByTitle(@PathVariable String title,@RequestParam("page")int page) {
+        ResponseForm responseForm = teamService.postListByTitle(title, page);
+        return ResponseEntity.ok(responseForm);
     }
 
 

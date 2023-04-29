@@ -11,6 +11,7 @@ import com.makedreamteam.capstoneback.JwtTokenProvider;
 import com.makedreamteam.capstoneback.domain.*;
 import com.makedreamteam.capstoneback.exception.*;
 import com.makedreamteam.capstoneback.form.PostResponseForm;
+import com.makedreamteam.capstoneback.form.ResponseForm;
 import com.makedreamteam.capstoneback.repository.CommentRepository;
 import com.makedreamteam.capstoneback.repository.FileDataRepository;
 import com.makedreamteam.capstoneback.repository.MemberRepository;
@@ -429,14 +430,20 @@ public class MemberController {
         contestCrawlingService.crawlContest();
     }
     @PostMapping("/send-email/{email}")
-    public void sendEmail(@PathVariable String email) throws MessagingException {
+    public ResponseEntity<String> sendEmail(@PathVariable String email) throws MessagingException {
+        Optional<Member> byEmail = memberRepository.findByEmail(email);
+        if(byEmail.isPresent())
+            return ResponseEntity.ok("이미 존재하는 이메일입니다.");
         memberService.sendVerificationEmail(email);
+        return ResponseEntity.ok("인증 코드를 보냈습니다");
     }
     @PostMapping("/verify-email/{email}")
-    public ResponseEntity<String> verifyEmail(@PathVariable String email){
-        memberService.verifyEmail(email);
-        HttpHeaders headers = new HttpHeaders();
-        headers.setLocation(URI.create("http://localhost:3000/verify/"+email));
-        return new ResponseEntity<String>(headers, HttpStatus.FOUND);
+    public ResponseEntity<String> verifyEmail(@PathVariable String email, @RequestParam("code")String code){
+        try {
+            memberService.verifyEmail(email, code);
+            return ResponseEntity.ok("코드가 일치합니다");
+        }catch (RuntimeException e){
+            return ResponseEntity.ok(e.getMessage());
+        }
     }
 }
