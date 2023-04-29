@@ -56,7 +56,7 @@ public class MemberController {
                 .email(user.get("email"))
                 .password(passwordEncoder.encode(user.get("password")))
                 .nickname(user.get("nickname"))
-                .profileImageUrl("https://firebasestorage.googleapis.com/v0/b/caps-1edf8.appspot.com/o/DefaultProfile.PNG?alt=media&token=266e52f4-818f-4a20-970d-2d84ba48e5a1")
+                .profileImageUrl("https://firebasestorage.googleapis.com/v0/b/caps-1edf8.appspot.com/o/DefaultProfile.PNG?alt=media&token=75846c5b-598a-4cf1-a7d6-9fe646192c40")
                 .role(Role.ROLE_MEMBER)
                 .build();
         return memberService.MemberJoin(member);
