@@ -3,6 +3,7 @@ package com.makedreamteam.capstoneback.controller;
 import java.io.IOException;
 import java.lang.reflect.Field;
 import java.net.URI;
+import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -10,6 +11,7 @@ import com.makedreamteam.capstoneback.JwtTokenProvider;
 import com.makedreamteam.capstoneback.domain.*;
 import com.makedreamteam.capstoneback.exception.*;
 import com.makedreamteam.capstoneback.form.PostResponseForm;
+import com.makedreamteam.capstoneback.repository.CommentRepository;
 import com.makedreamteam.capstoneback.repository.FileDataRepository;
 import com.makedreamteam.capstoneback.repository.MemberRepository;
 import com.makedreamteam.capstoneback.repository.PostMemberRepository;
@@ -18,7 +20,9 @@ import com.makedreamteam.capstoneback.service.FileService;
 import com.makedreamteam.capstoneback.service.MemberService;
 import com.makedreamteam.capstoneback.service.TeamService;
 import jakarta.mail.MessagingException;
+import com.makedreamteam.capstoneback.service.*;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.transaction.Transactional;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.platform.commons.logging.Logger;
 import org.junit.platform.commons.logging.LoggerFactory;
@@ -49,6 +53,8 @@ public class MemberController {
     private final TeamService teamService;
     private final FileDataRepository fileDataRepository;
     private final ContestCrawlingService contestCrawlingService;
+    private final CommentService commentService;
+    private final CommentRepository commentRepository;
 
     // 회원가입
     @PostMapping("/register")
@@ -346,9 +352,72 @@ public class MemberController {
                     .data(postMember)
                     .pid(postid)
                     .filenames(filenames)
+                    .commentList(postMember.getCommentList())
                     .build();
             return ResponseEntity.ok().body(responseForm);
         } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    @PostMapping("/post/{postid}/comment")
+    public ResponseEntity<PostResponseForm> uploadComment(@PathVariable Long postid, @RequestBody Map<String, Object> comment, HttpServletRequest request){
+        try{
+            String loginToken = request.getHeader("login-token");
+            String refreshToken = request.getHeader("refresh-token");
+            UUID userid = memberService.checkUserIdAndToken(loginToken, refreshToken);
+            String cmessage = (String) comment.get("comment");
+            Comment uploadComment = commentService.uploadComment(cmessage, userid, postid);
+            PostResponseForm responseForm = PostResponseForm.builder()
+                    .message("코멘트 작성이 완료되었습니다.")
+                    .data(uploadComment)
+                    .build();
+            return ResponseEntity.ok().body(responseForm);
+        }catch (Exception e){
+            throw new RuntimeException(e);
+        }
+    }
+    @Transactional
+    @PostMapping("/post/{postid}/comment/delete/{commentid}")
+    public ResponseEntity<PostResponseForm> deleteComment(@PathVariable Long postid, @PathVariable Long commentid, HttpServletRequest request){
+        try {
+            String loginToken = request.getHeader("login-token");
+            String refreshToken = request.getHeader("refresh-token");
+            UUID userid = memberService.checkUserIdAndToken(loginToken, refreshToken);
+            Comment deleteCm = commentRepository.findById(commentid).get();
+            if(userid.toString().equals(deleteCm.getMember().getId().toString())){
+                deleteCm.getPost().getCommentList().remove(deleteCm);
+                commentRepository.delete(deleteCm);
+            }
+            PostResponseForm responseForm = PostResponseForm.builder()
+                    .message("코멘트 삭제가 완료되었습니다.")
+                    .data(deleteCm)
+                    .build();
+            return ResponseEntity.ok().body(responseForm);
+        }catch (Exception e){
+            throw new RuntimeException(e);
+        }
+    }
+
+    @PostMapping("/post/{postid}/comment/update/{commentid}")
+    public ResponseEntity<PostResponseForm> updateComment(@PathVariable Long postid, @PathVariable Long commentid, @RequestBody Map<String, Object> comment, HttpServletRequest request){
+        try{
+            String loginToken = request.getHeader("login-token");
+            String refreshToken = request.getHeader("refresh-token");
+            UUID userid = memberService.checkUserIdAndToken(loginToken, refreshToken);
+            Comment updateCm = commentRepository.findById(commentid).get();
+            if(userid.toString().equals(updateCm.getMember().getId().toString())){
+                String cmessage = (String) comment.get("comment");
+                updateCm.setCm(cmessage);
+                updateCm.setUploadDate(LocalDateTime.now());
+                commentRepository.save(updateCm);
+            }
+            PostResponseForm responseForm = PostResponseForm.builder()
+                    .message("코멘트 업데이트가 완료되었습니다.")
+                    .data(updateCm)
+                    .build();
+            return ResponseEntity.ok().body(responseForm);
+        }catch (Exception e){
             throw new RuntimeException(e);
         }
     }

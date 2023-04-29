@@ -28,13 +28,13 @@ public class FileData {
     @JoinColumn(name = "post_id")
     private PostMember post;
 
-    @Column(name = "filename")
+    @Column(columnDefinition = "LONGTEXT")
     private String fileName;
 
     @Column(name = "filetype")
     private FileType fileType;
 
-    @Column(name = "original_name")
+    @Column(columnDefinition = "LONGTEXT")
     private String originalName;
 
     @Column(name = "upload_date")

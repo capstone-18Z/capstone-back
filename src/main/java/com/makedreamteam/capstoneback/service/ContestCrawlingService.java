@@ -21,7 +21,6 @@ import java.awt.*;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.TimeUnit;
 
 @Service
 @Transactional
@@ -29,6 +28,7 @@ import java.util.concurrent.TimeUnit;
 public class ContestCrawlingService {
     @Autowired
     private final ContestRepository contestRepository;
+
 
     private WebDriver driver;
     private WebDriver imageDriver;
