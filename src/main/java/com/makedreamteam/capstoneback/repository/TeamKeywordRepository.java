@@ -10,4 +10,5 @@ import java.util.Map;
 import java.util.UUID;
 
 public interface TeamKeywordRepository extends JpaRepository<TeamKeyword, Long> {
+
 }

@@ -2,38 +2,29 @@ package com.makedreamteam.capstoneback.service;
 
 import com.makedreamteam.capstoneback.JwtTokenProvider;
 import com.makedreamteam.capstoneback.controller.MemberData;
-import com.makedreamteam.capstoneback.controller.MemberResponseForm;
 import com.makedreamteam.capstoneback.domain.*;
 import com.makedreamteam.capstoneback.exception.*;
 import com.makedreamteam.capstoneback.form.PostResponseForm;
-import com.makedreamteam.capstoneback.form.ResponseForm;
-import com.makedreamteam.capstoneback.form.TeamData;
-import com.makedreamteam.capstoneback.form.checkTokenResponsForm;
 import com.makedreamteam.capstoneback.repository.*;
 import io.jsonwebtoken.*;
+import jakarta.mail.MessagingException;
+import jakarta.mail.internet.MimeMessage;
 import jakarta.persistence.EntityManager;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
+import org.springframework.mail.javamail.JavaMailSender;
+import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.orm.jpa.JpaSystemException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.TransactionSystemException;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
 
 import javax.naming.AuthenticationException;
-import java.io.File;
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.nio.file.StandardCopyOption;
 import java.util.*;
-import java.util.function.Function;
-import java.util.stream.Collectors;
 
 @Service
 @Transactional
@@ -69,6 +60,11 @@ public class MemberService {
     @Autowired
     private EntityManager entityManager;
 
+    @Autowired
+    private JavaMailSender javaMailSender;
+
+    private static final Map<String,Boolean> verifiedUserMap=new HashMap<>();
+
     public PostMember PostJoin(PostMember post, String authToken){
         if(authToken==null)
             throw new RuntimeException("로그인 상태가 아닙니다.");
@@ -83,22 +79,27 @@ public class MemberService {
     public Member MemberJoin(Member post){
         try{
             if(!checkEmailDuplicate(post.getEmail()) && !checkNicknameDuplicate(post.getNickname())) {
-                Member save = memberRepository.save(post);
+                if(verifiedUserMap.get(post.getEmail())!=null && verifiedUserMap.get(post.getEmail())) {
+                    Member save = memberRepository.save(post);
 
-                MemberLang memberLang = new MemberLang();
-                memberLang.setMember(save);
-                save.setMemberLang(memberLang);
+                    MemberLang memberLang = new MemberLang();
+                    memberLang.setMember(save);
+                    save.setMemberLang(memberLang);
 
-                MemberFramework memberFramework = new MemberFramework();
-                memberFramework.setMember(save);
-                save.setMemberFramework(memberFramework);
+                    MemberFramework memberFramework = new MemberFramework();
+                    memberFramework.setMember(save);
+                    save.setMemberFramework(memberFramework);
 
-                MemberDatabase memberDatabase = new MemberDatabase();
-                memberDatabase.setMember(save);
-                save.setMemberDB(memberDatabase);
+                    MemberDatabase memberDatabase = new MemberDatabase();
+                    memberDatabase.setMember(save);
+                    save.setMemberDB(memberDatabase);
 
-                System.out.println("저장이 완료되었습니다!");
-                return save;
+                    System.out.println("저장이 완료되었습니다!");
+                    verifiedUserMap.remove(post.getEmail());
+                    return save;
+                }else{
+                    throw new RuntimeException("이메일 인증을 해주세요.");
+                }
             }
             else if (checkNicknameDuplicate(post.getNickname())){
                 throw new IllegalArgumentException("이미 존재하는 닉네임입니다.");
@@ -112,12 +113,17 @@ public class MemberService {
         }
     }
 
+
     public void MemberUpdate(Member member, UUID uid, MultipartFile file) throws IOException {
         try {
             String defaultProfile = "https://firebasestorage.googleapis.com/v0/b/caps-1edf8.appspot.com/o/DefaultProfile.PNG?alt=media&token=266e52f4-818f-4a20-970d-2d84ba48e5a1";
 
             // 기존의 Member 엔티티 가져오기
             Member originalMember = memberRepository.findById(uid).get();
+            /*List<MemberKeyword> keywords = member.getMemberKeywords();
+            for (MemberKeyword tk : keywords) {
+                tk.setMember(member);
+            }*/
             List<MemberKeyword> keywords = member.getMemberKeywords();
             for (MemberKeyword tk : keywords) {
                 tk.setMember(member);
@@ -363,5 +369,26 @@ public class MemberService {
         else refreshTokenRepository.save(refreshTok);
 
         return MemberData.builder().Member(member).Token(Token.builder().accessToken(loginToken).refreshToken(refreshToken).build()).build();
+    }
+
+    public void sendVerificationEmail(String email) throws MessagingException {
+        verifiedUserMap.put(email,false);
+        MimeMessage message = javaMailSender.createMimeMessage();
+        MimeMessageHelper helper = new MimeMessageHelper(message);
+        helper.setTo(email);
+        helper.setSubject("이메일 인증을 완료해주세요.");
+        String link = "http://1871166.iptime.org:8080/member/verify-email/"+email;
+        String htmlMsg = "<h3>이메일 인증을 완료해주세요.</h3><br>"
+                + "<p>아래 버튼을 클릭하여 인증을 완료하세요.</p>"
+                + "<form action='" + link + "' method='POST'>"
+                + "<input type='submit' value='인증 완료' style='background-color: #4CAF50; color: white; padding: 12px 20px; border: none; border-radius: 4px; cursor: pointer;'>"
+                + "</form>";
+        helper.setText(htmlMsg, true);
+        javaMailSender.send(message);
+    }
+
+    public void verifyEmail(String email) {
+        verifiedUserMap.put(email,true);
+
     }
 }

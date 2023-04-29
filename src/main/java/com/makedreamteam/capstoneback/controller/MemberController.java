@@ -2,6 +2,7 @@ package com.makedreamteam.capstoneback.controller;
 
 import java.io.IOException;
 import java.lang.reflect.Field;
+import java.net.URI;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -20,6 +21,7 @@ import jakarta.transaction.Transactional;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.platform.commons.logging.Logger;
 import org.junit.platform.commons.logging.LoggerFactory;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -51,7 +53,7 @@ public class MemberController {
 
     // 회원가입
     @PostMapping("/register")
-    public Member register(@RequestBody Map<String, String> user) {
+    public Member register(@RequestBody Map<String, String> user) throws MessagingException {
         Member member = Member.builder()
                 .email(user.get("email"))
                 .password(passwordEncoder.encode(user.get("password")))
@@ -410,13 +412,26 @@ public class MemberController {
                     .data(updateCm)
                     .build();
             return ResponseEntity.ok().body(responseForm);
-        }catch (Exception e){
+        } catch (Exception e) {
             throw new RuntimeException(e);
         }
     }
 
+
+
     @GetMapping("/test")
     public void testcode(){
         contestCrawlingService.crawlContest();
+    }
+    @PostMapping("/send-email/{email}")
+    public void sendEmail(@PathVariable String email) throws MessagingException {
+        memberService.sendVerificationEmail(email);
+    }
+    @PostMapping("/verify-email/{email}")
+    public ResponseEntity<String> verifyEmail(@PathVariable String email){
+        memberService.verifyEmail(email);
+        HttpHeaders headers = new HttpHeaders();
+        headers.setLocation(URI.create("http://localhost:3000/verify/"+email));
+        return new ResponseEntity<String>(headers, HttpStatus.FOUND);
     }
 }

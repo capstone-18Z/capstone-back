@@ -16,6 +16,8 @@ import lombok.*;
 @AllArgsConstructor
 @Entity
 @Builder
+@Table(indexes = {@Index(name = "idx_email", columnList = "email"),
+        @Index(name = "idx_nickname", columnList = "nickname")})
 public class Member {
     @Id
     @Column(columnDefinition = "BINARY(16)")

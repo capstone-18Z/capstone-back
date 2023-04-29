@@ -23,15 +23,16 @@ import java.util.*;
 public class TeamController {
     private final TeamService teamService;
 
-    @GetMapping("/page/{page}")
-    public ResponseEntity<ResponseForm> allPost(HttpServletRequest request, @PathVariable int page) {
+    @GetMapping("")
+    public ResponseEntity<ResponseForm> allPost(HttpServletRequest request, @RequestParam("page") int page) {
         //check login
         try {
             String authToken = request.getHeader("login-token");
             String refreshToken = request.getHeader("refresh-token");
             List<Team> recommendTeams = null;
             List<Team> teams = teamService.allPosts(authToken, refreshToken, page);
-            ResponseForm responseForm = ResponseForm.builder().message("모든 팀을 조회합니다").state(HttpStatus.OK.value()).data(teams).build();
+            int totalPage=teamService.getTotalPage();
+            ResponseForm responseForm = ResponseForm.builder().metadata(Metadata.builder().currentPage(page).totalPage(totalPage).build()).message("모든 팀을 조회합니다").state(HttpStatus.OK.value()).data(teams).build();
             return ResponseEntity.ok().body(responseForm);
         } catch (RuntimeException e) {
             ResponseForm errorResponseForm = ResponseForm.builder()
@@ -87,7 +88,7 @@ public class TeamController {
     }
     @PostMapping("/{teamId}/recommend")
     public ResponseEntity<ResponseForm> findRecommendMember(@PathVariable UUID teamId,@RequestHeader("login-token") String accessToken,@RequestHeader("refresh-token")String refreshToken){
-        ResponseForm recommendList=teamService.recommendMembers2(teamId,accessToken,refreshToken);
+        ResponseForm recommendList=teamService.recommendMembers(teamId,accessToken,refreshToken);
         return ResponseEntity.ok().body(recommendList);
     }
 
@@ -96,6 +97,8 @@ public class TeamController {
     public ResponseEntity<ResponseForm> searchPostByTitle(@PathVariable String title, HttpServletRequest request) {
         return null;
     }
+
+
 
 
 

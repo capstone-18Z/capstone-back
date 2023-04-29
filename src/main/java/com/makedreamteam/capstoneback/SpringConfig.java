@@ -15,41 +15,9 @@ public class SpringConfig implements WebMvcConfigurer {
         this.postTeamRepository = postTeamRepository;
 
     }*/
-
-    private final SpringDataTeamRepository springDataTeamRepository;
-    private final TeamMemberRepository teamMemberRepository;
-    private final MemberRepository memberRepository;
-    private final PostMemberRepository postMemberRepository;
-
-
-    private final TeamKeywordRepository teamKeywordRepository;
-    private final RefreshTokenRepository refreshTokenRepository;
-
-    private final JwtTokenProvider jwtTokenProvider;
-
-       public SpringConfig(SpringDataTeamRepository springDataTeamRepository, TeamMemberRepository teamMemberRepository, MemberRepository memberRepository, PostMemberRepository postMemberRepository,  RefreshTokenRepository refreshTokenRepository, JwtTokenProvider jwtTokenProvider,TeamKeywordRepository teamKeywordRepository) {
-           this.springDataTeamRepository = springDataTeamRepository;
-           this.teamMemberRepository = teamMemberRepository;
-           this.memberRepository = memberRepository;
-           this.postMemberRepository = postMemberRepository;
-           this.teamKeywordRepository = teamKeywordRepository;
-           this.refreshTokenRepository = refreshTokenRepository;
-           this.jwtTokenProvider = jwtTokenProvider;
-       }
-
-    @Bean
-    public TeamService TeamService(){
-        return new TeamService(springDataTeamRepository, teamMemberRepository, memberRepository, postMemberRepository, refreshTokenRepository, jwtTokenProvider,teamKeywordRepository);
-
-    }
-
-
     @Override
     public void addCorsMappings(final CorsRegistry registry) {
         registry.addMapping("/**")
                 .allowedMethods(ALLOWED_METHOD_NAMES.split(","));
     }
-
-
-
 }
