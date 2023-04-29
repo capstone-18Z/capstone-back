@@ -34,34 +34,28 @@ public class MemberService {
     private final MemberRepository memberRepository;
     @Autowired
     private final PostMemberRepository postMemberRepository;
-
     @Autowired
     private final SpringDataTeamRepository springDataTeamRepository;
-
     @Autowired
     private final FileDataRepository fileDataRepository;
-
     @Autowired
     private final RefreshTokenRepository refreshTokenRepository;
-
     @Autowired
     private final FileService fileService;
-
     @Autowired
     private JwtTokenProvider jwtTokenProvider;
-
     @Autowired
     private final MemberLangRepository memberLangRepository;
     @Autowired
     private final MemberFrameworkRepository memberFrameworkRepository;
     @Autowired
     private final MemberDatabaseRepository memberDatabaseRepository;
-
     @Autowired
     private EntityManager entityManager;
-
     @Autowired
     private JavaMailSender javaMailSender;
+    @Autowired
+    private SolvedacService solvedacService;
 
     private static final Map<String,Boolean> verifiedUserMap=new HashMap<>();
 
@@ -79,27 +73,28 @@ public class MemberService {
     public Member MemberJoin(Member post){
         try{
             if(!checkEmailDuplicate(post.getEmail()) && !checkNicknameDuplicate(post.getNickname())) {
-                if(verifiedUserMap.get(post.getEmail())!=null && verifiedUserMap.get(post.getEmail())) {
-                    Member save = memberRepository.save(post);
+                Member save = memberRepository.save(post);
 
-                    MemberLang memberLang = new MemberLang();
-                    memberLang.setMember(save);
-                    save.setMemberLang(memberLang);
+                MemberLang memberLang = new MemberLang();
+                memberLang.setMember(save);
+                save.setMemberLang(memberLang);
 
-                    MemberFramework memberFramework = new MemberFramework();
-                    memberFramework.setMember(save);
-                    save.setMemberFramework(memberFramework);
+                MemberFramework memberFramework = new MemberFramework();
+                memberFramework.setMember(save);
+                save.setMemberFramework(memberFramework);
 
-                    MemberDatabase memberDatabase = new MemberDatabase();
-                    memberDatabase.setMember(save);
-                    save.setMemberDB(memberDatabase);
+                MemberDatabase memberDatabase = new MemberDatabase();
+                memberDatabase.setMember(save);
+                save.setMemberDB(memberDatabase);
 
-                    System.out.println("저장이 완료되었습니다!");
-                    verifiedUserMap.remove(post.getEmail());
-                    return save;
+                System.out.println("저장이 완료되었습니다!");
+                verifiedUserMap.remove(post.getEmail());
+                return save;
+                /*if(verifiedUserMap.get(post.getEmail())!=null && verifiedUserMap.get(post.getEmail())) {
+
                 }else{
                     throw new RuntimeException("이메일 인증을 해주세요.");
-                }
+                }*/
             }
             else if (checkNicknameDuplicate(post.getNickname())){
                 throw new IllegalArgumentException("이미 존재하는 닉네임입니다.");
@@ -150,6 +145,13 @@ public class MemberService {
             member.setEmail(originalMember.getEmail());
             member.setPassword(originalMember.getPassword());
             member.setRole(originalMember.getRole());
+
+            if(!member.getSolvedNickname().isEmpty()){
+                SolvedAcUser solvedAcUser = solvedacService.getUser(member.getSolvedNickname());
+                member.setSolvedTier(solvedAcUser.getTier());
+                member.setSolvedCount(solvedAcUser.getSolvedCount());
+                member.setSolvedProfile(solvedAcUser.getProfileImageUrl());
+            }
 
             // 프로필 이미지가 업데이트되는 경우, 기존 이미지 파일 삭제하고 새로운 파일 업로드하기
             if (file != null) {

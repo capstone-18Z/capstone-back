@@ -10,12 +10,14 @@ import java.util.stream.Collectors;
 import com.makedreamteam.capstoneback.JwtTokenProvider;
 import com.makedreamteam.capstoneback.domain.*;
 import com.makedreamteam.capstoneback.exception.*;
+import com.makedreamteam.capstoneback.form.MemberResponseForm;
 import com.makedreamteam.capstoneback.form.PostResponseForm;
 import com.makedreamteam.capstoneback.repository.CommentRepository;
 import com.makedreamteam.capstoneback.repository.FileDataRepository;
 import com.makedreamteam.capstoneback.repository.MemberRepository;
 import com.makedreamteam.capstoneback.repository.PostMemberRepository;
 import com.makedreamteam.capstoneback.service.*;
+import jakarta.mail.MessagingException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.transaction.Transactional;
 import lombok.extern.slf4j.Slf4j;
@@ -26,10 +28,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
-
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.multipart.MultipartFile;
-
 import javax.naming.AuthenticationException;
 
 @Slf4j
@@ -41,15 +41,13 @@ public class MemberController {
     private static final Logger logger = LoggerFactory.getLogger(MemberController.class);
     private final MemberService memberService;
     private final PasswordEncoder passwordEncoder;
-    private final JwtTokenProvider jwtTokenProvider;
     private final MemberRepository memberRepository;
     private final PostMemberRepository postMemberRepository;
     private final FileService fileService;
-    private final TeamService teamService;
-    private final FileDataRepository fileDataRepository;
     private final ContestCrawlingService contestCrawlingService;
     private final CommentService commentService;
     private final CommentRepository commentRepository;
+    private final SolvedacService solvedacService;
 
     // 회원가입
     @PostMapping("/register")
@@ -99,17 +97,15 @@ public class MemberController {
         return memberRepository.findById(uid);
     }
 
-    @GetMapping("/userForm")
-    public ResponseEntity<MemberResponseForm> inquireMember(HttpServletRequest request) throws AuthenticationException {
+    @GetMapping("/userForm/view/{uid}")
+    public ResponseEntity<MemberResponseForm> getMemberinfo(@PathVariable UUID uid){
         try {
-            String authToken = request.getHeader("login-token");
-            String refreshToken = request.getHeader("refresh-token");
-            UUID memberid = memberService.checkUserIdAndToken(authToken, refreshToken);
-            Member searchMember = memberRepository.findById(memberid).get();
+            Member searchMember = memberRepository.findById(uid).get();
             MemberResponseForm successForm = MemberResponseForm.builder()
                     .message("유저 포스트 조회")
                     .state(HttpStatus.OK.value())
-                    .data(MemberData.builder().Member(searchMember).build()).build();
+                    .data(MemberData.builder().Member(searchMember).build())
+                    .build();
             return ResponseEntity.ok().body(successForm);
         }catch (RuntimeException e){
             MemberResponseForm errorResponseForm = MemberResponseForm.builder()
@@ -146,8 +142,6 @@ public class MemberController {
             String refreshToken = request.getHeader("refresh-token");
             String DefaultProfile = "https://firebasestorage.googleapis.com/v0/b/caps-1edf8.appspot.com/o/DefaultProfile.PNG?alt=media&token=266e52f4-818f-4a20-970d-2d84ba48e5a1";
             UUID memberid = memberService.checkUserIdAndToken(authToken, refreshToken);
-            Member oldMember = memberRepository.findById(memberid)
-                    .orElseThrow(() -> new RuntimeException("해당하는 회원이 존재하지 않습니다."));
 
             memberService.MemberUpdate(member, memberid, file);
             MemberResponseForm successForm = MemberResponseForm.builder()
@@ -423,6 +417,12 @@ public class MemberController {
     public void testcode(){
         contestCrawlingService.crawlContest();
     }
+
+    @GetMapping("/solved/{username}")
+    public SolvedAcUser solvedtest(@PathVariable String username){
+        return solvedacService.getUser(username);
+    }
+
     @PostMapping("/send-email/{email}")
     public void sendEmail(@PathVariable String email) throws MessagingException {
         memberService.sendVerificationEmail(email);

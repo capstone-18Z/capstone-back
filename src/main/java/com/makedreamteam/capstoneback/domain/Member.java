@@ -69,6 +69,18 @@ public class Member {
     @Column
     private int grade;
 
+    @Column
+    private String solvedNickname;
+
+    @Column(columnDefinition = "LONGTEXT")
+    private String solvedProfile;
+
+    @Column
+    private int solvedTier;
+
+    @Column
+    private int solvedCount;
+
     @OneToMany(mappedBy = "member", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
     private List<PostMember> postMemberList = new ArrayList<>();
 
