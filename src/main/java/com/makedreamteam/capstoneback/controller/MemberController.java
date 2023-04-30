@@ -7,13 +7,11 @@ import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
-import com.makedreamteam.capstoneback.JwtTokenProvider;
 import com.makedreamteam.capstoneback.domain.*;
 import com.makedreamteam.capstoneback.exception.*;
 import com.makedreamteam.capstoneback.form.MemberResponseForm;
 import com.makedreamteam.capstoneback.form.PostResponseForm;
 import com.makedreamteam.capstoneback.repository.CommentRepository;
-import com.makedreamteam.capstoneback.repository.FileDataRepository;
 import com.makedreamteam.capstoneback.repository.MemberRepository;
 import com.makedreamteam.capstoneback.repository.PostMemberRepository;
 import com.makedreamteam.capstoneback.service.*;
@@ -49,6 +47,8 @@ public class MemberController {
     private final CommentRepository commentRepository;
     private final SolvedacService solvedacService;
 
+    private final String defaultprofileurl = "https://firebasestorage.googleapis.com/v0/b/caps-1edf8.appspot.com/o/DefaultProfile.PNG?alt=media&token=18e79bd3-f5b7-49c6-9edf-3939da9c2a84";
+
     // 회원가입
     @PostMapping("/register")
     public Member register(@RequestBody Map<String, String> user) throws MessagingException {
@@ -56,7 +56,7 @@ public class MemberController {
                 .email(user.get("email"))
                 .password(passwordEncoder.encode(user.get("password")))
                 .nickname(user.get("nickname"))
-                .profileImageUrl("https://firebasestorage.googleapis.com/v0/b/caps-1edf8.appspot.com/o/DefaultProfile.PNG?alt=media&token=75846c5b-598a-4cf1-a7d6-9fe646192c40")
+                .profileImageUrl(defaultprofileurl)
                 .role(Role.ROLE_MEMBER)
                 .build();
         return memberService.MemberJoin(member);
@@ -369,6 +369,25 @@ public class MemberController {
             throw new RuntimeException(e);
         }
     }
+
+    @PostMapping("/post/{postid}/recomment/{commentid}")
+    public ResponseEntity<PostResponseForm> uploadRecomment(@PathVariable Long postid, @PathVariable Long commentid, @RequestBody Map<String, Object> comment, HttpServletRequest request){
+        try{
+            String loginToken = request.getHeader("login-token");
+            String refreshToken = request.getHeader("refresh-token");
+            UUID userid = memberService.checkUserIdAndToken(loginToken, refreshToken);
+            String cmessage = (String) comment.get("comment");
+            Comment uploadComment = commentService.uploadRecomment(cmessage, userid, postid, commentid);
+            PostResponseForm responseForm = PostResponseForm.builder()
+                    .message("코멘트 작성이 완료되었습니다.")
+                    .data(uploadComment)
+                    .build();
+            return ResponseEntity.ok().body(responseForm);
+        }catch (Exception e){
+            throw new RuntimeException(e);
+        }
+    }
+
     @Transactional
     @PostMapping("/post/{postid}/comment/delete/{commentid}")
     public ResponseEntity<PostResponseForm> deleteComment(@PathVariable Long postid, @PathVariable Long commentid, HttpServletRequest request){
@@ -400,7 +419,7 @@ public class MemberController {
             Comment updateCm = commentRepository.findById(commentid).get();
             if(userid.toString().equals(updateCm.getMember().getId().toString())){
                 String cmessage = (String) comment.get("comment");
-                updateCm.setCm(cmessage);
+                updateCm.setContent(cmessage);
                 updateCm.setUploadDate(LocalDateTime.now());
                 commentRepository.save(updateCm);
             }

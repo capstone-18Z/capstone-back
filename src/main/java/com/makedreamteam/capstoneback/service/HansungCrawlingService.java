@@ -1,14 +1,11 @@
 package com.makedreamteam.capstoneback.service;
 
-import com.makedreamteam.capstoneback.domain.Contest;
-import com.makedreamteam.capstoneback.domain.ContestPeriod;
 import com.makedreamteam.capstoneback.domain.Course;
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.chrome.ChromeOptions;
-import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.WebDriverWait;
 import org.springframework.stereotype.Service;
 

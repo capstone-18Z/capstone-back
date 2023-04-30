@@ -1,12 +1,9 @@
 package com.makedreamteam.capstoneback.service;
 
 import com.makedreamteam.capstoneback.domain.Contest;
-import com.makedreamteam.capstoneback.domain.ContestPeriod;
 import com.makedreamteam.capstoneback.repository.ContestRepository;
 import lombok.RequiredArgsConstructor;
-import org.checkerframework.checker.units.qual.C;
 import org.openqa.selenium.By;
-import org.openqa.selenium.JavascriptExecutor;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.chrome.ChromeDriver;
@@ -17,7 +14,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.awt.*;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;

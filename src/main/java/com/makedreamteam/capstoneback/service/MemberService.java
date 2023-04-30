@@ -59,6 +59,8 @@ public class MemberService {
 
     private static final Map<String,Boolean> verifiedUserMap=new HashMap<>();
 
+    private final String defaultprofileurl = "https://firebasestorage.googleapis.com/v0/b/caps-1edf8.appspot.com/o/DefaultProfile.PNG?alt=media&token=18e79bd3-f5b7-49c6-9edf-3939da9c2a84";
+
     public PostMember PostJoin(PostMember post, String authToken){
         if(authToken==null)
             throw new RuntimeException("로그인 상태가 아닙니다.");
@@ -111,7 +113,6 @@ public class MemberService {
 
     public void MemberUpdate(Member member, UUID uid, MultipartFile file) throws IOException {
         try {
-            String defaultProfile = "https://firebasestorage.googleapis.com/v0/b/caps-1edf8.appspot.com/o/DefaultProfile.PNG?alt=media&token=266e52f4-818f-4a20-970d-2d84ba48e5a1";
 
             // 기존의 Member 엔티티 가져오기
             Member originalMember = memberRepository.findById(uid).get();
@@ -146,7 +147,7 @@ public class MemberService {
             member.setPassword(originalMember.getPassword());
             member.setRole(originalMember.getRole());
 
-            if(!member.getSolvedNickname().isEmpty()){
+            if(member.getSolvedNickname() != null){
                 SolvedAcUser solvedAcUser = solvedacService.getUser(member.getSolvedNickname());
                 member.setSolvedTier(solvedAcUser.getTier());
                 member.setSolvedCount(solvedAcUser.getSolvedCount());
@@ -155,12 +156,14 @@ public class MemberService {
 
             // 프로필 이미지가 업데이트되는 경우, 기존 이미지 파일 삭제하고 새로운 파일 업로드하기
             if (file != null) {
-                if (!originalMember.getProfileImageUrl().equals(defaultProfile)) {
+                if (!originalMember.getProfileImageUrl().equals(defaultprofileurl)) {
                     fileService.deleteFile(originalMember.getProfileImageUrl());
                     System.out.println("파일 삭제 실행");
                 }
                 member.setProfileImageUrl(fileService.uploadProfile(file, uid).getImageURL());
                 System.out.println("파일 저장실행");
+            } else{
+                member.setProfileImageUrl(originalMember.getProfileImageUrl());
             }
             // Member 엔티티 저장하기
             memberRepository.save(member);

@@ -38,9 +38,6 @@ public class TeamMember {
     public TeamMember() {
 
     }
-
-
-
 }
 
 
