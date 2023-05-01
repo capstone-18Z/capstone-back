@@ -18,6 +18,7 @@ import lombok.*;
 @Builder
 @Table(indexes = {@Index(name = "idx_email", columnList = "email"),
         @Index(name = "idx_nickname", columnList = "nickname")})
+@JsonIgnoreProperties({"password"})
 public class Member {
     @Id
     @Column(columnDefinition = "BINARY(16)")
@@ -52,6 +53,8 @@ public class Member {
 
     @Column(length = 100, unique = true, nullable = false, columnDefinition="VARCHAR(255) CHARACTER SET utf8 COLLATE utf8_general_ci")
     private String email;
+
+
     private String password;
 
     @Column(unique = true, nullable = false , columnDefinition="VARCHAR(255) CHARACTER SET utf8 COLLATE utf8_general_ci")

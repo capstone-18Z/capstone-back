@@ -19,7 +19,7 @@ public class TeamDatabase {
     private Long id;
 
     @OneToOne
-    @JoinColumn(name = "team")
+    @JoinColumn(name = "team_id")
     private Team team;
 
     @ColumnDefault("0")

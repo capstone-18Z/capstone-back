@@ -1,14 +1,11 @@
 package com.makedreamteam.capstoneback.controller;
 
-import com.makedreamteam.capstoneback.JwtTokenProvider;
 import com.makedreamteam.capstoneback.domain.Token;
 import com.makedreamteam.capstoneback.service.RefreshTokenService;
-import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
-import java.util.UUID;
 
 
 @RestController

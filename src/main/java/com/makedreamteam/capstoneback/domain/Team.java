@@ -54,24 +54,19 @@ public class Team{
     @Column(columnDefinition = "VARCHAR(20) CHARACTER SET utf8 COLLATE utf8_general_ci")
     private String writer;
 
-    @Column/*(columnDefinition = "VARCHAR(20) CHARACTER SET utf8 COLLATE utf8_general_ci")*/
+    @Column
     private Date createDate;
 
-    @Column/*(columnDefinition = "VARCHAR(20) CHARACTER SET utf8 COLLATE utf8_general_ci")*/
+    @Column
     private Date updateDate=new Date();
 
     @Column(columnDefinition = "VARCHAR(255) CHARACTER SET utf8 COLLATE utf8_general_ci")
     private String detail;
-
-
     @OneToMany(mappedBy = "team", cascade = CascadeType.ALL, orphanRemoval = true,fetch = FetchType.EAGER)
     private List<WaitingListOfMatchingUserToTeam> requestList=new ArrayList<>();
-
     @OneToOne(mappedBy = "team", cascade = CascadeType.ALL, orphanRemoval = true,fetch = FetchType.LAZY)
     @JsonIgnoreProperties({"team"})
     private TeamKeyword teamKeyword;
-
-
 
     @Column(columnDefinition = "VARCHAR(15) CHARACTER SET utf8 COLLATE utf8_general_ci")
     private String purpose;
@@ -97,4 +92,6 @@ public class Team{
 
     @ElementCollection(fetch = FetchType.EAGER)
     private List<String> imagePaths;
+
+
 }

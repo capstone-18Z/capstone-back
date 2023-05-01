@@ -2,7 +2,6 @@ package com.makedreamteam.capstoneback.controller;
 
 import java.io.IOException;
 import java.lang.reflect.Field;
-import java.net.URI;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -11,7 +10,6 @@ import com.makedreamteam.capstoneback.JwtTokenProvider;
 import com.makedreamteam.capstoneback.domain.*;
 import com.makedreamteam.capstoneback.exception.*;
 import com.makedreamteam.capstoneback.form.PostResponseForm;
-import com.makedreamteam.capstoneback.form.ResponseForm;
 import com.makedreamteam.capstoneback.repository.CommentRepository;
 import com.makedreamteam.capstoneback.repository.FileDataRepository;
 import com.makedreamteam.capstoneback.repository.MemberRepository;
@@ -27,7 +25,6 @@ import jakarta.transaction.Transactional;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.platform.commons.logging.Logger;
 import org.junit.platform.commons.logging.LoggerFactory;
-import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -41,6 +38,7 @@ import javax.naming.AuthenticationException;
 @Slf4j
 @RequiredArgsConstructor
 @RestController
+@CrossOrigin
 @RequestMapping("/member")
 public class MemberController {
 

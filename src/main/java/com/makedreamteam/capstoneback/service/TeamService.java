@@ -39,6 +39,11 @@ public class TeamService {
     @Autowired
     private Storage storage;
 
+    @Autowired
+    TeamFrameworkRepository teamFrameworkRepository;
+
+    @Autowired
+    TeamDatabaseRepository teamDatabaseRepository;
 
     private JwtTokenProvider jwtTokenProvider;
 
@@ -62,6 +67,8 @@ public class TeamService {
                     List<String> imagesPath = uploadFile(images);
                     team.setImagePaths(imagesPath);
                 }
+                if(team.getCurrentTeamMemberCount()==0)
+                    team.setCurrentTeamMemberCount((byte) 1);
                 setTeamRelation(team);
                 team.setTeamLeader(teamLeader);
             } catch (IOException e) {
@@ -109,6 +116,7 @@ public class TeamService {
             Team team = springDataTeamRepository.findById(teamId).orElseThrow(() -> {
                 throw new RuntimeException("팀이 존재하지 않습니다.");
             });
+
 
             List<UUID> allByTeamId = teamMemberRepository.findAllByTeamId(teamId);
             teamMemberRepository.deleteAllById(allByTeamId);
@@ -242,11 +250,13 @@ public class TeamService {
     public ResponseForm recommendMembers(UUID teamId, String accessToken, String refreshToken) {
 
         Map<Member, Integer> result = new HashMap<>();
-        int limitFramework = springDataTeamRepository.getTeamFrameworkTotalWeight(teamId);
-        int limitDatabase = springDataTeamRepository.getTeamDatabaseTotalWeight(teamId);
-        Team team = springDataTeamRepository.findById(teamId).orElseThrow(() -> {
-            throw new RuntimeException("Sdf");
+        Team team=springDataTeamRepository.findById(teamId).orElseThrow(()->{
+            throw new RuntimeException("팀이 존재하지 않습니다");
         });
+        long tfId=team.getTeamFramework().getId();
+        long tdId=team.getTeamDatabase().getId();
+        int limitFramework = teamFrameworkRepository.getTeamFrameworkTotalWeight(tfId);
+        int limitDatabase = teamDatabaseRepository.getTeamDatabaseTotalWeight(tdId);
         long startTime2 = System.currentTimeMillis();
 
         Pageable pageable = PageRequest.of(0, 10);
@@ -265,6 +275,7 @@ public class TeamService {
             Member m = (Member) member[0];
             int weight = (int) member[1];
             memberUUIDs.add(m.getId());
+
             result.put(m, weight);
         }
 

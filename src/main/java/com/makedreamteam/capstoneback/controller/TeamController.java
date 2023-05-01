@@ -1,12 +1,7 @@
 package com.makedreamteam.capstoneback.controller;
 
-import com.makedreamteam.capstoneback.JwtTokenProvider;
-import com.makedreamteam.capstoneback.domain.Member;
 import com.makedreamteam.capstoneback.domain.Team;
 import com.makedreamteam.capstoneback.form.*;
-import com.makedreamteam.capstoneback.repository.SpringDataTeamRepository;
-import com.makedreamteam.capstoneback.service.FileService;
-import com.makedreamteam.capstoneback.service.ImageStorageService;
 import com.makedreamteam.capstoneback.service.TeamService;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
