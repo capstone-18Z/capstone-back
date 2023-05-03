@@ -15,7 +15,7 @@ import java.time.LocalDateTime;
 @Builder
 public class Comment {
     @Id
-    @GeneratedValue
+    @GeneratedValue(strategy = GenerationType.SEQUENCE)
     private Long id;
 
     @ManyToOne(fetch = FetchType.EAGER)
@@ -32,5 +32,13 @@ public class Comment {
     private LocalDateTime uploadDate;
 
     @Column(columnDefinition = "LONGTEXT")
-    private String cm;
+    private String content;
+
+    @Column
+    private Long parentid;
+
+    @Column
+    private int childrenCount;
+
+
 }

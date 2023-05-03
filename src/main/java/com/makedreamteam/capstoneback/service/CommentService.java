@@ -29,11 +29,28 @@ public class CommentService {
     public Comment uploadComment(String comment, UUID uid, Long postid){
         Member member = memberRepository.findById(uid).get();
         Comment uploadComment = new Comment();
-        uploadComment.setCm(comment);
+        uploadComment.setContent(comment);
         uploadComment.setPost(postMemberRepository.findByPostId(postid).get());
         uploadComment.setMember(member);
         uploadComment.setUploadDate(LocalDateTime.now());
+        commentRepository.save(uploadComment);
 
+        uploadComment.setParentid(uploadComment.getId());
         return commentRepository.save(uploadComment);
     }
+
+    public Comment uploadRecomment(String comment, UUID uid, Long postid, Long commentid){
+        Member member = memberRepository.findById(uid).get();
+        Comment originalComment = commentRepository.findById(commentid).get();
+        Comment uploadComment = new Comment();
+        uploadComment.setContent(comment);
+        uploadComment.setPost(postMemberRepository.findByPostId(postid).get());
+        uploadComment.setMember(member);
+        uploadComment.setUploadDate(LocalDateTime.now());
+        uploadComment.setParentid(commentid);
+        originalComment.setChildrenCount(originalComment.getChildrenCount()+1);
+        commentRepository.save(originalComment);
+        return commentRepository.save(uploadComment);
+    }
+
 }

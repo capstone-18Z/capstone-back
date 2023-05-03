@@ -26,8 +26,8 @@ public class MemberKeyword {
     @Column(columnDefinition = "VARCHAR(30) CHARACTER SET utf8 COLLATE utf8_general_ci")
     private String field;
 
-    @Column(columnDefinition = "VARCHAR(4) CHARACTER SET utf8 COLLATE utf8_general_ci")
-    private String sub="none";
+    @Column(columnDefinition = "VARCHAR(5) CHARACTER SET utf8 COLLATE utf8_general_ci")
+    private String sub = "none";
 
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "member_id")

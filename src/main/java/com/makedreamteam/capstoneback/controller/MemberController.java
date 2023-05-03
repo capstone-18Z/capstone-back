@@ -2,25 +2,31 @@ package com.makedreamteam.capstoneback.controller;
 
 import java.io.IOException;
 import java.lang.reflect.Field;
+<<<<<<<<< Temporary merge branch 1
 import java.time.LocalDateTime;
+=========
+import java.net.URI;
+>>>>>>>>> Temporary merge branch 2
 import java.util.*;
 import java.util.stream.Collectors;
 
-import com.makedreamteam.capstoneback.JwtTokenProvider;
 import com.makedreamteam.capstoneback.domain.*;
 import com.makedreamteam.capstoneback.exception.*;
+import com.makedreamteam.capstoneback.form.MemberResponseForm;
 import com.makedreamteam.capstoneback.form.PostResponseForm;
 import com.makedreamteam.capstoneback.form.ResponseForm;
 import com.makedreamteam.capstoneback.repository.CommentRepository;
-import com.makedreamteam.capstoneback.repository.FileDataRepository;
 import com.makedreamteam.capstoneback.repository.MemberRepository;
 import com.makedreamteam.capstoneback.repository.PostMemberRepository;
+<<<<<<<<< Temporary merge branch 1
+import com.makedreamteam.capstoneback.service.*;
+=========
 import com.makedreamteam.capstoneback.service.ContestCrawlingService;
 import com.makedreamteam.capstoneback.service.FileService;
 import com.makedreamteam.capstoneback.service.MemberService;
 import com.makedreamteam.capstoneback.service.TeamService;
 import jakarta.mail.MessagingException;
-import com.makedreamteam.capstoneback.service.*;
+>>>>>>>>> Temporary merge branch 2
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.transaction.Transactional;
 import lombok.extern.slf4j.Slf4j;
@@ -30,10 +36,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
-
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.multipart.MultipartFile;
-
 import javax.naming.AuthenticationException;
 
 @Slf4j
@@ -46,15 +50,15 @@ public class MemberController {
     private static final Logger logger = LoggerFactory.getLogger(MemberController.class);
     private final MemberService memberService;
     private final PasswordEncoder passwordEncoder;
-    private final JwtTokenProvider jwtTokenProvider;
     private final MemberRepository memberRepository;
     private final PostMemberRepository postMemberRepository;
     private final FileService fileService;
-    private final TeamService teamService;
-    private final FileDataRepository fileDataRepository;
     private final ContestCrawlingService contestCrawlingService;
     private final CommentService commentService;
     private final CommentRepository commentRepository;
+    private final SolvedacService solvedacService;
+
+    private final String defaultprofileurl = "https://firebasestorage.googleapis.com/v0/b/caps-1edf8.appspot.com/o/DefaultProfile.PNG?alt=media&token=18e79bd3-f5b7-49c6-9edf-3939da9c2a84";
 
     // 회원가입
     @PostMapping("/register")
@@ -63,7 +67,7 @@ public class MemberController {
                 .email(user.get("email"))
                 .password(passwordEncoder.encode(user.get("password")))
                 .nickname(user.get("nickname"))
-                .profileImageUrl("https://firebasestorage.googleapis.com/v0/b/caps-1edf8.appspot.com/o/DefaultProfile.PNG?alt=media&token=266e52f4-818f-4a20-970d-2d84ba48e5a1")
+                .profileImageUrl(defaultprofileurl)
                 .role(Role.ROLE_MEMBER)
                 .build();
         return memberService.MemberJoin(member);
@@ -114,7 +118,8 @@ public class MemberController {
             MemberResponseForm successForm = MemberResponseForm.builder()
                     .message("유저 포스트 조회")
                     .state(HttpStatus.OK.value())
-                    .data(MemberData.builder().Member(searchMember).build()).build();
+                    .data(MemberData.builder().Member(searchMember).build())
+                    .build();
             return ResponseEntity.ok().body(successForm);
         }catch (RuntimeException e){
             MemberResponseForm errorResponseForm = MemberResponseForm.builder()
@@ -151,8 +156,6 @@ public class MemberController {
             String refreshToken = request.getHeader("refresh-token");
             String DefaultProfile = "https://firebasestorage.googleapis.com/v0/b/caps-1edf8.appspot.com/o/DefaultProfile.PNG?alt=media&token=266e52f4-818f-4a20-970d-2d84ba48e5a1";
             UUID memberid = memberService.checkUserIdAndToken(authToken, refreshToken);
-            Member oldMember = memberRepository.findById(memberid)
-                    .orElseThrow(() -> new RuntimeException("해당하는 회원이 존재하지 않습니다."));
 
             memberService.MemberUpdate(member, memberid, file);
             MemberResponseForm successForm = MemberResponseForm.builder()
@@ -377,6 +380,25 @@ public class MemberController {
             throw new RuntimeException(e);
         }
     }
+
+    @PostMapping("/post/{postid}/recomment/{commentid}")
+    public ResponseEntity<PostResponseForm> uploadRecomment(@PathVariable Long postid, @PathVariable Long commentid, @RequestBody Map<String, Object> comment, HttpServletRequest request){
+        try{
+            String loginToken = request.getHeader("login-token");
+            String refreshToken = request.getHeader("refresh-token");
+            UUID userid = memberService.checkUserIdAndToken(loginToken, refreshToken);
+            String cmessage = (String) comment.get("comment");
+            Comment uploadComment = commentService.uploadRecomment(cmessage, userid, postid, commentid);
+            PostResponseForm responseForm = PostResponseForm.builder()
+                    .message("코멘트 작성이 완료되었습니다.")
+                    .data(uploadComment)
+                    .build();
+            return ResponseEntity.ok().body(responseForm);
+        }catch (Exception e){
+            throw new RuntimeException(e);
+        }
+    }
+
     @Transactional
     @PostMapping("/post/{postid}/comment/delete/{commentid}")
     public ResponseEntity<PostResponseForm> deleteComment(@PathVariable Long postid, @PathVariable Long commentid, HttpServletRequest request){
@@ -408,7 +430,7 @@ public class MemberController {
             Comment updateCm = commentRepository.findById(commentid).get();
             if(userid.toString().equals(updateCm.getMember().getId().toString())){
                 String cmessage = (String) comment.get("comment");
-                updateCm.setCm(cmessage);
+                updateCm.setContent(cmessage);
                 updateCm.setUploadDate(LocalDateTime.now());
                 commentRepository.save(updateCm);
             }
@@ -417,7 +439,7 @@ public class MemberController {
                     .data(updateCm)
                     .build();
             return ResponseEntity.ok().body(responseForm);
-        }catch (Exception e){
+        } catch (Exception e) {
             throw new RuntimeException(e);
         }
     }
@@ -428,6 +450,12 @@ public class MemberController {
     public void testcode(){
         contestCrawlingService.crawlContest();
     }
+
+    @GetMapping("/solved/{username}")
+    public SolvedAcUser solvedtest(@PathVariable String username){
+        return solvedacService.getUser(username);
+    }
+
     @PostMapping("/send-email/{email}")
     public ResponseEntity<String> sendEmail(@PathVariable String email) throws MessagingException {
         Optional<Member> byEmail = memberRepository.findByEmail(email);

@@ -20,6 +20,7 @@ public class Contest {
     private String host;
     private String target;
     private String dday;
+    private String state;
     @Column(columnDefinition = "LONGTEXT")
     private String imgUrl;
     private String period;
