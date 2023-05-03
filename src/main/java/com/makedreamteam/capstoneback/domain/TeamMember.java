@@ -34,7 +34,6 @@ public class TeamMember {
         this.teamId = teamId;
         this.userId = userId;
     }
-
     public TeamMember() {
 
     }

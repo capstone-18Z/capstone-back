@@ -44,6 +44,6 @@ public class TeamFramework {
     private int tdmax;
 
     @OneToOne
-    @JoinColumn(name="team")
+    @JoinColumn(name="team_id")
     private Team team;
 }

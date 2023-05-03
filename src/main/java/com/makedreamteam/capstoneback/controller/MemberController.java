@@ -7,11 +7,14 @@ import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import com.makedreamteam.capstoneback.JwtTokenProvider;
 import com.makedreamteam.capstoneback.domain.*;
 import com.makedreamteam.capstoneback.exception.*;
 import com.makedreamteam.capstoneback.form.MemberResponseForm;
 import com.makedreamteam.capstoneback.form.PostResponseForm;
+import com.makedreamteam.capstoneback.form.ResponseForm;
 import com.makedreamteam.capstoneback.repository.CommentRepository;
+import com.makedreamteam.capstoneback.repository.FileDataRepository;
 import com.makedreamteam.capstoneback.repository.MemberRepository;
 import com.makedreamteam.capstoneback.repository.PostMemberRepository;
 import com.makedreamteam.capstoneback.service.*;
@@ -33,15 +36,19 @@ import javax.naming.AuthenticationException;
 @Slf4j
 @RequiredArgsConstructor
 @RestController
+@CrossOrigin
 @RequestMapping("/member")
 public class MemberController {
 
     private static final Logger logger = LoggerFactory.getLogger(MemberController.class);
     private final MemberService memberService;
     private final PasswordEncoder passwordEncoder;
+    private final JwtTokenProvider jwtTokenProvider;
     private final MemberRepository memberRepository;
     private final PostMemberRepository postMemberRepository;
     private final FileService fileService;
+    private final TeamService teamService;
+    private final FileDataRepository fileDataRepository;
     private final ContestCrawlingService contestCrawlingService;
     private final CommentService commentService;
     private final CommentRepository commentRepository;
@@ -446,14 +453,33 @@ public class MemberController {
     }
 
     @PostMapping("/send-email/{email}")
-    public void sendEmail(@PathVariable String email) throws MessagingException {
+    public ResponseEntity<String> sendEmail(@PathVariable String email) throws MessagingException {
+        Optional<Member> byEmail = memberRepository.findByEmail(email);
+        if(byEmail.isPresent())
+            return ResponseEntity.ok("이미 존재하는 이메일입니다.");
         memberService.sendVerificationEmail(email);
+        return ResponseEntity.ok("인증 코드를 보냈습니다");
     }
     @PostMapping("/verify-email/{email}")
-    public ResponseEntity<String> verifyEmail(@PathVariable String email){
-        memberService.verifyEmail(email);
-        HttpHeaders headers = new HttpHeaders();
-        headers.setLocation(URI.create("http://localhost:3000/verify/"+email));
-        return new ResponseEntity<String>(headers, HttpStatus.FOUND);
+    public ResponseEntity<String> verifyEmail(@PathVariable String email, @RequestParam("code")String code){
+        try {
+            memberService.verifyEmail(email, code);
+            return ResponseEntity.ok("코드가 일치합니다");
+        }catch (RuntimeException e){
+            return ResponseEntity.ok(e.getMessage());
+        }
+    }
+
+    @PostMapping("/recommend")
+    public ResponseEntity<ResponseForm> recommendList(HttpServletRequest request){
+        String accessToken=request.getHeader("login-token");
+        String refreshToken=request.getHeader("refresh-token");
+        try {
+            ResponseForm responseForm = memberService.recommendTeams(accessToken, refreshToken);
+            return ResponseEntity.ok(responseForm);
+        }catch (RuntimeException e){
+            ResponseForm error=ResponseForm.builder().message(e.getMessage()).build();
+            return ResponseEntity.badRequest().body(error);
+        }
     }
 }

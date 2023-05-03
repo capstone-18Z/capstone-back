@@ -7,6 +7,7 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -16,4 +17,8 @@ public interface TeamMemberRepository extends JpaRepository<TeamMember, UUID> {
 
     @Query("select t.teamMemberId from TeamMember t where t.teamId=:teamId")
     List<UUID> findAllByTeamId(@Param("teamId") UUID teamId);
+
+
+    @Query("select teamId,userId from TeamMember where teamId = :teamId")
+    Map<UUID,List<UUID>> getMapTeamMember(@Param("teamId")UUID teamId);
 }

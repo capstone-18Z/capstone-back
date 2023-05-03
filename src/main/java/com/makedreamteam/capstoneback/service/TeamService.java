@@ -7,6 +7,7 @@ import com.google.cloud.storage.Storage;
 import com.google.firebase.cloud.StorageClient;
 import com.makedreamteam.capstoneback.JwtTokenProvider;
 import com.makedreamteam.capstoneback.domain.*;
+import com.makedreamteam.capstoneback.form.Metadata;
 import com.makedreamteam.capstoneback.form.ResponseForm;
 import com.makedreamteam.capstoneback.form.TeamData;
 import com.makedreamteam.capstoneback.repository.*;
@@ -38,11 +39,16 @@ public class TeamService {
     @Autowired
     private Storage storage;
 
+    @Autowired
+    TeamFrameworkRepository teamFrameworkRepository;
+
+    @Autowired
+    TeamDatabaseRepository teamDatabaseRepository;
 
     private JwtTokenProvider jwtTokenProvider;
 
 
-    public TeamService(SpringDataTeamRepository springDataTeamRepository, TeamMemberRepository teamMemberRepository,RefreshTokenRepository refreshTokenRepository, JwtTokenProvider jwtTokenProvider) {
+    public TeamService(SpringDataTeamRepository springDataTeamRepository, TeamMemberRepository teamMemberRepository, RefreshTokenRepository refreshTokenRepository, JwtTokenProvider jwtTokenProvider) {
         this.springDataTeamRepository = springDataTeamRepository;
         this.teamMemberRepository = teamMemberRepository;
         this.refreshTokenRepository = refreshTokenRepository;
@@ -61,15 +67,17 @@ public class TeamService {
                     List<String> imagesPath = uploadFile(images);
                     team.setImagePaths(imagesPath);
                 }
+                if(team.getCurrentTeamMemberCount()==0)
+                    team.setCurrentTeamMemberCount((byte) 1);
                 setTeamRelation(team);
                 team.setTeamLeader(teamLeader);
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }
             Team savedTeam = springDataTeamRepository.save(team);
-            TeamMember teamMember=TeamMember.builder().teamId(savedTeam.getTeamId()).userId(savedTeam.getTeamLeader()).teamLeader(savedTeam.getTeamLeader()).build();
+            TeamMember teamMember = TeamMember.builder().teamId(savedTeam.getTeamId()).userId(savedTeam.getTeamLeader()).teamLeader(savedTeam.getTeamLeader()).build();
             teamMemberRepository.save(teamMember);
-            System.out.println("유저 "+savedTeam.getTeamId()+"를 팀에 추가했습니다.");
+            System.out.println("유저 " + savedTeam.getTeamId() + "를 팀에 추가했습니다.");
             return ResponseForm.builder().state(HttpStatus.OK.value()).message("팀을 추가했습니다.").data(savedTeam).updatable(true).build();
         } else {
             return checkRefreshToken(refreshToken);
@@ -108,6 +116,7 @@ public class TeamService {
             Team team = springDataTeamRepository.findById(teamId).orElseThrow(() -> {
                 throw new RuntimeException("팀이 존재하지 않습니다.");
             });
+
 
             List<UUID> allByTeamId = teamMemberRepository.findAllByTeamId(teamId);
             teamMemberRepository.deleteAllById(allByTeamId);
@@ -151,6 +160,18 @@ public class TeamService {
             throw new RuntimeException("Failed to retrieve Team information from the database", e);
         }
     }
+
+    public ResponseForm postListByTitle(String title, int page) {
+        Pageable pageable = PageRequest.of(page - 1, 1);
+        List<Team> teams = springDataTeamRepository.findTeamsByTitleContainingOrderByUpdateDateDesc(title, pageable);
+
+        int totalPage = getTotalPageByTitle(title);
+        if(teams.size()==0){
+            return ResponseForm.builder().message(title+" 검색 결과가 존재하지 않습니다.").metadata(Metadata.builder().totalPage(0).currentPage(1).build()).build();
+        }
+        return ResponseForm.builder().state(HttpStatus.OK.value()).message("검색어 : "+title).data(teams).metadata(Metadata.builder().totalPage(totalPage).currentPage(page).build()).build();
+    }
+
     public List<String> uploadFile(List<MultipartFile> files) throws IOException {
         List<String> images = new ArrayList<>();
         for (MultipartFile file : files) {
@@ -180,10 +201,9 @@ public class TeamService {
     }
 
 
-
     public void setTeamRelation(Team team) {
         if (team.getTeamKeyword() != null) {
-            TeamKeyword keyword=team.getTeamKeyword();
+            TeamKeyword keyword = team.getTeamKeyword();
             keyword.setTeam(team);
         }
         //team language 양방향 설정
@@ -229,15 +249,17 @@ public class TeamService {
 
     public ResponseForm recommendMembers(UUID teamId, String accessToken, String refreshToken) {
 
-        Map<Member,Integer> result=new HashMap<>();
-        int limitFramework= springDataTeamRepository.getTeamFrameworkTotalWeight(teamId);
-        int limitDatabase= springDataTeamRepository.getTeamDatabaseTotalWeight(teamId);
-        Team team = springDataTeamRepository.findById(teamId).orElseThrow(() -> {
-            throw new RuntimeException("Sdf");
+        Map<Member, Integer> result = new HashMap<>();
+        Team team=springDataTeamRepository.findById(teamId).orElseThrow(()->{
+            throw new RuntimeException("팀이 존재하지 않습니다");
         });
+        long tfId=team.getTeamFramework().getId();
+        long tdId=team.getTeamDatabase().getId();
+        int limitFramework = teamFrameworkRepository.getTeamFrameworkTotalWeight(tfId);
+        int limitDatabase = teamDatabaseRepository.getTeamDatabaseTotalWeight(tdId);
         long startTime2 = System.currentTimeMillis();
 
-        Pageable pageable = PageRequest.of(0, 10);
+        Pageable pageable = PageRequest.of(0, 5);
         //team과 같은 키워드를 가진 member를 골라낸다
         //List<Member> memberAndTeamKeywordValues = springDataTeamRepository.findMemberAndTeamKeywordValues2(teamId);
         List<Member> memberAndTeamKeywordValues = springDataTeamRepository.findMemberAndTeamKeywordValues2(teamId);
@@ -246,52 +268,31 @@ public class TeamService {
         for (Member member : memberAndTeamKeywordValues) {
             memberUUIDs.add(member.getId());
         }
-        //1차로 언어 가중치를 이용해 1~10순위 member를 가려낸다
+        //1차로 언어 가중치를 이용해 1~5순위 member를 가려낸다
         List<Object[]> recommedMemberWithLang = springDataTeamRepository.recommendMemberWithLang(memberUUIDs, teamId, pageable);
         memberUUIDs.clear();
         for (Object[] member : recommedMemberWithLang) {
-            Member m=(Member) member[0];
-            int weight=(int) member[1];
+            Member m = (Member) member[0];
+            int weight = (int) member[1]*2;
             memberUUIDs.add(m.getId());
-            result.put(m,weight);
+
+            result.put(m, weight);
         }
 
 
         //가중치 도출해내고, 너무 작은 가중치의경우 리스트에서 제외시킨다
         List<Object[]> recommendMemberWithFramework = springDataTeamRepository.recommendMemberWithFramework(memberUUIDs, teamId, pageable);
         for (Object[] member : recommendMemberWithFramework) {
-            Member m=(Member) member[0];
-            int weight=(int) member[1];
-            if(weight<limitFramework){
-                result.remove(m);
-                for(UUID id : memberUUIDs){
-                    if(id.equals(m.getId())){
-                        memberUUIDs.remove(id);
-                        break;
-                    }
-                }
-                System.out.println("프레임워크에서 필터링// 가중치 : "+weight +"   멤버 " + m.getId()+"를 리스트에서 제외합니다.( 제한 가중치 "+limitFramework+"보다 작습니다)");
-            }else {
-                result.put(m, result.get(m) + weight);
-            }
-
+            Member m = (Member) member[0];
+            int weight = (int) member[1];
+            result.put(m, result.get(m) + weight);
         }
-        List<Object[]> recommendMemberWithDatabase = springDataTeamRepository.recommendMemberWithDatabase(memberUUIDs, teamId, PageRequest.of(0, memberUUIDs.size()==0 ? 1 :  memberUUIDs.size()));
+        List<Object[]> recommendMemberWithDatabase = springDataTeamRepository.recommendMemberWithDatabase(memberUUIDs, teamId, PageRequest.of(0, memberUUIDs.size() == 0 ? 1 : memberUUIDs.size()));
         for (Object[] member : recommendMemberWithDatabase) {
-            Member m=(Member) member[0];
-            int weight=(int) member[1];
-            if(weight<limitDatabase){
-                result.remove(m);
-                for(UUID id : memberUUIDs){
-                    if(id.equals(m.getId())){
-                        memberUUIDs.remove(id);
-                        break;
-                    }
-                }
-                System.out.println("데이터베이스에서 필터링//  가중치 : "+weight +"  멤버 " + m.getId()+"를 리스트에서 제외합니다.( 제한 가중치 "+limitDatabase+"보다 작습니다)");
-            }else {
-                result.put(m, result.get(m) + weight);
-            }
+            Member m = (Member) member[0];
+            int weight = (int) member[1];
+            result.put(m, result.get(m) + weight);
+
         }
         List<Member> list = new ArrayList<>(result.keySet()); // KeySet을 리스트로 변환
         Collections.sort(list, new Comparator<Member>() {
@@ -311,16 +312,21 @@ public class TeamService {
         }
 
 
-
         return ResponseForm.builder().message("추천 유저를 반환합니다").data(list).build();
     }
-    public long getTeamCount(){
+
+    public long getTeamCount() {
         return springDataTeamRepository.count();
     }
 
     public int getTotalPage() {
-        int pageSize=20;
-        int totalPage=(int)Math.ceil((double)springDataTeamRepository.getCountOfTeams()/pageSize);
+        int pageSize = 20;
+        int totalPage = (int) Math.ceil((double) springDataTeamRepository.getCountOfTeams() / pageSize);
         return totalPage;
+    }
+
+    public int getTotalPageByTitle(String title) {
+        int pageSize = 1;
+        return (int) Math.ceil((double) springDataTeamRepository.findTeamsByTitleContaining(title).size() / pageSize);
     }
 }

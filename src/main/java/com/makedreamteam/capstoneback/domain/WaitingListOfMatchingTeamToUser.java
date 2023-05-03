@@ -19,7 +19,7 @@ public class WaitingListOfMatchingTeamToUser {
     private Long Id;
 
     @Column
-    private Long memberPostId;
+    private UUID memberId;
 
     @Column
     private UUID teamId;

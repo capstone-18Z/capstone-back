@@ -129,7 +129,12 @@ public class MatchingUserToTeamService {
         }
     }
     public Team settingTeamMember(Team team){
-
+        int currentMember= team.getCurrentTeamMemberCount();
+        int wantedMember=team.getWantTeamMemberCount();
+        if(wantedMember-1<0)
+            throw new RuntimeException("더이상 팀원을 받을 수 없습니다");
+        team.setCurrentTeamMemberCount((byte) (currentMember+1));
+        team.setWantTeamMemberCount((byte) (wantedMember-1));
         return team;
     }
 
