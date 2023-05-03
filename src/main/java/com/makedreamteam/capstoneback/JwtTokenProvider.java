@@ -7,10 +7,13 @@ import com.makedreamteam.capstoneback.domain.Role;
 import com.makedreamteam.capstoneback.domain.Token;
 import com.makedreamteam.capstoneback.exception.RefreshTokenExpiredException;
 import com.makedreamteam.capstoneback.form.ResponseForm;
+import com.makedreamteam.capstoneback.repository.RefreshTokenRepository;
 import io.jsonwebtoken.*;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.xml.bind.DatatypeConverter;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -24,6 +27,9 @@ import lombok.RequiredArgsConstructor;
 public class JwtTokenProvider {
 
     private String secretKey = "test";
+
+    @Autowired
+    private final RefreshTokenRepository refreshTokenRepository;
 
     // 토큰 유효시간 30분
     private long accesstokenValidTime =60*60*1000L;
@@ -184,4 +190,21 @@ public class JwtTokenProvider {
         return UUID.fromString((String)userInfo.get("userId"));
     }
 
+    public ResponseForm checkRefreshToken(String refreshToken) {
+        if (refreshToken == null) {
+            throw new NullPointerException("refreshTokenRepository.findById(team.getTeamLeader()) is empty");
+        }
+        if (isValidRefreshToken(refreshToken)) {//refreshtoken이 유효하다면
+            //db에서 refreshtoken 검사
+            Optional<RefreshToken> byRefreshToken = refreshTokenRepository.findByRefreshToken(refreshToken);
+            if (byRefreshToken.isPresent()) {//db에 refresh토큰이 존재한다면
+                //access토큰 재발급 요청
+                return ResponseForm.builder().state(HttpStatus.BAD_REQUEST.value()).message("LonginToken 재발급이 필요합니다.").build();
+            }
+            //존재 하지않는다면
+            return ResponseForm.builder().state(HttpStatus.BAD_REQUEST.value()).message("허용되지 않은 refreshtoken 입니다").build();
+        } else {//refreshtoken이  만료되었다면
+            return ResponseForm.builder().state(HttpStatus.BAD_REQUEST.value()).message("RefreshToken 이 만료되었습니다, 다시 로그인 해주세요").build();
+        }
+    }
 }
