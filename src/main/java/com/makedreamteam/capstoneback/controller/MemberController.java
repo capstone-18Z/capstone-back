@@ -2,16 +2,19 @@ package com.makedreamteam.capstoneback.controller;
 
 import java.io.IOException;
 import java.lang.reflect.Field;
+import java.net.URI;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import com.makedreamteam.capstoneback.JwtTokenProvider;
 import com.makedreamteam.capstoneback.domain.*;
 import com.makedreamteam.capstoneback.exception.*;
 import com.makedreamteam.capstoneback.form.MemberResponseForm;
 import com.makedreamteam.capstoneback.form.PostResponseForm;
 import com.makedreamteam.capstoneback.form.ResponseForm;
 import com.makedreamteam.capstoneback.repository.CommentRepository;
+import com.makedreamteam.capstoneback.repository.FileDataRepository;
 import com.makedreamteam.capstoneback.repository.MemberRepository;
 import com.makedreamteam.capstoneback.repository.PostMemberRepository;
 import com.makedreamteam.capstoneback.service.*;
@@ -19,11 +22,15 @@ import com.makedreamteam.capstoneback.service.ContestCrawlingService;
 import com.makedreamteam.capstoneback.service.FileService;
 import com.makedreamteam.capstoneback.service.MemberService;
 import jakarta.mail.MessagingException;
+import jakarta.mail.MessagingException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.transaction.Transactional;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.platform.commons.logging.Logger;
 import org.junit.platform.commons.logging.LoggerFactory;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -165,10 +172,17 @@ public class MemberController {
     }
 
     @GetMapping("/all")
-    public List<Member> allMember(){
-        return memberRepository.findAll();
+    public ResponseEntity<ResponseForm> allMemberByPage(@RequestParam int page){
+        int wantCount = 12;
+        Pageable pageable = PageRequest.of(page-1, wantCount);
+        int maxPage = (int) Math.ceil((double) memberRepository.findAll().size() / wantCount);
+        ResponseForm successResponse = ResponseForm.builder()
+                .message(page + " 페이지 조회가 완료되었습니다.")
+                .data(memberRepository.getAllMember(pageable))
+                .state(maxPage)
+                .build();
+        return ResponseEntity.ok().body(successResponse);
     }
-
     @GetMapping("/check_email/{email}/exists")
     public ResponseEntity<Boolean> checkEmailDuplicate(@PathVariable String email){
         return ResponseEntity.ok(memberService.checkEmailDuplicate(email));

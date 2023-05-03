@@ -77,33 +77,32 @@ public class MemberService {
             throw new RuntimeException("Failed to add", e);
         }
     }
-    public Member MemberJoin(Member post){
-        try{
-            if(!checkEmailDuplicate(post.getEmail()) && !checkNicknameDuplicate(post.getNickname())) {
-                Member save = memberRepository.save(post);
 
-                MemberLang memberLang = new MemberLang();
-                memberLang.setMember(save);
-                save.setMemberLang(memberLang);
+    public Member MemberJoin(Member post) {
+        try {
+            if (!checkEmailDuplicate(post.getEmail()) && !checkNicknameDuplicate(post.getNickname())) {
+               // if (verifiedUserMap.get(post.getEmail()) != null && verifiedUserMap.get(post.getEmail()).isVerified()) {
+                    Member save = memberRepository.save(post);
 
-                MemberFramework memberFramework = new MemberFramework();
-                memberFramework.setMember(save);
-                save.setMemberFramework(memberFramework);
+                    MemberLang memberLang = new MemberLang();
+                    memberLang.setMember(save);
+                    save.setMemberLang(memberLang);
 
-                MemberDatabase memberDatabase = new MemberDatabase();
-                memberDatabase.setMember(save);
-                save.setMemberDB(memberDatabase);
+                    MemberFramework memberFramework = new MemberFramework();
+                    memberFramework.setMember(save);
+                    save.setMemberFramework(memberFramework);
 
-                System.out.println("저장이 완료되었습니다!");
-                verifiedUserMap.remove(post.getEmail());
-                return save;
-                /*if(verifiedUserMap.get(post.getEmail())!=null && verifiedUserMap.get(post.getEmail())) {
+                    MemberDatabase memberDatabase = new MemberDatabase();
+                    memberDatabase.setMember(save);
+                    save.setMemberDB(memberDatabase);
 
-                }else{
-                    throw new RuntimeException("이메일 인증을 해주세요.");
-                }*/
-            }
-            else if (checkNicknameDuplicate(post.getNickname())){
+                    System.out.println("저장이 완료되었습니다!");
+                    verifiedUserMap.remove(post.getEmail());
+                    return save;
+              //  } else {
+               //     throw new RuntimeException("이메일 인증을 해주세요.");
+               // }
+            } else if (checkNicknameDuplicate(post.getNickname())) {
                 throw new IllegalArgumentException("이미 존재하는 닉네임입니다.");
             } else {
                 throw new IllegalArgumentException("이미 존재하는 이메일입니다.");
@@ -175,7 +174,7 @@ public class MemberService {
             }
             // Member 엔티티 저장하기
             memberRepository.save(member);
-        } catch (RuntimeException e) {
+        }catch (RuntimeException e){
             throw new RuntimeException(e);
         }
     }
@@ -205,7 +204,7 @@ public class MemberService {
                     System.out.println("refreshtoken이 만료되었습니다, 다시 로그인 해주세요");
                 }
             }
-        } catch (DataIntegrityViolationException | JpaSystemException | TransactionSystemException e) {
+        }catch (DataIntegrityViolationException | JpaSystemException | TransactionSystemException e) {
             throw new DatabaseException("데이터베이스 처리 중 오류가 발생했습니다.");
         } catch (JwtException ex) {
             throw new TokenException(ex.getMessage());
@@ -213,17 +212,17 @@ public class MemberService {
 
     }
 
-    public void deletePost(Long postid, String authToken, String refreshToken) throws RefreshTokenExpiredException, TokenException, DatabaseException {
+    public void deletePost(Long postid, String authToken, String refreshToken) throws RefreshTokenExpiredException, TokenException, DatabaseException{
         try {
             // checkTokenResponsForm checkTokenResponsForm = checkUserIdAndToken(authToken, refreshToken);
-            if (jwtTokenProvider.isValidAccessToken(authToken)) {//accesstoken 유효
+            if(jwtTokenProvider.isValidAccessToken(authToken)){//accesstoken 유효
                 //addPost 진행
                 System.out.println("accesstoken이 유효합니다");
-                Claims userinfo = jwtTokenProvider.getClaimsToken(refreshToken);
-                UUID writer = UUID.fromString((String) userinfo.get("userId"));
+                Claims userinfo= jwtTokenProvider.getClaimsToken(refreshToken);
+                UUID writer=UUID.fromString((String)userinfo.get("userId"));
                 Optional<Member> byId = memberRepository.findById(writer);
                 PostMember postMember = postMemberRepository.findByPostId(postid).get();
-                if (byId.isEmpty()) {
+                if(byId.isEmpty()){
                     throw new RuntimeException("사용자가 존재하지 않습니다.");
                 }
                 List<FileData> fileList = postMember.getFileDataList();
@@ -231,24 +230,27 @@ public class MemberService {
                     fileService.deleteFile(file);
                 }
                 //String newToken = checkTokenResponsForm.getNewToken();
-                System.out.println("postid : " + postid + "를 삭제합니다.");
+                System.out.println("postid : "+postid+"를 삭제합니다.");
                 postMemberRepository.deleteById(postid);
-            } else {//accesstoken 만료
-                if (jwtTokenProvider.isValidRefreshToken(refreshToken)) {//refreshtoken 유효성검사
+            }
+            else{//accesstoken 만료
+                if(jwtTokenProvider.isValidRefreshToken(refreshToken)){//refreshtoken 유효성검사
                     //refreshtoken db 검사
                     System.out.println("accesstoken이 만료되었습니다");
                     System.out.println("refreshtoken 유효성 검사를 시작합니다");
-                    Claims userinfo = jwtTokenProvider.getClaimsToken(refreshToken);
-                    UUID userId = UUID.fromString((String) userinfo.get("userId"));
+                    Claims userinfo= jwtTokenProvider.getClaimsToken(refreshToken);
+                    UUID userId=UUID.fromString((String)userinfo.get("userId"));
                     Optional<RefreshToken> optionalRefreshToken = refreshTokenRepository.findById(userId);
-                    if (optionalRefreshToken.isPresent()) {
+                    if(optionalRefreshToken.isPresent()){
                         //db에 존재하므로 access토큰 재발급 문자 출력
                         System.out.println("accseetoken 재발급이 필요합니다.");
-                    } else {
+                    }
+                    else{
                         //db에 없는 토큰이므로 오류메시지 출력
                         System.out.println("허용되지 않은 refreshtoken 입니다");
                     }
-                } else {
+                }
+                else{
                     // 다시 login 시도
                     System.out.println("refreshtoken이 만료되었습니다, 다시 로그인 해주세요");
                 }
@@ -264,30 +266,33 @@ public class MemberService {
     }
 
     public UUID checkUserIdAndToken(String authToken, String refreshToken) throws AuthenticationException {
-        if (jwtTokenProvider.isValidAccessToken(authToken)) {//accesstoken 유효
+        if(jwtTokenProvider.isValidAccessToken(authToken)) {//accesstoken 유효
             //addPost 진행
             System.out.println("accesstoken이 유효합니다");
             Claims userinfo = jwtTokenProvider.getClaimsToken(refreshToken);
             UUID uid = UUID.fromString((String) userinfo.get("userId"));
             return uid;
-        } else {//accesstoken 만료
-            if (jwtTokenProvider.isValidRefreshToken(refreshToken)) {//refreshtoken 유효성검사
+        }
+        else{//accesstoken 만료
+            if(jwtTokenProvider.isValidRefreshToken(refreshToken)){//refreshtoken 유효성검사
                 //refreshtoken db 검사
                 System.out.println("accesstoken이 만료되었습니다");
                 System.out.println("refreshtoken 유효성 검사를 시작합니다");
-                Claims userinfo = jwtTokenProvider.getClaimsToken(refreshToken);
-                UUID userId = UUID.fromString((String) userinfo.get("userId"));
+                Claims userinfo= jwtTokenProvider.getClaimsToken(refreshToken);
+                UUID userId=UUID.fromString((String)userinfo.get("userId"));
                 Optional<RefreshToken> optionalRefreshToken = refreshTokenRepository.findById(userId);
-                if (optionalRefreshToken.isPresent()) {
+                if(optionalRefreshToken.isPresent()){
                     //db에 존재하므로 access토큰 재발급 문자 출력
                     System.out.println("accseetoken 재발급이 필요합니다.");
                     throw new AuthenticationException("accseetoken 재발급이 필요합니다.");
-                } else {
+                }
+                else{
                     //db에 없는 토큰이므로 오류메시지 출력
                     System.out.println("허용되지 않은 refreshtoken 입니다");
                     throw new AuthenticationException("허용되지 않은 refreshtoken 입니다");
                 }
-            } else {
+            }
+            else{
                 // 다시 login 시도
                 System.out.println("refreshtoken이 만료되었습니다, 다시 로그인 해주세요");
                 throw new AuthenticationException("refreshtoken이 만료되었습니다, 다시 로그인 해주세요");
@@ -300,14 +305,14 @@ public class MemberService {
         try {
             // checkTokenResponsForm checkTokenResponsForm = checkUserIdAndToken(authToken, refreshToken);
             //임시
-            if (jwtTokenProvider.isValidAccessToken(authToken)) {//accesstoken 유효
+            if(jwtTokenProvider.isValidAccessToken(authToken)){//accesstoken 유효
                 //addPost 진행
                 System.out.println("accesstoken이 유효합니다 게시물을 추가합니다.");
-                Claims userinfo = jwtTokenProvider.getClaimsToken(refreshToken);
-                UUID writer = UUID.fromString((String) userinfo.get("userId"));
+                Claims userinfo= jwtTokenProvider.getClaimsToken(refreshToken);
+                UUID writer=UUID.fromString((String)userinfo.get("userId"));
 
                 Optional<Member> byId = memberRepository.findById(writer);
-                if (byId.isEmpty()) {
+                if(byId.isEmpty()){
                     throw new RuntimeException("사용자가 존재하지 않습니다.");
                 }
 
@@ -315,27 +320,29 @@ public class MemberService {
                 member.setMember(byId.get());
                 member.setNickname(byId.get().getNickname());
                 // post 저장
-                PostMember saved = postMemberRepository.save(member);
+                PostMember saved=postMemberRepository.save(member);
 
                 return PostResponseForm.builder().state(HttpStatus.OK.value()).message("게시물을 등록했습니다.").data(saved).pid(saved.getPostId()).updatable(true).build();
-            } else {//accesstoken 만료
-                if (jwtTokenProvider.isValidRefreshToken(refreshToken)) {//refreshtoken 유효성검사
+            }else{//accesstoken 만료
+                if(jwtTokenProvider.isValidRefreshToken(refreshToken)){//refreshtoken 유효성검사
                     //refreshtoken db 검사
                     System.out.println("accesstoken이 만료되었습니다");
                     System.out.println("refreshtoken 유효성 검사를 시작합니다");
-                    Claims userinfo = jwtTokenProvider.getClaimsToken(refreshToken);
-                    UUID userId = UUID.fromString((String) userinfo.get("userId"));
+                    Claims userinfo= jwtTokenProvider.getClaimsToken(refreshToken);
+                    UUID userId=UUID.fromString((String)userinfo.get("userId"));
                     Optional<RefreshToken> optionalRefreshToken = refreshTokenRepository.findById(userId);
-                    if (optionalRefreshToken.isPresent()) {
+                    if(optionalRefreshToken.isPresent()){
                         //db에 존재하므로 access토큰 재발급 문자 출력
                         System.out.println("accseetoken 재발급이 필요합니다.");
                         return PostResponseForm.builder().message("LonginToken 재발급이 필요합니다.").build();
-                    } else {
+                    }
+                    else{
                         //db에 없는 토큰이므로 오류메시지 출력
                         System.out.println("허용되지 않은 refreshtoken 입니다");
                         return PostResponseForm.builder().message("허용되지 않은 RefreshToken 입니다").build();
                     }
-                } else {
+                }
+                else{
                     // 다시 login 시도
                     System.out.println("refreshtoken이 만료되었습니다, 다시 로그인 해주세요");
                     return PostResponseForm.builder().message("RefreshToken 이 만료되었습니다, 다시 로그인 해주세요").build();
@@ -350,28 +357,28 @@ public class MemberService {
     }
 
 
-    public boolean checkEmailDuplicate(String email) {
+    public boolean checkEmailDuplicate(String email){
         return memberRepository.existsByEmail(email);
     }
-
-    public boolean checkNicknameDuplicate(String nickname) {
+    public boolean checkNicknameDuplicate(String nickname){
         return memberRepository.existsByNickname(nickname);
     }
 
     public MemberData doLogin(Member member) {
         //새로운 토큰 생성
-        String loginToken = jwtTokenProvider.createAccessToken(member.getId(), member.getEmail(), member.getRole(),
+        String loginToken= jwtTokenProvider.createAccessToken(member.getId(), member.getEmail(), member.getRole(),
                 member.getNickname());
-        String refreshToken = jwtTokenProvider.createRefreshToken(member.getId());
-        RefreshToken refreshTok = RefreshToken.builder().userId(member.getId()).refreshToken(refreshToken).build();
+        String refreshToken= jwtTokenProvider.createRefreshToken(member.getId());
+        RefreshToken refreshTok= RefreshToken.builder().userId(member.getId()).refreshToken(refreshToken).build();
 
         //db에 해당 유저의 refresh토큰이 존재한다면 업데이트한다
         Optional<RefreshToken> memberRefreshToken = refreshTokenRepository.findById(member.getId());
-        if (memberRefreshToken.isPresent()) {
-            RefreshToken savedRefreshToken = memberRefreshToken.get();
+        if(memberRefreshToken.isPresent()){
+            RefreshToken savedRefreshToken=memberRefreshToken.get();
             savedRefreshToken.setRefreshToken(refreshToken);
             refreshTokenRepository.save(savedRefreshToken);
-        } else refreshTokenRepository.save(refreshTok);
+        }
+        else refreshTokenRepository.save(refreshTok);
 
         return MemberData.builder().Member(member).Token(Token.builder().accessToken(loginToken).refreshToken(refreshToken).build()).build();
     }
