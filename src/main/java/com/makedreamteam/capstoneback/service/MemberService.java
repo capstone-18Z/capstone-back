@@ -147,11 +147,15 @@ public class MemberService {
             member.setPassword(originalMember.getPassword());
             member.setRole(originalMember.getRole());
 
-            if(member.getSolvedNickname() != null){
+            if(member.getSolvedNickname() != null && !member.getSolvedNickname().equals("")){
                 SolvedAcUser solvedAcUser = solvedacService.getUser(member.getSolvedNickname());
-                member.setSolvedTier(solvedAcUser.getTier());
-                member.setSolvedCount(solvedAcUser.getSolvedCount());
-                member.setSolvedProfile(solvedAcUser.getProfileImageUrl());
+                if(solvedAcUser.getError() == null) {
+                    member.setSolvedTier(solvedAcUser.getTier());
+                    member.setSolvedCount(solvedAcUser.getSolvedCount());
+                    member.setSolvedProfile(solvedAcUser.getProfileImageUrl());
+                }else{
+                    member.setSolvedNickname("!!No User!!");
+                }
             }
 
             // 프로필 이미지가 업데이트되는 경우, 기존 이미지 파일 삭제하고 새로운 파일 업로드하기

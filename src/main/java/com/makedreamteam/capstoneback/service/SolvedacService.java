@@ -6,6 +6,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
 
 @Service
@@ -20,11 +21,17 @@ public class SolvedacService {
     public SolvedAcUser getUser(String username) {
         String url = String.format("https://solved.ac/api/v3/user/show?handle=%s", username);
         System.out.println(url);
-        ResponseEntity<SolvedAcUser> response = restTemplate.getForEntity(url, SolvedAcUser.class);
-        if (response.getStatusCode() == HttpStatus.OK) {
-            return response.getBody();
-        } else {
-            throw new RuntimeException("Failed to get user information from SolvedAc API");
+        try {
+            ResponseEntity<SolvedAcUser> response = restTemplate.getForEntity(url, SolvedAcUser.class);
+            if (response.getStatusCode() == HttpStatus.OK) {
+                return response.getBody();
+            } else {
+                throw new RuntimeException("Failed to get user information from SolvedAc API");
+            }
+        } catch (HttpClientErrorException e) {
+            SolvedAcUser errorUser = new SolvedAcUser();
+            errorUser.setError(e.getStatusText());
+            return errorUser;
         }
     }
 }

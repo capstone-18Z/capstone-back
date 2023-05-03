@@ -34,4 +34,5 @@ public class SolvedAcUser {
     private String bannedUntil;
     private String proUntil;
     private int rank;
+    private String error;
 }

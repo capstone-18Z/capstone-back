@@ -30,7 +30,7 @@ public class ContestCrawlingService {
     private WebDriver imageDriver;
     private String defaultUrl = "https://www.contestkorea.com/sub/list.php?displayrow=12&int_gbn=1&Txt_sGn=1&Txt_key=all&Txt_word=&Txt_bcode=030510001&Txt_code1=&Txt_aarea=&Txt_area=&Txt_sortkey=a.int_sort&Txt_sortword=desc&Txt_host=&Txt_tipyn=&Txt_actcode=&page=";
     public static String WEB_DRIVER_ID = "webdriver.chrome.driver"; // Properties 설정
-    public static String WEB_DRIVER_PATH = "src/main/resources/static/upload/chromedriver.exe";
+    public static String WEB_DRIVER_PATH = "src/main/resources/app/chromedriver.exe";
     public List<Contest> crawlContest() {
         System.setProperty(WEB_DRIVER_ID, WEB_DRIVER_PATH);
 
@@ -63,18 +63,22 @@ public class ContestCrawlingService {
                     WebElement titleElement = contestElement.findElement(By.tagName("a"));
                     String title = titleElement.findElement(By.cssSelector("span.txt")).getText();
                     String url = titleElement.getAttribute("href");
-                    System.out.println("제목 : " + title);
-                    System.out.println("링크 : " + url);
 
                     // 주최 정보 가져오기
                     String host = contestElement.findElement(By.className("icon_1")).getText().replace("주최 . ", "");
-                    System.out.println("주최 : " + host);
                     // 대상 정보 가져오기
                     String target = contestElement.findElement(By.className("icon_2")).getText().replace("대상 . ", "");
-                    System.out.println("대상 : " + target);
                     // D-day 정보 가져오기
                     String dDay = contestElement.findElement(By.className("d-day")).getText().trim();
-                    System.out.println("D-Day : " + dDay);
+                    String[] dDayAndState = dDay.split("\n");
+                    String dayinfo = "";
+                    String stateinfo = "";
+                    if (dDayAndState.length > 1) {
+                        dayinfo = dDayAndState[0];
+                        stateinfo = dDayAndState[1];
+                    } else {
+                        stateinfo = dDayAndState[0];
+                    }
                     // 기간 정보 가져오기
                     WebElement dateElement = contestElement.findElement(By.className("date-detail"));
                     String text = dateElement.getText();
@@ -83,11 +87,9 @@ public class ContestCrawlingService {
                         int endIndex = text.indexOf("심사");
                         if (endIndex > 0) {
                             String startDate = text.substring(startIndex, endIndex).trim();
-                            System.out.println("접수 : " + startDate);
                             contest.setPeriod(startDate);
                         } else {
                             String startDate = text.substring(startIndex).trim();
-                            System.out.println("접수 : " + startDate);
                             contest.setPeriod(startDate);
                         }
                     }
@@ -96,23 +98,19 @@ public class ContestCrawlingService {
                         int endIndex = text.indexOf("발표");
                         if (endIndex > 0) {
                             String startDate = text.substring(startIndex, endIndex).trim();
-                            System.out.println("심사 : " + startDate);
                             contest.setAuditDate(startDate);
                         } else {
                             String startDate = text.substring(startIndex).trim();
-                            System.out.println("심사 : " + startDate);
                             contest.setAuditDate(startDate);
                         }
                     }
                     if (text.contains("발표")) {
                         String announcementDate = text.substring(text.indexOf("발표") + 3).trim();
-                        System.out.println("발표 : " + announcementDate);
                         contest.setReleaseDate(announcementDate);
                     }
                     imageDriver.get(url);
                     WebElement imgElement = imageDriver.findElement(By.cssSelector("div.img_area > div > img"));
                     String imgUrl = imgElement.getAttribute("src");
-                    System.out.println("이미지 : " + imgUrl);
 
                     // ContestPeriod 객체와 나머지 정보를 하나의 Contest 객체에 담아 리스트에 추가하기
 
@@ -120,7 +118,10 @@ public class ContestCrawlingService {
                     contest.setUrl(url);
                     contest.setHost(host);
                     contest.setTarget(target);
-                    contest.setDday(dDay);
+                    if(!dayinfo.equals("")) {
+                        contest.setDday(dayinfo);
+                    }
+                    contest.setState(stateinfo);
                     contest.setImgUrl(imgUrl);
 
                     contestRepository.save(contest);
