@@ -259,7 +259,7 @@ public class TeamService {
         int limitDatabase = teamDatabaseRepository.getTeamDatabaseTotalWeight(tdId);
         long startTime2 = System.currentTimeMillis();
 
-        Pageable pageable = PageRequest.of(0, 10);
+        Pageable pageable = PageRequest.of(0, 5);
         //team과 같은 키워드를 가진 member를 골라낸다
         //List<Member> memberAndTeamKeywordValues = springDataTeamRepository.findMemberAndTeamKeywordValues2(teamId);
         List<Member> memberAndTeamKeywordValues = springDataTeamRepository.findMemberAndTeamKeywordValues2(teamId);
@@ -268,12 +268,12 @@ public class TeamService {
         for (Member member : memberAndTeamKeywordValues) {
             memberUUIDs.add(member.getId());
         }
-        //1차로 언어 가중치를 이용해 1~10순위 member를 가려낸다
+        //1차로 언어 가중치를 이용해 1~5순위 member를 가려낸다
         List<Object[]> recommedMemberWithLang = springDataTeamRepository.recommendMemberWithLang(memberUUIDs, teamId, pageable);
         memberUUIDs.clear();
         for (Object[] member : recommedMemberWithLang) {
             Member m = (Member) member[0];
-            int weight = (int) member[1];
+            int weight = (int) member[1]*2;
             memberUUIDs.add(m.getId());
 
             result.put(m, weight);
@@ -285,36 +285,14 @@ public class TeamService {
         for (Object[] member : recommendMemberWithFramework) {
             Member m = (Member) member[0];
             int weight = (int) member[1];
-            if (weight < limitFramework) {
-                result.remove(m);
-                for (UUID id : memberUUIDs) {
-                    if (id.equals(m.getId())) {
-                        memberUUIDs.remove(id);
-                        break;
-                    }
-                }
-                System.out.println("프레임워크에서 필터링// 가중치 : " + weight + "   멤버 " + m.getId() + "를 리스트에서 제외합니다.( 제한 가중치 " + limitFramework + "보다 작습니다)");
-            } else {
-                result.put(m, result.get(m) + weight);
-            }
-
+            result.put(m, result.get(m) + weight);
         }
         List<Object[]> recommendMemberWithDatabase = springDataTeamRepository.recommendMemberWithDatabase(memberUUIDs, teamId, PageRequest.of(0, memberUUIDs.size() == 0 ? 1 : memberUUIDs.size()));
         for (Object[] member : recommendMemberWithDatabase) {
             Member m = (Member) member[0];
             int weight = (int) member[1];
-            if (weight < limitDatabase) {
-                result.remove(m);
-                for (UUID id : memberUUIDs) {
-                    if (id.equals(m.getId())) {
-                        memberUUIDs.remove(id);
-                        break;
-                    }
-                }
-                System.out.println("데이터베이스에서 필터링//  가중치 : " + weight + "  멤버 " + m.getId() + "를 리스트에서 제외합니다.( 제한 가중치 " + limitDatabase + "보다 작습니다)");
-            } else {
-                result.put(m, result.get(m) + weight);
-            }
+            result.put(m, result.get(m) + weight);
+
         }
         List<Member> list = new ArrayList<>(result.keySet()); // KeySet을 리스트로 변환
         Collections.sort(list, new Comparator<Member>() {

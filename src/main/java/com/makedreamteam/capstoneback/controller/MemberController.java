@@ -10,6 +10,7 @@ import com.makedreamteam.capstoneback.JwtTokenProvider;
 import com.makedreamteam.capstoneback.domain.*;
 import com.makedreamteam.capstoneback.exception.*;
 import com.makedreamteam.capstoneback.form.PostResponseForm;
+import com.makedreamteam.capstoneback.form.ResponseForm;
 import com.makedreamteam.capstoneback.repository.CommentRepository;
 import com.makedreamteam.capstoneback.repository.FileDataRepository;
 import com.makedreamteam.capstoneback.repository.MemberRepository;
@@ -442,6 +443,19 @@ public class MemberController {
             return ResponseEntity.ok("코드가 일치합니다");
         }catch (RuntimeException e){
             return ResponseEntity.ok(e.getMessage());
+        }
+    }
+
+    @PostMapping("/recommend")
+    public ResponseEntity<ResponseForm> recommendList(HttpServletRequest request){
+        String accessToken=request.getHeader("login-token");
+        String refreshToken=request.getHeader("refresh-token");
+        try {
+            ResponseForm responseForm = memberService.recommendTeams(accessToken, refreshToken);
+            return ResponseEntity.ok(responseForm);
+        }catch (RuntimeException e){
+            ResponseForm error=ResponseForm.builder().message(e.getMessage()).build();
+            return ResponseEntity.badRequest().body(error);
         }
     }
 }

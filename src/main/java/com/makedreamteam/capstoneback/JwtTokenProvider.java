@@ -179,6 +179,9 @@ public class JwtTokenProvider {
                 .signWith(SignatureAlgorithm.HS256, secretKey)
                 .compact();
     }
-
+    public UUID getUserId(String accessToken){
+        Claims userInfo=getClaimsToken(accessToken);
+        return UUID.fromString((String)userInfo.get("userId"));
+    }
 
 }

@@ -5,6 +5,7 @@ import com.makedreamteam.capstoneback.controller.MemberData;
 import com.makedreamteam.capstoneback.domain.*;
 import com.makedreamteam.capstoneback.exception.*;
 import com.makedreamteam.capstoneback.form.PostResponseForm;
+import com.makedreamteam.capstoneback.form.ResponseForm;
 import com.makedreamteam.capstoneback.form.Verification;
 import com.makedreamteam.capstoneback.repository.*;
 import io.jsonwebtoken.*;
@@ -14,6 +15,8 @@ import jakarta.persistence.EntityManager;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
@@ -24,6 +27,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import javax.naming.AuthenticationException;
+import javax.print.attribute.HashPrintJobAttributeSet;
 import java.io.IOException;
 import java.util.*;
 
@@ -398,5 +402,81 @@ public class MemberService {
             code.append(chars.charAt(index));
         }
         return code.toString();
+    }
+
+    public ResponseForm recommendTeams(String loginToken,String refreshToken){
+        Map<Team,Integer> recommendList=new HashMap<>();
+        UUID userId=jwtTokenProvider.getUserId(loginToken);
+        Member member=memberRepository.findById(userId).orElseThrow(()->{
+            throw new RuntimeException("유저가 존재하지 않습니다");
+        });
+        long memberFrameworkId=member.getMemberFramework().getId();
+        long memberDatabaseId=member.getMemberDB().getId();
+        long startTime=System.currentTimeMillis();
+        Pageable pageable= PageRequest.of(0,5);
+       // if (jwtTokenProvider.isValidAccessToken(loginToken)){
+            List<UUID> teams=memberRepository.findTeamWithSameKeyword(userId);
+            for(UUID teamId : teams){
+                System.out.println("teamId : " +teamId);
+            }
+            List<Object[]> recommendTeamsByLanguage=memberRepository.recommendTeamWithLang(teams,userId,pageable);
+            for(Object[] result : recommendTeamsByLanguage){
+                Team team=(Team) result[0];
+                int weight=(int) result[1]*2;
+                recommendList.put(team,weight);
+            }
+            List<Object[]> recommendTeamsByFramework=memberRepository.recommendTeamWithFramework(teams,userId,pageable);
+            for(Object[] result : recommendTeamsByLanguage){
+                Team team=(Team) result[0];
+                int weight=(int) result[1];
+                recommendList.put(team,recommendList.get(team)+weight);
+            }
+            List<Object[]> recommendListByDatabase=memberRepository.recommendTeamWithDatabase(teams,userId,pageable);
+            for(Object[] result : recommendTeamsByLanguage){
+                Team team=(Team) result[0];
+                int weight=(int) result[1];
+                recommendList.put(team,recommendList.get(team)+weight);
+            }
+            List<Team> list=new ArrayList<>();
+            Collections.sort(list, new Comparator<Team>() {
+                @Override
+                public int compare(Team t1, Team t2) {
+                    Integer value1 = recommendList.get(t1);
+                    Integer value2 = recommendList.get(t2);
+                    return value2.compareTo(value1); // 내림차순으로 정렬
+                }
+            });
+            long endTime = System.currentTimeMillis();
+            long elapsedTime = endTime - startTime;
+            System.out.println("코드의 수행 시간(ms) : " + elapsedTime);
+
+        for (Team team : list) {
+            System.out.println("Team: " + team + ", Value: " + recommendList.get(team));
+        }
+
+            return ResponseForm.builder().message("추천 팀을 반환합니다").data(list).build();
+        //}else{
+        //    return checkRefreshToken(refreshToken);
+        //}
+
+    }
+
+
+    public ResponseForm checkRefreshToken(String refreshToken) {
+        if (refreshToken == null) {
+            throw new NullPointerException("refreshTokenRepository.findById(team.getTeamLeader()) is empty");
+        }
+        if (jwtTokenProvider.isValidRefreshToken(refreshToken)) {//refreshtoken이 유효하다면
+            //db에서 refreshtoken 검사
+            Optional<RefreshToken> byRefreshToken = refreshTokenRepository.findByRefreshToken(refreshToken);
+            if (byRefreshToken.isPresent()) {//db에 refresh토큰이 존재한다면
+                //access토큰 재발급 요청
+                return ResponseForm.builder().state(HttpStatus.BAD_REQUEST.value()).message("LonginToken 재발급이 필요합니다.").build();
+            }
+            //존재 하지않는다면
+            return ResponseForm.builder().state(HttpStatus.BAD_REQUEST.value()).message("허용되지 않은 refreshtoken 입니다").build();
+        } else {//refreshtoken이  만료되었다면
+            return ResponseForm.builder().state(HttpStatus.BAD_REQUEST.value()).message("RefreshToken 이 만료되었습니다, 다시 로그인 해주세요").build();
+        }
     }
 }
