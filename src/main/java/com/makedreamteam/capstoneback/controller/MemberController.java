@@ -2,11 +2,7 @@ package com.makedreamteam.capstoneback.controller;
 
 import java.io.IOException;
 import java.lang.reflect.Field;
-<<<<<<<<< Temporary merge branch 1
 import java.time.LocalDateTime;
-=========
-import java.net.URI;
->>>>>>>>> Temporary merge branch 2
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -18,15 +14,11 @@ import com.makedreamteam.capstoneback.form.ResponseForm;
 import com.makedreamteam.capstoneback.repository.CommentRepository;
 import com.makedreamteam.capstoneback.repository.MemberRepository;
 import com.makedreamteam.capstoneback.repository.PostMemberRepository;
-<<<<<<<<< Temporary merge branch 1
 import com.makedreamteam.capstoneback.service.*;
-=========
 import com.makedreamteam.capstoneback.service.ContestCrawlingService;
 import com.makedreamteam.capstoneback.service.FileService;
 import com.makedreamteam.capstoneback.service.MemberService;
-import com.makedreamteam.capstoneback.service.TeamService;
 import jakarta.mail.MessagingException;
->>>>>>>>> Temporary merge branch 2
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.transaction.Transactional;
 import lombok.extern.slf4j.Slf4j;

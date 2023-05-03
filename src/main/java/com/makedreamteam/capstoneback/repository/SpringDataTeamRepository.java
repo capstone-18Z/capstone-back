@@ -45,4 +45,9 @@ public interface SpringDataTeamRepository extends JpaRepository<Team, UUID>  {
     List<Team> findTeamsByTitleContainingOrderByUpdateDateDesc(String title,Pageable pageable);
     List<Team> findTeamsByTitleContaining(String title);
 
+
+    List<Team> findTeamsByTeamLeader(UUID userId);
+
+
+
 }

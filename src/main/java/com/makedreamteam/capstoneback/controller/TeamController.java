@@ -26,7 +26,7 @@ public class TeamController {
             String refreshToken = request.getHeader("refresh-token");
             List<Team> recommendTeams = null;
             List<Team> teams = teamService.allPosts(authToken, refreshToken, page);
-            int totalPage=teamService.getTotalPage();
+            int totalPage = teamService.getTotalPage();
             ResponseForm responseForm = ResponseForm.builder().metadata(Metadata.builder().currentPage(page).totalPage(totalPage).build()).message("모든 팀을 조회합니다").state(HttpStatus.OK.value()).data(teams).build();
             return ResponseEntity.ok().body(responseForm);
         } catch (RuntimeException e) {
@@ -81,18 +81,34 @@ public class TeamController {
 
 
     }
+
     @PostMapping("/{teamId}/recommend")
-    public ResponseEntity<ResponseForm> findRecommendMember(@PathVariable UUID teamId,@RequestHeader("login-token") String accessToken,@RequestHeader("refresh-token")String refreshToken){
-        ResponseForm recommendList=teamService.recommendMembers(teamId,accessToken,refreshToken);
+    public ResponseEntity<ResponseForm> findRecommendMember(@PathVariable UUID teamId, @RequestHeader("login-token") String accessToken, @RequestHeader("refresh-token") String refreshToken) {
+        ResponseForm recommendList = teamService.recommendMembers(teamId, accessToken, refreshToken);
         return ResponseEntity.ok().body(recommendList);
     }
 
 
     @GetMapping("/search/{title}")//제목으로 포스트 검색
-    public ResponseEntity<ResponseForm> searchPostByTitle(@PathVariable String title,@RequestParam("page")int page) {
+    public ResponseEntity<ResponseForm> searchPostByTitle(@PathVariable String title, @RequestParam("page") int page) {
         ResponseForm responseForm = teamService.postListByTitle(title, page);
         return ResponseEntity.ok(responseForm);
     }
+
+    @PostMapping("/myteams")
+    public ResponseEntity<ResponseForm> getAllMyTeams(@RequestHeader("login-token") String accessToken, @RequestHeader("refresh-token") String refreshToken) {
+        try {
+            ResponseForm responseForm = teamService.getAllMyTeams(accessToken, refreshToken);
+            return ResponseEntity.ok(responseForm);
+        }catch (RuntimeException e){
+            ResponseForm error=ResponseForm.builder().message(e.getMessage()).build();
+            return ResponseEntity.badRequest().body(error);
+        }
+    }
+//    @PostMapping("/filter")
+//    public ResponseEntity<ResponseForm> doFilteringTeams(@RequestBody Filter filter){
+//
+//    }
 
 
 

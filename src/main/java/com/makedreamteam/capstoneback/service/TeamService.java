@@ -8,6 +8,7 @@ import com.google.firebase.cloud.StorageClient;
 import com.makedreamteam.capstoneback.JwtTokenProvider;
 import com.makedreamteam.capstoneback.domain.*;
 import com.makedreamteam.capstoneback.form.Metadata;
+import com.makedreamteam.capstoneback.form.MyTeam;
 import com.makedreamteam.capstoneback.form.ResponseForm;
 import com.makedreamteam.capstoneback.form.TeamData;
 import com.makedreamteam.capstoneback.repository.*;
@@ -328,5 +329,21 @@ public class TeamService {
     public int getTotalPageByTitle(String title) {
         int pageSize = 1;
         return (int) Math.ceil((double) springDataTeamRepository.findTeamsByTitleContaining(title).size() / pageSize);
+    }
+
+    public ResponseForm getAllMyTeams(String accessToken, String refreshToken) {
+        if(jwtTokenProvider.isValidAccessToken(accessToken)){
+            UUID userId=jwtTokenProvider.getUserId(accessToken);
+
+            List<Team> teamsByTeamLeader = springDataTeamRepository.findTeamsByTeamLeader(userId);
+            List<MyTeam> myTeams=new ArrayList<>();
+            for (Team team : teamsByTeamLeader){
+                MyTeam myTeam=MyTeam.builder().teamId(team.getTeamId()).title(team.getTitle()).build();
+                myTeams.add(myTeam);
+            }
+            return ResponseForm.builder().message("해당 유저의 팀을 반환합니다.").data(myTeams).build();
+        }else{
+            return checkRefreshToken(refreshToken);
+        }
     }
 }

@@ -19,6 +19,6 @@ public interface TeamMemberRepository extends JpaRepository<TeamMember, UUID> {
     List<UUID> findAllByTeamId(@Param("teamId") UUID teamId);
 
 
-    @Query("select teamId,userId from TeamMember where teamId = :teamId")
-    Map<UUID,List<UUID>> getMapTeamMember(@Param("teamId")UUID teamId);
+    @Query("select userId from TeamMember where teamId = :teamId")
+    List<UUID> getMapTeamMember(@Param("teamId")UUID teamId);
 }
