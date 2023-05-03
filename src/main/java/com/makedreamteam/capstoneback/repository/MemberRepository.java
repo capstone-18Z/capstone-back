@@ -19,6 +19,9 @@ public interface MemberRepository extends JpaRepository<Member, String> {
     @Override
     List<Member> findAll();
 
+    @Query("SELECT m FROM Member m")
+    List<Member> getAllMember(Pageable pageable);
+
     //추천
     @Query("SELECT tk.team.teamId  FROM TeamKeyword tk " +
             "WHERE EXISTS (" +

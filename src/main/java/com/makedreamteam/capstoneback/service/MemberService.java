@@ -384,17 +384,17 @@ public class MemberService {
     }
 
     public void sendVerificationEmail(String email) throws MessagingException {
-        verifiedUserMap.put(email,false);
+        Verification verification = new Verification();
+        String code = createCode();
+        verification.setCode(code);
+        verifiedUserMap.put(email, verification);
         MimeMessage message = javaMailSender.createMimeMessage();
         MimeMessageHelper helper = new MimeMessageHelper(message);
-        helper.setTo(email);
+        helper.setTo(email+"@hansung.ac.kr");
         helper.setSubject("이메일 인증을 완료해주세요.");
-        String link = "http://1871166.iptime.org:8080/member/verify-email/"+email;
         String htmlMsg = "<h3>이메일 인증을 완료해주세요.</h3><br>"
-                + "<p>아래 버튼을 클릭하여 인증을 완료하세요.</p>"
-                + "<form action='" + link + "' method='POST'>"
-                + "<input type='submit' value='인증 완료' style='background-color: #4CAF50; color: white; padding: 12px 20px; border: none; border-radius: 4px; cursor: pointer;'>"
-                + "</form>";
+                +"<p>아래 코드를 입력하여 이메일 인증을 완료해주세요.</p>"
+                +"<p>"+code+"</p>";
         helper.setText(htmlMsg, true);
         javaMailSender.send(message);
     }
