@@ -421,7 +421,7 @@ public class MemberService {
     }
 
     public ResponseForm recommendTeams(String loginToken,String refreshToken){
-        Map<Team,Integer> recommendList=new HashMap<>();
+        Map<Team,Double> recommendList=new HashMap<>();
         UUID userId=jwtTokenProvider.getUserId(loginToken);
         Member member=memberRepository.findById(userId).orElseThrow(()->{
             throw new RuntimeException("유저가 존재하지 않습니다");
@@ -437,29 +437,33 @@ public class MemberService {
             }
             List<Object[]> recommendTeamsByLanguage=memberRepository.recommendTeamWithLang(teams,userId,pageable);
             for(Object[] result : recommendTeamsByLanguage){
+
                 Team team=(Team) result[0];
-                int weight=(int) result[1]*2;
+                double weight=(int) result[1]*1.1;
+                System.out.println("lang Team : "+team.getTeamId());
                 recommendList.put(team,weight);
             }
             List<Object[]> recommendTeamsByFramework=memberRepository.recommendTeamWithFramework(teams,userId,pageable);
             for(Object[] result : recommendTeamsByLanguage){
                 Team team=(Team) result[0];
-                int weight=(int) result[1];
+                double weight=(int) result[1];
+                System.out.println("frame Team : "+team.getTeamId());
                 recommendList.put(team,recommendList.get(team)+weight);
             }
             List<Object[]> recommendListByDatabase=memberRepository.recommendTeamWithDatabase(teams,userId,pageable);
             for(Object[] result : recommendTeamsByLanguage){
                 Team team=(Team) result[0];
-                int weight=(int) result[1];
+                double weight=(int) result[1];
+                System.out.println("DB Team : "+team.getTeamId());
                 recommendList.put(team,recommendList.get(team)+weight);
             }
-            List<Team> list=new ArrayList<>();
+            List<Team> list=new ArrayList<>(recommendList.keySet());
             Collections.sort(list, new Comparator<Team>() {
                 @Override
                 public int compare(Team t1, Team t2) {
-                    Integer value1 = recommendList.get(t1);
-                    Integer value2 = recommendList.get(t2);
-                    return value2.compareTo(value1); // 내림차순으로 정렬
+                    double value1 = recommendList.get(t1);
+                    double value2 = recommendList.get(t2);
+                    return Double.compare(value2, value1); // 내림차순으로 정렬
                 }
             });
             long endTime = System.currentTimeMillis();

@@ -14,5 +14,6 @@ import java.util.List;
 @NoArgsConstructor
 public class Filter {
     private List<String> category;
-    private List<String> field;
+    private List<String> subject;
+    private List<String> rule;
 }

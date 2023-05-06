@@ -10,12 +10,11 @@ import com.makedreamteam.capstoneback.domain.*;
 import com.makedreamteam.capstoneback.form.Metadata;
 import com.makedreamteam.capstoneback.form.MyTeam;
 import com.makedreamteam.capstoneback.form.ResponseForm;
-import com.makedreamteam.capstoneback.form.TeamData;
 import com.makedreamteam.capstoneback.repository.*;
 import io.jsonwebtoken.*;
-import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.EmptyResultDataAccessException;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
@@ -41,6 +40,9 @@ public class TeamService {
     private Storage storage;
 
     @Autowired
+    private final TeamKeywordRepository teamKeywordRepository;
+
+    @Autowired
     TeamFrameworkRepository teamFrameworkRepository;
 
     @Autowired
@@ -49,10 +51,11 @@ public class TeamService {
     private JwtTokenProvider jwtTokenProvider;
 
 
-    public TeamService(SpringDataTeamRepository springDataTeamRepository, TeamMemberRepository teamMemberRepository, RefreshTokenRepository refreshTokenRepository, JwtTokenProvider jwtTokenProvider) {
+    public TeamService(SpringDataTeamRepository springDataTeamRepository, TeamMemberRepository teamMemberRepository, RefreshTokenRepository refreshTokenRepository, TeamKeywordRepository teamKeywordRepository, JwtTokenProvider jwtTokenProvider) {
         this.springDataTeamRepository = springDataTeamRepository;
         this.teamMemberRepository = teamMemberRepository;
         this.refreshTokenRepository = refreshTokenRepository;
+        this.teamKeywordRepository = teamKeywordRepository;
         this.jwtTokenProvider = jwtTokenProvider;
     }
 
@@ -164,7 +167,7 @@ public class TeamService {
 
     public ResponseForm postListByTitle(String title, int page) {
         Pageable pageable = PageRequest.of(page - 1, 1);
-        List<Team> teams = springDataTeamRepository.findTeamsByTitleContainingOrderByUpdateDateDesc(title, pageable);
+        List<Team> teams = springDataTeamRepository.findTeamsByTitleContainingOrderByUpdateDateDesc(title, pageable).getContent();
 
         int totalPage = getTotalPageByTitle(title);
         if(teams.size()==0){
@@ -344,6 +347,27 @@ public class TeamService {
             return ResponseForm.builder().message("해당 유저의 팀을 반환합니다.").data(myTeams).build();
         }else{
             return checkRefreshToken(refreshToken);
+        }
+    }
+
+    public ResponseForm doFilteringTeams(List<String> category, List<String> subject, List<String> rule,String search,int page) {
+        Pageable pageable=PageRequest.of(page-1,20);
+        if(category.size()==0 && rule.size()==0 && subject.size()==0){
+            Page<Team> teamsByTitleContainingOrderByUpdateDateDesc = springDataTeamRepository.findTeamsByTitleContainingOrderByUpdateDateDesc(search, pageable);
+            int totalPage=teamsByTitleContainingOrderByUpdateDateDesc.getTotalPages();
+            return ResponseForm.builder().message("팀을 반환합니다").data(teamsByTitleContainingOrderByUpdateDateDesc.getContent()).metadata(Metadata.builder().currentPage(page).totalPage(totalPage).build()).build();
+
+        }
+
+        if(search.equals("")) {
+            Page<Team> teams = teamKeywordRepository.findAllByFilter(category, subject, rule, pageable);
+            int totalPage = teams.getTotalPages();
+            return ResponseForm.builder().message("팀을 반환합니다").data(teams.getContent()).metadata(Metadata.builder().currentPage(page).totalPage(totalPage).build()).build();
+        }else{
+            System.out.println("search : "+search);
+            Page<Team> teams = teamKeywordRepository.findAllByFilter(category, subject, rule, search, pageable);
+            int totalPage = teams.getTotalPages();
+            return ResponseForm.builder().message("팀을 반환합니다").data(teams.getContent()).metadata(Metadata.builder().currentPage(page).totalPage(totalPage).build()).build();
         }
     }
 }

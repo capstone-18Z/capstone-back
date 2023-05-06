@@ -5,6 +5,7 @@ import com.makedreamteam.capstoneback.form.*;
 import com.makedreamteam.capstoneback.service.TeamService;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
+import org.hibernate.event.spi.SaveOrUpdateEvent;
 import org.springframework.http.*;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -95,7 +96,7 @@ public class TeamController {
         return ResponseEntity.ok(responseForm);
     }
 
-    @PostMapping("/myteams")
+    @GetMapping("/myteams")
     public ResponseEntity<ResponseForm> getAllMyTeams(@RequestHeader("login-token") String accessToken, @RequestHeader("refresh-token") String refreshToken) {
         try {
             ResponseForm responseForm = teamService.getAllMyTeams(accessToken, refreshToken);
@@ -105,10 +106,19 @@ public class TeamController {
             return ResponseEntity.badRequest().body(error);
         }
     }
-//    @PostMapping("/filter")
-//    public ResponseEntity<ResponseForm> doFilteringTeams(@RequestBody Filter filter){
-//
-//    }
+    @GetMapping("/filter")
+    public ResponseEntity<ResponseForm> doFilteringTeams(@RequestParam("search") String search,@RequestParam("category") List<String> category,@RequestParam("subject") List<String> subject, @RequestParam("rule") List<String> rule,@RequestParam("page") int page){
+
+        ResponseForm responseForm=teamService.doFilteringTeams(category,subject,rule,search,page);
+
+        System.out.println("search : "+ search);
+        System.out.println("category : "+ category);
+        System.out.println("subject : "+subject);
+        System.out.println("rule : "+ rule);
+
+        System.out.println("page : "+page);
+        return ResponseEntity.ok().body(responseForm);
+    }
 
 
 
