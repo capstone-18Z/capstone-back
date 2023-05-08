@@ -2,6 +2,8 @@ package com.makedreamteam.capstoneback.form;
 
 import lombok.*;
 
+import java.util.UUID;
+
 
 @AllArgsConstructor
 @NoArgsConstructor
@@ -11,5 +13,6 @@ import lombok.*;
 @Data
 public class RequestData {
     private Object data;
-    private long matchId;
+    private UUID matchId;
+    private UUID teamLeader;
 }

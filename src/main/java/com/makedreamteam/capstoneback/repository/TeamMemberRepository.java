@@ -25,4 +25,6 @@ public interface TeamMemberRepository extends JpaRepository<TeamMember, UUID> {
 
     @Query("select teamId from TeamMember where userId=:userId")
     List<UUID> getTeams(@Param("userId")UUID userId);
+
+    void deleteAllByTeamId(UUID teamId);
 }

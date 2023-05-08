@@ -6,7 +6,8 @@ package com.makedreamteam.capstoneback.service;
 import com.makedreamteam.capstoneback.JwtTokenProvider;
 import com.makedreamteam.capstoneback.WebSocketConfig;
 import com.makedreamteam.capstoneback.domain.*;
-        import com.makedreamteam.capstoneback.form.ResponseForm;
+import com.makedreamteam.capstoneback.form.RequestData;
+import com.makedreamteam.capstoneback.form.ResponseForm;
         import com.makedreamteam.capstoneback.repository.*;
         import io.jsonwebtoken.Claims;
         import org.springframework.beans.factory.annotation.Autowired;
@@ -14,6 +15,7 @@ import com.makedreamteam.capstoneback.domain.*;
         import org.springframework.transaction.annotation.Transactional;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
         import java.util.Optional;
         import java.util.UUID;
@@ -64,7 +66,7 @@ public class MatchingUserToTeamService {
                         throw new RuntimeException("이미 같은팀에 속해있습니다.");
                     });
             UUID teamLeader=team.getTeamLeader();
-            WebSocketConfig.MyWebSocketHandler.sendNotificationToUser(teamLeader);
+            WebSocketConfig.MyWebSocketHandler.sendNotificationToUser(teamLeader,"팀원 신청이 왔습니다.");
             waitingListOfMatchingUserToTeam.setUserId(userId);
             waitingListOfMatchingUserToTeam.setTeam(team);
             WaitingListOfMatchingUserToTeam savedData = waitingListRepository.save(waitingListOfMatchingUserToTeam);
@@ -78,7 +80,7 @@ public class MatchingUserToTeamService {
         }
     }
 
-    public ResponseForm approveMatch(UUID waitingListId,String accessToken,String refreshToken){
+    public ResponseForm approveMatch(UUID waitingListId,String accessToken,String refreshToken) throws IOException {
         if(jwtTokenProvider.isValidAccessToken(accessToken)){
             WaitingListOfMatchingUserToTeam waitingList = waitingListRepository.findById(waitingListId).orElseThrow(()->{
                 throw new RuntimeException("매칭 대기 리스트가 존재하지 않습니다.");
@@ -101,7 +103,7 @@ public class MatchingUserToTeamService {
             teamMemberRepository.save(teamMember);
 
             springDataTeamRepository.save(settingTeamMember(team));
-
+            WebSocketConfig.MyWebSocketHandler.sendNotificationToUser(userId,"신청이 수락되었습니다.");
 
             return ResponseForm.builder().message("사용자를 팀에 추가했습니다").build();
         }else{
@@ -138,7 +140,7 @@ public class MatchingUserToTeamService {
         return team;
     }
 
-    public ResponseForm fuckYouMatch(UUID waitingListId, String accessToken, String refreshToken) {
+    public ResponseForm fuckYouMatch(UUID waitingListId, String accessToken, String refreshToken) throws IOException {
         if(jwtTokenProvider.isValidAccessToken(accessToken)){
             WaitingListOfMatchingUserToTeam waitingListOfMatchingUserToTeam = waitingListRepository.findById(waitingListId).orElseThrow(() -> {
                 throw new RuntimeException("매칭 대기 리스트가 존재하지 않습니다.");
@@ -151,7 +153,7 @@ public class MatchingUserToTeamService {
             //매칭이 완료외었으므로 해당 대기인원 data는 삭제한다
             waitingListRepository.delete(waitingListOfMatchingUserToTeam);
             springDataTeamRepository.save(team);
-
+            WebSocketConfig.MyWebSocketHandler.sendNotificationToUser(waitingListOfMatchingUserToTeam.getUserId(),"신청이 거절되었습니다");
             return ResponseForm.builder().message("해당 요청을 거절했습니다.").build();
         }else{
             return checkRefreshToken(refreshToken);
@@ -168,5 +170,20 @@ public class MatchingUserToTeamService {
         }else{
             return checkRefreshToken(refreshToken);
         }
+    }
+
+    public ResponseForm getAllMyWaitingList(String accessToken, String refreshToken) {
+        if(jwtTokenProvider.isValidAccessToken(accessToken)){
+            UUID userId=jwtTokenProvider.getUserId(accessToken);
+            List<RequestData> requestDataList=new ArrayList<>();
+            List<WaitingListOfMatchingUserToTeam> idByUserId = waitingListRepository.findAllByUserId(userId);
+            for(WaitingListOfMatchingUserToTeam request : idByUserId){
+                requestDataList.add(RequestData.builder().data(request).teamLeader(request.getTeam().getTeamLeader()).matchId(request.getWaitingId()).build());
+            }
+            return ResponseForm.builder().message(requestDataList.size()==0 ? "신청한 팀이 없습니다." : "신청한 팀을 반환합니다").data(requestDataList).build();
+        }else{
+            return jwtTokenProvider.checkRefreshToken(refreshToken);
+        }
+
     }
 }

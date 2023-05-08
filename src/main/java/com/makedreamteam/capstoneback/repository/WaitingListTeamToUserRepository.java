@@ -11,7 +11,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
-public interface WaitingListTeamToUserRepository extends JpaRepository<WaitingListOfMatchingTeamToUser,Long> {
+public interface WaitingListTeamToUserRepository extends JpaRepository<WaitingListOfMatchingTeamToUser,UUID> {
 
     Optional<WaitingListOfMatchingTeamToUser> findWaitingListOfMatchingTeamToUserByMemberIdAndTeamId(UUID memberId,UUID teamId);
 
@@ -20,4 +20,10 @@ public interface WaitingListTeamToUserRepository extends JpaRepository<WaitingLi
 
 
     Optional<WaitingListOfMatchingTeamToUser> findByMemberId(UUID memberId);
+
+    @Query("select Id from WaitingListOfMatchingTeamToUser where memberId = :memberId" )
+    List<UUID> findIdByMemberId(@Param("memberId") UUID memberId);
+
+
+    void deleteAllByTeamId(UUID teamId);
 }

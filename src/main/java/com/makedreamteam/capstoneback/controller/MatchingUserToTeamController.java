@@ -50,7 +50,7 @@ public class MatchingUserToTeamController {
         try {
             ResponseForm responseForm = matchingUserToTeamService.approveMatch(waitingId,accessToken, refreshToken);
             return ResponseEntity.ok().body(responseForm);
-        }catch (RuntimeException e){
+        }catch (RuntimeException | IOException e){
             ResponseForm error=ResponseForm.builder().message(e.getMessage()).build();
             return ResponseEntity.badRequest().body(error);
         }
@@ -76,15 +76,18 @@ public class MatchingUserToTeamController {
         try {
             ResponseForm responseForm = matchingUserToTeamService.fuckYouMatch(waitingId,accessToken, refreshToken);
             return ResponseEntity.ok().body(responseForm);
-        }catch (RuntimeException e){
+        }catch (RuntimeException | IOException e){
             ResponseForm error=ResponseForm.builder().message(e.getMessage()).build();
             return ResponseEntity.badRequest().body(error);
         }
     }
 
-    @PostMapping("/{teamId}/all")
-    public ResponseEntity<ResponseForm> findAllWaitingList(@PathVariable UUID teamId,HttpServletRequest request){
-        return null;
+    @GetMapping("/all-my-request")
+    public ResponseEntity<ResponseForm> getAllMyWaitingList(HttpServletRequest request){
+        String accessToken= request.getHeader("login-token");
+        String refreshToken= request.getHeader("refresh-token");
+        ResponseForm allMyWaitingList = matchingUserToTeamService.getAllMyWaitingList(accessToken, refreshToken);
+        return ResponseEntity.ok(allMyWaitingList);
     }
 
 

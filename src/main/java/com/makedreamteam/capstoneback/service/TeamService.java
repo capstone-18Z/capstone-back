@@ -48,6 +48,9 @@ public class TeamService {
     @Autowired
     TeamDatabaseRepository teamDatabaseRepository;
 
+    @Autowired
+    WaitingListTeamToUserRepository waitingListTeamToUserRepository;
+
     private JwtTokenProvider jwtTokenProvider;
 
 
@@ -88,7 +91,7 @@ public class TeamService {
         }
     }
 
-    public ResponseForm updateTest(Team team, List<MultipartFile> images, UUID teamId, String authToken, String refreshToken) {
+    public ResponseForm updateTeam(Team team, List<MultipartFile> images, UUID teamId, String authToken, String refreshToken) {
         if (jwtTokenProvider.isValidAccessToken(authToken)) {
             try {
                 UUID teamLeader = UUID.fromString((String) jwtTokenProvider.getClaimsToken(authToken).get("userId"));
@@ -115,15 +118,15 @@ public class TeamService {
         }
     }
 
-    public ResponseForm deleteTest(UUID teamId, String authToken, String refreshToken) {
+    public ResponseForm deleteTeam(UUID teamId, String authToken, String refreshToken) {
         if (jwtTokenProvider.isValidAccessToken(authToken)) {
             Team team = springDataTeamRepository.findById(teamId).orElseThrow(() -> {
                 throw new RuntimeException("팀이 존재하지 않습니다.");
             });
-
-
-            List<UUID> allByTeamId = teamMemberRepository.findAllByTeamId(teamId);
-            teamMemberRepository.deleteAllById(allByTeamId);
+            waitingListTeamToUserRepository.deleteAllByTeamId(teamId);
+            //List<UUID> allByTeamId = teamMemberRepository.findAllByTeamId(teamId);
+            //teamMemberRepository.deleteAllById(allByTeamId);
+            teamMemberRepository.deleteAllByTeamId(teamId);
             springDataTeamRepository.delete(team);
             return ResponseForm.builder().state(HttpStatus.OK.value()).message("팀을 삭제 했습니다.").build();
         } else {

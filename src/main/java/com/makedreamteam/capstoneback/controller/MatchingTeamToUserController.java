@@ -10,6 +10,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
+import java.io.IOException;
 import java.util.Map;
 import java.util.UUID;
 
@@ -33,27 +34,36 @@ public class MatchingTeamToUserController {
         try {
             ResponseForm responseForm = matchingTeamToUserService.requestMatching(teamId, user,accessToken, refreshToken);
             return ResponseEntity.ok(responseForm);
-        }catch (RuntimeException e){
+        }catch (RuntimeException | IOException e){
             ResponseForm error= ResponseForm.builder().state(HttpStatus.BAD_REQUEST.value()).message(e.getMessage()).build();
             return ResponseEntity.ok().body(error);
         }
     }
 
     @PostMapping("/{matchId}/approve")
-    public ResponseEntity<ResponseForm> approveRequest(@PathVariable Long matchId,HttpServletRequest request){
+    public ResponseEntity<ResponseForm> approveRequest(@PathVariable UUID matchId,HttpServletRequest request){
         String accessToken=request.getHeader("login-token");
         String refreshToken= request.getHeader("refresh-token");
         try {
             ResponseForm responseForm = matchingTeamToUserService.approveRequest(matchId, accessToken, refreshToken);
             return ResponseEntity.ok(responseForm);
-        }catch (RuntimeException e){
+        }catch (RuntimeException | IOException e){
             ResponseForm error= ResponseForm.builder().state(HttpStatus.BAD_REQUEST.value()).message(e.getMessage()).build();
             return ResponseEntity.badRequest().body(error);
         }
     }
     @PostMapping("/{matchId}/refuse")
-    public ResponseEntity<ResponseForm> refuseRequest(@PathVariable Long matchId,HttpServletRequest request) {
-        return null;
+    public ResponseEntity<ResponseForm> refuseRequest(@PathVariable UUID matchId,HttpServletRequest request) {
+        String accessToken=request.getHeader("login-token");
+        String refreshToken= request.getHeader("refresh-token");
+        try {
+            ResponseForm responseForm = matchingTeamToUserService.refuseRequest(matchId, accessToken, refreshToken);
+            return ResponseEntity.ok(responseForm);
+        }catch (RuntimeException | IOException e){
+            ResponseForm error= ResponseForm.builder().message(e.getMessage()).build();
+            return ResponseEntity.badRequest().body(error);
+        }
+
     }
     @GetMapping("/request-TeamToUser")
     public ResponseEntity<ResponseForm> getAllRequestToMe(HttpServletRequest request){

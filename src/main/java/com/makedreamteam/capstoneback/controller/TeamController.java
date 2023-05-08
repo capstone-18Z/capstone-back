@@ -5,7 +5,6 @@ import com.makedreamteam.capstoneback.form.*;
 import com.makedreamteam.capstoneback.service.TeamService;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
-import org.hibernate.event.spi.SaveOrUpdateEvent;
 import org.springframework.http.*;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -51,7 +50,7 @@ public class TeamController {
     @PostMapping(value = "/{teamId}/update", consumes = "multipart/form-data")
     public ResponseEntity<ResponseForm> updateTest(@RequestPart("team") Team team, @RequestPart(value = "images", required = false) List<MultipartFile> images, @PathVariable UUID teamId, @RequestHeader("login-token") String accessToken, @RequestHeader("refresh-token") String refreshToken) {
         try {
-            ResponseForm responseFormOK = teamService.updateTest(team, images, teamId, accessToken, refreshToken);
+            ResponseForm responseFormOK = teamService.updateTeam(team, images, teamId, accessToken, refreshToken);
             return ResponseEntity.ok(responseFormOK);
         } catch (RuntimeException e) {
             ResponseForm responseFormError = ResponseForm.builder().message(e.getMessage()).state(HttpStatus.BAD_REQUEST.value()).build();
@@ -63,7 +62,7 @@ public class TeamController {
     @PostMapping("/{teamId}/delete")
     public ResponseEntity<ResponseForm> deleteTest(@PathVariable UUID teamId, @RequestHeader("login-token") String accessToken, @RequestHeader("refresh-token") String refreshToken) {
         try {
-            ResponseForm responseFormOK = teamService.deleteTest(teamId, accessToken, refreshToken);
+            ResponseForm responseFormOK = teamService.deleteTeam(teamId, accessToken, refreshToken);
             return ResponseEntity.ok(responseFormOK);
         } catch (RuntimeException e) {
             ResponseForm responseFormError = ResponseForm.builder().message(e.getMessage()).state(HttpStatus.BAD_REQUEST.value()).build();
