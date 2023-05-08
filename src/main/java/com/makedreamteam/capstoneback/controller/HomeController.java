@@ -60,8 +60,8 @@ public class HomeController {
         try{
             int wantPage = 12;
             Pageable pageable = PageRequest.of(page-1, wantPage);
-            int maxPage = (int) Math.ceil((double) contestRepository.findAll().size() / wantPage);
             List<Contest> allContest = contestRepository.findByTitleContainsOrderByCidDesc(title, pageable);
+            int maxPage = (int) Math.ceil((double) contestRepository.findByTitleContains(title).size() / wantPage);
             ResponseForm responseForm = ResponseForm.builder()
                     .state(maxPage)
                     .message(page + "페이지 공모전 조회 완료")

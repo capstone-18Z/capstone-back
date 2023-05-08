@@ -13,6 +13,7 @@ import org.springframework.data.repository.query.Param;
 public interface MemberRepository extends JpaRepository<Member, String> {
     Optional<Member> findByEmail(String email);
     Optional<Member> findById(UUID id);
+    Optional<Member> findByNickname(String nickname);
 
     boolean existsByEmail(String email);
     boolean existsByNickname(String nickname);
@@ -21,6 +22,9 @@ public interface MemberRepository extends JpaRepository<Member, String> {
 
     @Query("SELECT m FROM Member m")
     List<Member> getAllMember(Pageable pageable);
+
+    @Query("SELECT m FROM Member m ORDER BY RAND() LIMIT 4")
+    List<Member> findRandomMembers();
 
     //추천
     @Query("SELECT tk.team.teamId  FROM TeamKeyword tk " +

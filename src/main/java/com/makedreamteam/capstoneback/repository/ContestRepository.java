@@ -14,4 +14,5 @@ public interface ContestRepository extends JpaRepository<Contest, String> {
     List<Contest> getAllContest(Pageable pageable);
 
     List<Contest> findByTitleContainsOrderByCidDesc(String title, Pageable pageable);
+    List<Contest> findByTitleContains(String title);
 }

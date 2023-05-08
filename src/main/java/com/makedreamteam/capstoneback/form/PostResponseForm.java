@@ -20,5 +20,6 @@ public class PostResponseForm {
     private List<String> filenames;
     private boolean updatable;
     private List<Comment> commentList;
+    private int maxPage;
 }
 

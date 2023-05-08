@@ -2,9 +2,12 @@ package com.makedreamteam.capstoneback.controller;
 
 import com.makedreamteam.capstoneback.domain.Team;
 import com.makedreamteam.capstoneback.form.*;
+import com.makedreamteam.capstoneback.repository.SpringDataTeamRepository;
 import com.makedreamteam.capstoneback.service.TeamService;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.*;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -17,6 +20,7 @@ import java.util.*;
 @RequestMapping(value = "/teams", produces = "application/json;charset=UTF-8")
 public class TeamController {
     private final TeamService teamService;
+    private final SpringDataTeamRepository teamRepository;
 
     @GetMapping("")
     public ResponseEntity<ResponseForm> allPost(HttpServletRequest request, @RequestParam("page") int page) {
@@ -34,6 +38,14 @@ public class TeamController {
                     .message(e.getMessage()).state(HttpStatus.BAD_REQUEST.value()).build();
             return ResponseEntity.badRequest().body(errorResponseForm);
         }
+    }
+
+    @GetMapping("/main")
+    public ResponseEntity<ResponseForm> mainPost(){
+        Pageable pageable = PageRequest.of(0, 4);
+        List<Team> teams = teamRepository.getAllTeamOrderByUpdateDesc(pageable);
+        ResponseForm responseForm = ResponseForm.builder().message("모든 팀을 조회합니다").state(HttpStatus.OK.value()).data(teams).build();
+        return ResponseEntity.ok().body(responseForm);
     }
 
     @PostMapping(value = "/new", consumes = "multipart/form-data")

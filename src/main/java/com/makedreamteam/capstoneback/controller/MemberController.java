@@ -98,6 +98,11 @@ public class MemberController {
         return memberRepository.findByEmail(email);
     }
 
+    @GetMapping("/search/nickname/{nickname}")
+    public Optional<Member> SearchMemberbyNickname(@PathVariable String nickname){
+        return memberRepository.findByNickname(nickname);
+    }
+
     @GetMapping("/search/uid/{uid}")
     public Optional<Member> SearchMemberbyUid(@PathVariable UUID uid){
         return memberRepository.findById(uid);
@@ -189,9 +194,12 @@ public class MemberController {
     }
 
     @GetMapping("/post")
-    public ResponseEntity<List<PostResponseForm>> getAllPosts() {
+    public ResponseEntity<List<PostResponseForm>> getAllPosts(@RequestParam int page) {
         try {
-            List<PostMember> postMembers = postMemberRepository.findAll();
+            int wantCount = 12;
+            Pageable pageable = PageRequest.of(page-1, wantCount);
+            int maxPage = (int) Math.ceil((double) postMemberRepository.findAll().size() / wantCount);
+            List<PostMember> postMembers = postMemberRepository.getAllPost(pageable);
             List<PostResponseForm> responseForms = new ArrayList<>();
             for (PostMember postMember : postMembers) {
                 List<String> filenames = postMember.getFileDataList().stream()
@@ -202,6 +210,7 @@ public class MemberController {
                         .data(postMember)
                         .pid(postMember.getPostId())
                         .filenames(filenames)
+                        .maxPage(maxPage)
                         .build();
                 responseForms.add(responseForm);
             }
@@ -209,6 +218,29 @@ public class MemberController {
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
+    }
+
+    @GetMapping("/post/search/{title}")
+    public ResponseEntity<List<PostResponseForm>> searchPost(@PathVariable String title, @RequestParam int page){
+        int wantCount = 12;
+        Pageable pageable = PageRequest.of(page-1, wantCount);
+        List<PostMember> searchPosts = postMemberRepository.findPostMemberByTitleContaining(title, pageable);
+        int maxPage = (int) Math.ceil((double) searchPosts.size() / wantCount);
+        List<PostResponseForm> responseForms = new ArrayList<>();
+        for (PostMember postMember : searchPosts) {
+            List<String> filenames = postMember.getFileDataList().stream()
+                    .map(FileData::getImageURL)
+                    .collect(Collectors.toList());
+            PostResponseForm responseForm = PostResponseForm.builder()
+                    .message("포스트 전체 조회가 완료되었습니다.")
+                    .data(postMember)
+                    .pid(postMember.getPostId())
+                    .maxPage(maxPage)
+                    .filenames(filenames)
+                    .build();
+            responseForms.add(responseForm);
+        }
+        return ResponseEntity.ok().body(responseForms);
     }
 
     @PostMapping("/post/new")
@@ -487,5 +519,12 @@ public class MemberController {
             ResponseForm error=ResponseForm.builder().message(e.getMessage()).build();
             return ResponseEntity.badRequest().body(error);
         }
+    }
+
+    @GetMapping("/main")
+    public ResponseEntity<ResponseForm> mainMember(){
+        List<Member> randomMember = memberRepository.findRandomMembers();
+        ResponseForm responseForm = ResponseForm.builder().message("랜덤 유저를 조회합니다").state(HttpStatus.OK.value()).data(randomMember).build();
+        return ResponseEntity.ok().body(responseForm);
     }
 }
