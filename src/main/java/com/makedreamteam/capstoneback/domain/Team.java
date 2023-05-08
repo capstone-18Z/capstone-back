@@ -43,8 +43,8 @@ public class Team{
     @Column
     private UUID teamLeader;
 
-    @Column(columnDefinition = "VARCHAR(15) CHARACTER SET utf8 COLLATE utf8_general_ci")
-    private String name;
+//    @Column(columnDefinition = "VARCHAR(15) CHARACTER SET utf8 COLLATE utf8_general_ci")
+//    private String teamName;
 
     @Column
     private byte wantTeamMemberCount;

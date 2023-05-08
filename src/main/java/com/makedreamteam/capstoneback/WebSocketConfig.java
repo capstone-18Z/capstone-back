@@ -143,19 +143,20 @@ public class WebSocketConfig implements WebSocketConfigurer {
 
 
         public static void sendNotificationToUser(UUID userId,String msg) throws IOException {
+            if(sessions.get(userId)!=null) {
+                WebSocketSession session = sessions.get(userId).getSession();
+                if (session != null) {
+                    Gson gson = new Gson();
+                    Map<String, String> payloadMap = new HashMap<>();
+                    payloadMap.put("type", "notification");
+                    payloadMap.put("message", msg);
+                    String payload = gson.toJson(payloadMap);
 
-            WebSocketSession session = sessions.get(userId).getSession();
-            if (session != null) {
-                Gson gson = new Gson();
-                Map<String, String> payloadMap = new HashMap<>();
-                payloadMap.put("type", "notification");
-                payloadMap.put("message", msg);
-                String payload = gson.toJson(payloadMap);
-
-                TextMessage message = new TextMessage(payload);
-                session.sendMessage(message);
-            } else {
-                System.out.println("오프라인");
+                    TextMessage message = new TextMessage(payload);
+                    session.sendMessage(message);
+                } else {
+                    System.out.println("오프라인");
+                }
             }
         }
 

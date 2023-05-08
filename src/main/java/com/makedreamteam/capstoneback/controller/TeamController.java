@@ -26,7 +26,7 @@ public class TeamController {
             String refreshToken = request.getHeader("refresh-token");
             List<Team> recommendTeams = null;
             List<Team> teams = teamService.allPosts(authToken, refreshToken, page);
-            int totalPage = teamService.getTotalPage();
+            int totalPage = teamService.getTotalPage(12);
             ResponseForm responseForm = ResponseForm.builder().metadata(Metadata.builder().currentPage(page).totalPage(totalPage).build()).message("모든 팀을 조회합니다").state(HttpStatus.OK.value()).data(teams).build();
             return ResponseEntity.ok().body(responseForm);
         } catch (RuntimeException e) {
@@ -72,13 +72,14 @@ public class TeamController {
     }
 
     @GetMapping("/{id}")//포스트 페이지 접속
-    public ResponseEntity<ResponseForm> findById(@PathVariable UUID id, @RequestHeader("login-token") String accessToken, @RequestHeader("refresh-token") String refreshToken) {
+    public ResponseEntity<ResponseForm> findById(@PathVariable UUID id, HttpServletRequest request) {
+        String accessToken= request.getHeader("login-token");
+        String refreshToken=request.getHeader("refresh-token");
         ResponseForm team = teamService.findById(id, accessToken, refreshToken);
         if (team.getData() == null) {//team의  data가 null이라면 오류
             return ResponseEntity.badRequest().body(team);
         }
         return ResponseEntity.ok().body(team);
-
 
     }
 

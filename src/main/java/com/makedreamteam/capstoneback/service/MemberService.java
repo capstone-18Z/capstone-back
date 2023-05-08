@@ -99,7 +99,7 @@ public class MemberService {
                     System.out.println("저장이 완료되었습니다!");
                     verifiedUserMap.remove(post.getEmail());
                     return save;
-              //  } else {
+               // } else {
                //     throw new RuntimeException("이메일 인증을 해주세요.");
                // }
             } else if (checkNicknameDuplicate(post.getNickname())) {
@@ -384,13 +384,14 @@ public class MemberService {
     }
 
     public void sendVerificationEmail(String email) throws MessagingException {
+        System.out.println("email : "+email);
         Verification verification = new Verification();
         String code = createCode();
         verification.setCode(code);
         verifiedUserMap.put(email, verification);
         MimeMessage message = javaMailSender.createMimeMessage();
         MimeMessageHelper helper = new MimeMessageHelper(message);
-        helper.setTo(email+"@hansung.ac.kr");
+        helper.setTo(email);
         helper.setSubject("이메일 인증을 완료해주세요.");
         String htmlMsg = "<h3>이메일 인증을 완료해주세요.</h3><br>"
                 +"<p>아래 코드를 입력하여 이메일 인증을 완료해주세요.</p>"
@@ -399,7 +400,7 @@ public class MemberService {
         javaMailSender.send(message);
     }
 
-    public void verifyEmail(String email,String code) {
+    public ResponseForm verifyEmail(String email,String code) {
         Verification verification = verifiedUserMap.get(email);
         if(verification.getCode().equals(code))
             verification.setVerified(true);
@@ -407,6 +408,7 @@ public class MemberService {
             throw new RuntimeException("코드가 일치하지 않습니다.");
         }
         verifiedUserMap.put(email, verification);
+        return ResponseForm.builder().state(200).message("코드가 일치합니다").build();
     }
 
     public String createCode() {

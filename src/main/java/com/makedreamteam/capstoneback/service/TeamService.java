@@ -136,31 +136,40 @@ public class TeamService {
 
     public ResponseForm findById(UUID teamId, String authToken, String refreshToken) {
 
-        if (jwtTokenProvider.isValidAccessToken(authToken)) {//accesstoken이 유효하다면
-            //팀 정보를db에서 가져온다
+        if(!authToken.equals("null")  && !refreshToken.equals("null") ) {
+            System.out.println("null이 아니래");
+            if (jwtTokenProvider.isValidAccessToken(authToken)) {//accesstoken이 유효하다면
+                //팀 정보를db에서 가져온다
+                Optional<Team> teambyId = springDataTeamRepository.findById(teamId);
+                if (teambyId.isPresent()) {
+                    Claims claims = jwtTokenProvider.getClaimsToken(authToken);
+                    UUID userid = UUID.fromString((String) claims.get("userId"));
+                    //게시물을 만든 사용자와 게시물을 조회한 사용자의 ID를 비교
+                    if (teambyId.get().getTeamLeader().equals(userid)) {
+                        //같다면 update를 true
+                        return ResponseForm.builder().data(teambyId.get()).updatable(true).message("팀 조회").build();
+                    }
+                    //다르면 false
+                    return ResponseForm.builder().data(teambyId).updatable(false).message("팀 조회").build();
+                }
+                return ResponseForm.builder().message("팀이 존재하지 않습니다.").build();
+
+            } else {//accesstoken이 만료되었다면
+                return checkRefreshToken(refreshToken);
+            }
+        }else{
             Optional<Team> teambyId = springDataTeamRepository.findById(teamId);
             if (teambyId.isPresent()) {
-                Claims claims = jwtTokenProvider.getClaimsToken(authToken);
-                UUID userid = UUID.fromString((String) claims.get("userId"));
-                //게시물을 만든 사용자와 게시물을 조회한 사용자의 ID를 비교
-                if (teambyId.get().getTeamLeader().equals(userid)) {
-                    //같다면 update를 true
-                    return ResponseForm.builder().data(teambyId.get()).updatable(true).message("팀 조회").build();
-                }
-                //다르면 false
                 return ResponseForm.builder().data(teambyId).updatable(false).message("팀 조회").build();
             }
             return ResponseForm.builder().message("팀이 존재하지 않습니다.").build();
-
-        } else {//accesstoken이 만료되었다면
-            return checkRefreshToken(refreshToken);
         }
 
     }
 
     public List<Team> allPosts(String loginToken, String refreshToken, int page) {
         try {
-            Pageable pageable = PageRequest.of(page - 1, 20);
+            Pageable pageable = PageRequest.of(page - 1, 12);
             List<Team> all = springDataTeamRepository.getAllTeamOrderByUpdateDesc(pageable);
             return all;
         } catch (EmptyResultDataAccessException e) {
@@ -326,8 +335,8 @@ public class TeamService {
         return springDataTeamRepository.count();
     }
 
-    public int getTotalPage() {
-        int pageSize = 20;
+    public int getTotalPage(int count) {
+        int pageSize = count;
         int totalPage = (int) Math.ceil((double) springDataTeamRepository.getCountOfTeams() / pageSize);
         return totalPage;
     }
@@ -354,7 +363,7 @@ public class TeamService {
     }
 
     public ResponseForm doFilteringTeams(List<String> category, List<String> subject, List<String> rule,String search,int page) {
-        Pageable pageable=PageRequest.of(page-1,20);
+        Pageable pageable=PageRequest.of(page-1,12);
         if(category.size()==0 && rule.size()==0 && subject.size()==0){
             Page<Team> teamsByTitleContainingOrderByUpdateDateDesc = springDataTeamRepository.findTeamsByTitleContainingOrderByUpdateDateDesc(search, pageable);
             int totalPage=teamsByTitleContainingOrderByUpdateDateDesc.getTotalPages();
