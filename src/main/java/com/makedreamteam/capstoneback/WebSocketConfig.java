@@ -91,7 +91,9 @@ public class WebSocketConfig implements WebSocketConfigurer {
                 } else if (payload.startsWith("enterRoom:")) {
                     UUID waitingId = UUID.fromString(payload.substring(10).split("##")[0]);
                     String token = payload.substring(10).split("##")[1];
+                    String nickname = payload.substring(10).split("##")[2];
                     UUID userId = jwtTokenProvider.getUserId(token);
+
                     //isEnterd에 session 추가
                     if (sessions.get(userId) == null) {
                         WebSocketSessionList webSocketSession = new WebSocketSessionList();
@@ -109,6 +111,7 @@ public class WebSocketConfig implements WebSocketConfigurer {
                     } else {
                         isEnterd.get(waitingId).add(session);
                     }
+                    sendEnterNotifocationTeamChat(nickname+"님이 입장했습니다",nickname,waitingId);
                 } else {
 
                 }
@@ -207,8 +210,23 @@ public class WebSocketConfig implements WebSocketConfigurer {
                     sessions.get(to).getSession().sendMessage(message);
                 }
             }
+        }
 
-
+        public static void sendEnterNotifocationTeamChat(String msg,String nickname, UUID where) throws IOException {
+            List<WebSocketSession> userList = isEnterd.get(where);
+            if (userList != null) {
+                for (WebSocketSession user : userList) {
+                        System.out.println("isEnterd.get(where).contains(user) || sessions.get(to).getRoomSessions().contains(user)");
+                        Gson gson = new Gson();
+                        Map<String, String> payloadMap = new HashMap<>();
+                        payloadMap.put("type", "enter");
+                        payloadMap.put("message", "n:" + msg);
+                        payloadMap.put("nickname", nickname);
+                        String payload = gson.toJson(payloadMap);
+                        TextMessage message = new TextMessage(payload);
+                        user.sendMessage(message);
+                }
+            }
         }
 
 

@@ -51,6 +51,9 @@ public class TeamService {
     @Autowired
     WaitingListTeamToUserRepository waitingListTeamToUserRepository;
 
+    @Autowired
+    MemberRepository memberRepository;
+
     private JwtTokenProvider jwtTokenProvider;
 
 
@@ -108,6 +111,7 @@ public class TeamService {
                 setTeamRelation(team);
                 team.setTeamId(teamId);
                 team.setTeamLeader(teamLeader);
+                team.setRequestList(originalTeam.getRequestList());
                 Team updateResult = springDataTeamRepository.save(team);
                 return ResponseForm.builder().message("팀을 업데이트 했습니다").state(HttpStatus.OK.value()).data(updateResult).updatable(true).build();
             } catch (IOException e) {
@@ -346,7 +350,7 @@ public class TeamService {
         return (int) Math.ceil((double) springDataTeamRepository.findTeamsByTitleContaining(title).size() / pageSize);
     }
 
-    public ResponseForm getAllMyTeams(String accessToken, String refreshToken) {
+    public ResponseForm getAllTeamsByTeamLeader(String accessToken, String refreshToken) {
         if(jwtTokenProvider.isValidAccessToken(accessToken)){
             UUID userId=jwtTokenProvider.getUserId(accessToken);
 
@@ -381,5 +385,42 @@ public class TeamService {
             int totalPage = teams.getTotalPages();
             return ResponseForm.builder().message("팀을 반환합니다").data(teams.getContent()).metadata(Metadata.builder().currentPage(page).totalPage(totalPage).build()).build();
         }
+    }
+
+    public ResponseForm getAllTeamsByUserId(String accessToken, String refreshToken) {
+        if(jwtTokenProvider.isValidAccessToken(accessToken)){
+            UUID userId=jwtTokenProvider.getUserId(accessToken);
+            List<UUID> teams = teamMemberRepository.getTeams(userId);
+            if(teams.size()==0) {
+                return ResponseForm.builder().message("가입된 팀이 없습니다.").build();
+            }else return ResponseForm.builder().data(springDataTeamRepository.findAllById(teams)).message("가입된 팀을 반환합니다").build();
+
+        }else{
+            return jwtTokenProvider.checkRefreshToken(refreshToken);
+        }
+    }
+
+    public ResponseForm getMembersFromMyTeam(UUID teamId, String accessToken, String refreshToken) {
+        if(jwtTokenProvider.isValidAccessToken(accessToken)){
+            List<UUID> allByTeamId = teamMemberRepository.findAllByTeamId(teamId);
+            if(allByTeamId.size()==0){
+                return ResponseForm.builder().message("가입된 팀원이 없습니다.").build();
+            }
+            List<Member> teamMembers = memberRepository.findAllById(allByTeamId);
+            return ResponseForm.builder().data(teamMembers).message("팀원을 반환합니다").build();
+        }else{
+            return jwtTokenProvider.checkRefreshToken(refreshToken);
+        }
+    }
+
+    public ResponseForm deleteMember(UUID teamId, UUID userId, String accessToken, String refreshToken) {
+        if(jwtTokenProvider.isValidAccessToken(accessToken)){
+            TeamMember teamMember = teamMemberRepository.findByTeamIdAndUserId(teamId, userId).orElseThrow(() -> {
+                throw new RuntimeException("데이터가 존재하지 않습니다.");
+            });
+            teamMemberRepository.delete(teamMember);
+            return ResponseForm.builder().message("맴버가 팀에서 나갔습니다.").build();
+
+        }else return jwtTokenProvider.checkRefreshToken(refreshToken);
     }
 }

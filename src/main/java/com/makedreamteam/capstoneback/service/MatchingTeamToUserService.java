@@ -3,11 +3,14 @@ package com.makedreamteam.capstoneback.service;
 
 import com.makedreamteam.capstoneback.JwtTokenProvider;
 import com.makedreamteam.capstoneback.WebSocketConfig;
+import com.makedreamteam.capstoneback.domain.Member;
 import com.makedreamteam.capstoneback.domain.Team;
 import com.makedreamteam.capstoneback.domain.TeamMember;
 import com.makedreamteam.capstoneback.domain.WaitingListOfMatchingTeamToUser;
+import com.makedreamteam.capstoneback.form.MypageFormForList;
 import com.makedreamteam.capstoneback.form.RequestData;
 import com.makedreamteam.capstoneback.form.ResponseForm;
+import com.makedreamteam.capstoneback.repository.MemberRepository;
 import com.makedreamteam.capstoneback.repository.SpringDataTeamRepository;
 import com.makedreamteam.capstoneback.repository.TeamMemberRepository;
 import com.makedreamteam.capstoneback.repository.WaitingListTeamToUserRepository;
@@ -16,10 +19,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 
 @Service
 @Transactional
@@ -31,6 +31,8 @@ public class MatchingTeamToUserService {
     @Autowired
     private final JwtTokenProvider jwtTokenProvider;
 
+    @Autowired
+    MemberRepository memberRepository;
     @Autowired
     private final SpringDataTeamRepository springDataTeamRepository;
 
@@ -139,5 +141,52 @@ public class MatchingTeamToUserService {
         }else{
             return jwtTokenProvider.checkRefreshToken(refreshToken);
         }
+    }
+
+    public ResponseForm getAllRequestFromTeam(String accessToken, String refreshToken) {
+        if(jwtTokenProvider.isValidAccessToken(accessToken)){
+            UUID userId=jwtTokenProvider.getUserId(accessToken);
+            List<WaitingListOfMatchingTeamToUser> allByMemberId = waitingListTeamToUserRepository.findAllByMemberId(userId);
+            if(allByMemberId.size()==0){
+                return ResponseForm.builder().message("받은 신청이 없습니다.").build();
+            } else return ResponseForm.builder().message(
+                    "팀으로부터 받은 신청리스트를 반환합니다."
+            ).data(allByMemberId).build();
+
+
+        }else return jwtTokenProvider.checkRefreshToken(refreshToken);
+    }
+
+    public ResponseForm getAllRequestTeamToUser(UUID teamId, String accessToken, String refreshToken) {
+        if(jwtTokenProvider.isValidAccessToken(accessToken)){
+            List<WaitingListOfMatchingTeamToUser> allByTeamId = waitingListTeamToUserRepository.findAllByTeamId(teamId);
+            List<MypageFormForList> data=new ArrayList<>();
+            for(WaitingListOfMatchingTeamToUser request : allByTeamId){
+                Optional<Member> memberRepositoryById = memberRepository.findById(request.getMemberId());
+                if(memberRepositoryById.isPresent()) {
+                    MypageFormForList mypageFormForList = new MypageFormForList();
+                    mypageFormForList.setId(request.getId());
+                    mypageFormForList.setInfo(memberRepositoryById.get());
+                    data.add(mypageFormForList);
+                }
+            }
+            if(allByTeamId.size()==0){
+                return ResponseForm.builder().message("보낸 신청이 없습니다.").build();
+            } else return ResponseForm.builder().message(
+                    "보낸 신청리스트를 반환합니다."
+            ).data(data).build();
+
+
+        }else return jwtTokenProvider.checkRefreshToken(refreshToken);
+    }
+
+    public ResponseForm deleteRequest(UUID matchId, String accessToken, String refreshToken) {
+        if(jwtTokenProvider.isValidAccessToken(accessToken)){
+            waitingListTeamToUserRepository.findById(matchId).orElseThrow(()->{
+                throw new RuntimeException("해당 신청이 존재하지 않습니다");
+            });
+            waitingListTeamToUserRepository.deleteById(matchId);
+            return ResponseForm.builder().message("신청을 취소했습니다.").build();
+        }else return jwtTokenProvider.checkRefreshToken(refreshToken);
     }
 }

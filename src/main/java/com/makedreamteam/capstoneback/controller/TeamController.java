@@ -96,10 +96,11 @@ public class TeamController {
         return ResponseEntity.ok(responseForm);
     }
 
+    //내가 만든팀
     @GetMapping("/myteams")
-    public ResponseEntity<ResponseForm> getAllMyTeams(@RequestHeader("login-token") String accessToken, @RequestHeader("refresh-token") String refreshToken) {
+    public ResponseEntity<ResponseForm> getAllTeamsByTeamLeader(@RequestHeader("login-token") String accessToken, @RequestHeader("refresh-token") String refreshToken) {
         try {
-            ResponseForm responseForm = teamService.getAllMyTeams(accessToken, refreshToken);
+            ResponseForm responseForm = teamService.getAllTeamsByTeamLeader(accessToken, refreshToken);
             return ResponseEntity.ok(responseForm);
         }catch (RuntimeException e){
             ResponseForm error=ResponseForm.builder().message(e.getMessage()).build();
@@ -120,7 +121,44 @@ public class TeamController {
         return ResponseEntity.ok().body(responseForm);
     }
 
+    @GetMapping("/allMyTeams")
+    public ResponseEntity<ResponseForm> getAllTeamsByUserId(HttpServletRequest request){
+        String accessToken= request.getHeader("login-token");
+        String refreshToken= request.getHeader("refresh-token");
+        try {
+            ResponseForm responseForm = teamService.getAllTeamsByUserId(accessToken, refreshToken);
+            return ResponseEntity.ok(responseForm);
+        }catch (RuntimeException e){
+            ResponseForm error= ResponseForm.builder().message(e.getMessage()).build();
+            return ResponseEntity.badRequest().body(error);
+        }
+    }
 
+    @GetMapping("/getMembersFromMyTeam")
+    public ResponseEntity<ResponseForm> getMembersFromMyTeam(HttpServletRequest request,@RequestParam("teamId") UUID teamId){
+        String accessToken= request.getHeader("login-token");
+        String refreshToken= request.getHeader("refresh-token");
+        try {
+            ResponseForm responseForm = teamService.getMembersFromMyTeam(teamId,accessToken, refreshToken);
+            return ResponseEntity.ok(responseForm);
+        }catch (RuntimeException e){
+            ResponseForm error= ResponseForm.builder().message(e.getMessage()).build();
+            return ResponseEntity.badRequest().body(error);
+        }
+    }
+
+    @PostMapping("/deleteMember")
+    public ResponseEntity<ResponseForm> deleteMember(HttpServletRequest request,@RequestParam("teamId") UUID teamId,@RequestParam("userId")UUID userId){
+        String accessToken= request.getHeader("login-token");
+        String refreshToken= request.getHeader("refresh-token");
+        try {
+            ResponseForm responseForm = teamService.deleteMember(teamId,userId,accessToken, refreshToken);
+            return ResponseEntity.ok(responseForm);
+        }catch (RuntimeException e){
+            ResponseForm error= ResponseForm.builder().message(e.getMessage()).build();
+            return ResponseEntity.badRequest().body(error);
+        }
+    }
 
 
 

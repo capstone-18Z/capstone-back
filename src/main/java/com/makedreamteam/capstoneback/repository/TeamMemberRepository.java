@@ -1,5 +1,6 @@
 package com.makedreamteam.capstoneback.repository;
 
+import com.makedreamteam.capstoneback.domain.Team;
 import com.makedreamteam.capstoneback.domain.TeamMember;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -15,7 +16,7 @@ import java.util.UUID;
 public interface TeamMemberRepository extends JpaRepository<TeamMember, UUID> {
     Optional<TeamMember> findByTeamIdAndUserId(UUID teamId, UUID userId);
 
-    @Query("select t.teamMemberId from TeamMember t where t.teamId=:teamId")
+    @Query("select t.userId from TeamMember t where t.teamId=:teamId")
     List<UUID> findAllByTeamId(@Param("teamId") UUID teamId);
 
 
@@ -23,7 +24,9 @@ public interface TeamMemberRepository extends JpaRepository<TeamMember, UUID> {
     List<UUID> getMapTeamMember(@Param("teamId")UUID teamId);
 
 
-    @Query("select teamId from TeamMember where userId=:userId")
+
+
+    @Query("select teamId from TeamMember where userId =:userId and teamMemberId <> :userId")
     List<UUID> getTeams(@Param("userId")UUID userId);
 
     void deleteAllByTeamId(UUID teamId);

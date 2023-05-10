@@ -19,4 +19,6 @@ public interface WaitingListUserToTeamRepository extends JpaRepository<WaitingLi
     @Query("select waitingId from WaitingListOfMatchingUserToTeam  where userId = :userId")
     List<UUID> findIdByUserId(@Param("userId") UUID userId);
 
+
+
 }

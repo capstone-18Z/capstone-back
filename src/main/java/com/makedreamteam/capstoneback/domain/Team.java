@@ -65,20 +65,14 @@ public class Team{
 
     @Column(columnDefinition = "VARCHAR(255) CHARACTER SET utf8 COLLATE utf8_general_ci")
     private String detail;
+
     @OneToMany(mappedBy = "team", cascade = CascadeType.ALL, orphanRemoval = true,fetch = FetchType.EAGER)
     private List<WaitingListOfMatchingUserToTeam> requestList=new ArrayList<>();
+
     @OneToOne(mappedBy = "team", cascade = CascadeType.ALL, orphanRemoval = true,fetch = FetchType.LAZY)
     @JsonIgnoreProperties({"team"})
     private TeamKeyword teamKeyword;
 
-    @Column(columnDefinition = "VARCHAR(15) CHARACTER SET utf8 COLLATE utf8_general_ci")
-    private String purpose;
-
-    @Column(columnDefinition = "VARCHAR(10) CHARACTER SET utf8 COLLATE utf8_general_ci")
-    private String purposeDetail1;
-
-    @Column(columnDefinition = "VARCHAR(2) CHARACTER SET utf8 COLLATE utf8_general_ci")
-    private String purposeDetail2;
 
     @OneToOne(mappedBy = "team",cascade = CascadeType.ALL ,orphanRemoval = true,fetch = FetchType.LAZY)
     @JsonIgnoreProperties({"team"})

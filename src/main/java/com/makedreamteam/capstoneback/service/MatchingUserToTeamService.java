@@ -6,6 +6,7 @@ package com.makedreamteam.capstoneback.service;
 import com.makedreamteam.capstoneback.JwtTokenProvider;
 import com.makedreamteam.capstoneback.WebSocketConfig;
 import com.makedreamteam.capstoneback.domain.*;
+import com.makedreamteam.capstoneback.form.MypageFormForList;
 import com.makedreamteam.capstoneback.form.RequestData;
 import com.makedreamteam.capstoneback.form.ResponseForm;
         import com.makedreamteam.capstoneback.repository.*;
@@ -175,15 +176,38 @@ public class MatchingUserToTeamService {
     public ResponseForm getAllMyWaitingList(String accessToken, String refreshToken) {
         if(jwtTokenProvider.isValidAccessToken(accessToken)){
             UUID userId=jwtTokenProvider.getUserId(accessToken);
-            List<RequestData> requestDataList=new ArrayList<>();
+            List<MypageFormForList> data=new ArrayList<>();
             List<WaitingListOfMatchingUserToTeam> idByUserId = waitingListRepository.findAllByUserId(userId);
             for(WaitingListOfMatchingUserToTeam request : idByUserId){
-                requestDataList.add(RequestData.builder().data(request).teamLeader(request.getTeam().getTeamLeader()).matchId(request.getWaitingId()).build());
+                MypageFormForList mypageFormForList=new MypageFormForList();
+                mypageFormForList.setId(request.getWaitingId());
+                mypageFormForList.setInfo(request.getTeam());
+                data.add(mypageFormForList);
             }
-            return ResponseForm.builder().message(requestDataList.size()==0 ? "신청한 팀이 없습니다." : "신청한 팀을 반환합니다").data(requestDataList).build();
+            return ResponseForm.builder().message(data.size()==0 ? "신청한 팀이 없습니다." : "신청한 팀을 반환합니다").data(data).build();
         }else{
             return jwtTokenProvider.checkRefreshToken(refreshToken);
         }
 
+    }
+
+    public ResponseForm getAllRequestFromUser(UUID teamId, String accessToken, String refreshToken) {
+        if(jwtTokenProvider.isValidAccessToken(accessToken)){
+            Team team = springDataTeamRepository.findById(teamId).orElseThrow(() -> {
+                throw new RuntimeException("팀이 존재하지 않습니다");
+            });
+            List<WaitingListOfMatchingUserToTeam> requestList = team.getRequestList();
+            List<MypageFormForList> data=new ArrayList<>();
+            for(WaitingListOfMatchingUserToTeam request : requestList){
+                Optional<Member> memberRepositoryById = memberRepository.findById(request.getUserId());
+                if(memberRepositoryById.isPresent()) {
+                    MypageFormForList mypageFormForList = new MypageFormForList(request.getDetail(),request.getWaitingId(),memberRepositoryById.get());
+                    data.add(mypageFormForList);
+                }
+            }
+            if(data.size()==0){
+                return ResponseForm.builder().message("요청이 없습니다.").build();
+            }else  return ResponseForm.builder().data(data).message("요청리스트를 반환합니다").build();
+        }else return jwtTokenProvider.checkRefreshToken(refreshToken);
     }
 }
