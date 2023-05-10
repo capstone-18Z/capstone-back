@@ -18,6 +18,10 @@ import com.makedreamteam.capstoneback.repository.FileDataRepository;
 import com.makedreamteam.capstoneback.repository.MemberRepository;
 import com.makedreamteam.capstoneback.repository.PostMemberRepository;
 import com.makedreamteam.capstoneback.service.*;
+import com.makedreamteam.capstoneback.service.ContestCrawlingService;
+import com.makedreamteam.capstoneback.service.FileService;
+import com.makedreamteam.capstoneback.service.MemberService;
+import jakarta.mail.MessagingException;
 import jakarta.mail.MessagingException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.transaction.Transactional;
@@ -491,20 +495,29 @@ public class MemberController {
     }
 
     @PostMapping("/send-email/{email}")
-    public ResponseEntity<String> sendEmail(@PathVariable String email) throws MessagingException {
+    public ResponseEntity<ResponseForm> sendEmail(@PathVariable String email) throws MessagingException {
         Optional<Member> byEmail = memberRepository.findByEmail(email);
-        if(byEmail.isPresent())
-            return ResponseEntity.ok("이미 존재하는 이메일입니다.");
-        memberService.sendVerificationEmail(email);
-        return ResponseEntity.ok("인증 코드를 보냈습니다");
+        if(byEmail.isPresent()) {
+            ResponseForm duplicateEmail=ResponseForm.builder().state(100).message("이미 존재하는 이메일입니다.").build();
+            return ResponseEntity.ok(duplicateEmail);
+        }
+        try {
+            memberService.sendVerificationEmail(email);
+            ResponseForm responseForm=ResponseForm.builder().state(200).message("인증 코드를 보냈습니다").build();
+            return ResponseEntity.ok(responseForm);
+        }catch (MessagingException e){
+            ResponseForm error=ResponseForm.builder().state(101).message(e.getMessage()).build();
+            return ResponseEntity.ok(error);
+        }
+
     }
     @PostMapping("/verify-email/{email}")
-    public ResponseEntity<String> verifyEmail(@PathVariable String email, @RequestParam("code")String code){
+    public ResponseEntity<ResponseForm> verifyEmail(@PathVariable String email, @RequestParam("code")String code){
         try {
-            memberService.verifyEmail(email, code);
-            return ResponseEntity.ok("코드가 일치합니다");
+            ResponseForm responseForm = memberService.verifyEmail(email, code);
+            return ResponseEntity.ok(responseForm);
         }catch (RuntimeException e){
-            return ResponseEntity.ok(e.getMessage());
+            return ResponseEntity.ok(ResponseForm.builder().state(100).message(e.getMessage()).build());
         }
     }
 

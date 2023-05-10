@@ -50,7 +50,7 @@ public class MatchingUserToTeamController {
         try {
             ResponseForm responseForm = matchingUserToTeamService.approveMatch(waitingId,accessToken, refreshToken);
             return ResponseEntity.ok().body(responseForm);
-        }catch (RuntimeException e){
+        }catch (RuntimeException | IOException e){
             ResponseForm error=ResponseForm.builder().message(e.getMessage()).build();
             return ResponseEntity.badRequest().body(error);
         }
@@ -76,15 +76,31 @@ public class MatchingUserToTeamController {
         try {
             ResponseForm responseForm = matchingUserToTeamService.fuckYouMatch(waitingId,accessToken, refreshToken);
             return ResponseEntity.ok().body(responseForm);
-        }catch (RuntimeException e){
+        }catch (RuntimeException | IOException e){
             ResponseForm error=ResponseForm.builder().message(e.getMessage()).build();
             return ResponseEntity.badRequest().body(error);
         }
     }
-
-    @PostMapping("/{teamId}/all")
-    public ResponseEntity<ResponseForm> findAllWaitingList(@PathVariable UUID teamId,HttpServletRequest request){
-        return null;
+    //내가 팀에게 요청한 리스트
+    @GetMapping("/all-my-request")
+    public ResponseEntity<ResponseForm> getAllMyWaitingList(HttpServletRequest request){
+        String accessToken= request.getHeader("login-token");
+        String refreshToken= request.getHeader("refresh-token");
+        ResponseForm allMyWaitingList = matchingUserToTeamService.getAllMyWaitingList(accessToken, refreshToken);
+        return ResponseEntity.ok(allMyWaitingList);
+    }
+    //팀이 유저한테 받은 리스트
+    @GetMapping("/allRequestFromUser")
+    public ResponseEntity<ResponseForm> getAllRequestFromUser(HttpServletRequest request,@RequestParam("teamId")UUID teamId){
+        String accessToken= request.getHeader("login-token");
+        String refreshToken= request.getHeader("refresh-token");
+        try {
+            ResponseForm responseForm = matchingUserToTeamService.getAllRequestFromUser(teamId, accessToken, refreshToken);
+            return ResponseEntity.ok(responseForm);
+        }catch (RuntimeException e){
+            ResponseForm error= ResponseForm.builder().message(e.getMessage()).build();
+            return ResponseEntity.badRequest().body(error);
+        }
     }
 
 

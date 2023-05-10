@@ -3,6 +3,7 @@ package com.makedreamteam.capstoneback.repository;
 import com.makedreamteam.capstoneback.domain.Member;
 import com.makedreamteam.capstoneback.domain.Team;
 import org.springframework.data.domain.Example;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -42,7 +43,14 @@ public interface SpringDataTeamRepository extends JpaRepository<Team, UUID>  {
     @Query("select 1 from TeamMember tm where  tm.teamId = :teamId and tm.userId in :userIds")
     boolean isTeamMember(@Param("userIds") List<UUID> userIds,@Param("teamId")UUID teamId);
 
-    List<Team> findTeamsByTitleContainingOrderByUpdateDateDesc(String title,Pageable pageable);
+    Page<Team> findTeamsByTitleContainingOrderByUpdateDateDesc(String title, Pageable pageable);
     List<Team> findTeamsByTitleContaining(String title);
+
+
+    List<Team> findTeamsByTeamLeader(UUID userId);
+
+    @Query("select wantTeamMemberCount from Team where teamId = :teamId ")
+    int getWantedMember(@Param("teamId")UUID teamId);
+
 
 }
