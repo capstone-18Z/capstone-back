@@ -418,6 +418,12 @@ public class TeamService {
             TeamMember teamMember = teamMemberRepository.findByTeamIdAndUserId(teamId, userId).orElseThrow(() -> {
                 throw new RuntimeException("데이터가 존재하지 않습니다.");
             });
+            Team team = springDataTeamRepository.findById(teamId).orElseThrow(() -> {
+                throw new RuntimeException("팀이 존재하지 않습니다.");
+            });
+            if(team.getTeamLeader().equals(userId)){
+                throw new RuntimeException("팀장은 팀을 나갈 수 없습니다");
+            }
             teamMemberRepository.delete(teamMember);
             return ResponseForm.builder().message("맴버가 팀에서 나갔습니다.").build();
 
