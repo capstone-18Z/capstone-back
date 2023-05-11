@@ -10,7 +10,7 @@ import java.util.UUID;
 
 @Repository
 public interface TeamFrameworkRepository extends JpaRepository<TeamFramework,Long> {
-    @Query("select xcode+unrealEngine+unity+tdmax+spring+react+nodejs+androidStudio from TeamFramework  where id=:tf_id")
+    @Query("select xcode+unreal+unity+tdmax+spring+react+node+android from TeamFramework  where id=:tf_id")
     int getTeamFrameworkTotalWeight(@Param("tf_id")long id);
 
 }

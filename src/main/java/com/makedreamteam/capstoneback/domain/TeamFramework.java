@@ -23,10 +23,10 @@ public class TeamFramework {
     private int react;
 
     @ColumnDefault("0")
-    private int androidStudio;
+    private int android;
 
     @ColumnDefault("0")
-    private int nodejs;
+    private int node;
 
     @ColumnDefault("0")
     private int xcode;
@@ -38,7 +38,7 @@ public class TeamFramework {
     private int unity;
 
     @ColumnDefault("0")
-    private int unrealEngine;
+    private int unreal;
 
     @ColumnDefault("0")
     private int tdmax;

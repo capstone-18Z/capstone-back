@@ -382,12 +382,14 @@ public class TeamService {
                 System.out.println("category.isEmpty() && rule.size()==1 && rule.get(0).equalse(상관없음)");
                 teams=teamKeywordRepository.findAllByFilterWithoutCategoryAndRuleAndSearch(subject,pageable);
             } else if (category.isEmpty() && !(rule.size()==1 && rule.get(0).equals("상관없음"))) {
+                rule.add("상관없음");
                 System.out.println("category.isEmpty() && rule.size()>1");
                 teams=teamKeywordRepository.findAllByFilterWithoutCategoryAndSearch(subject,rule,pageable);
             } else if (!category.isEmpty() && (rule.size()==1 && rule.get(0).equals("상관없음"))) {
                 System.out.println("!category.isEmpty() && rule.size()==1 && rule.get(0).equals(상관없음)");
                 teams=teamKeywordRepository.findAllByFilterWithoutRuleAndSearch(category,subject,pageable);
             }else{
+                rule.add("상관없음");
                 System.out.println("!category.isEmpty() && rule.size()>1");
                 teams=teamKeywordRepository.findAllByFilterWithoutSearch(category, subject, rule, pageable);
             }
@@ -404,11 +406,13 @@ public class TeamService {
                 teams=teamKeywordRepository.findAllByFilterWithoutCategoryAndRule(subject,search,pageable);
             } else if (category.isEmpty() && !(rule.size()==1 && rule.get(0).equals("상관없음"))) {
                 System.out.println("category.isEmpty() && rule.size()>1");
+                rule.add("상관없음");
                 teams=teamKeywordRepository.findAllByFilterWithoutCategory(subject,rule,search,pageable);
             } else if (!category.isEmpty() && (rule.size()==1 && rule.get(0).equals("상관없음"))) {
                 System.out.println("!category.isEmpty() && rule.size()==1 && rule.get(0).equalse(상관없음)");
                 teams=teamKeywordRepository.findAllByFilterWithoutRule(category,subject,search,pageable);
             }else{
+                rule.add("상관없음");
                 System.out.println("!category.isEmpty() && rule.size()>1");
                 teams=teamKeywordRepository.findAllByFilter(category,subject,rule,search,pageable);
             }
