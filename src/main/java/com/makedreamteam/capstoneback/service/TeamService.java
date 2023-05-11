@@ -376,12 +376,42 @@ public class TeamService {
         }
 
         if(search.equals("")) {
-            Page<Team> teams = teamKeywordRepository.findAllByFilter(category, subject, rule, pageable);
+            Page<Team> teams = null;
+
+            if(category.isEmpty() && (rule.size()==1 && rule.get(0).equals("상관없음"))){
+                System.out.println("category.isEmpty() && rule.size()==1 && rule.get(0).equalse(상관없음)");
+                teams=teamKeywordRepository.findAllByFilterWithoutCategoryAndRuleAndSearch(subject,pageable);
+            } else if (category.isEmpty() && !(rule.size()==1 && rule.get(0).equals("상관없음"))) {
+                System.out.println("category.isEmpty() && rule.size()>1");
+                teams=teamKeywordRepository.findAllByFilterWithoutCategoryAndSearch(subject,rule,pageable);
+            } else if (!category.isEmpty() && (rule.size()==1 && rule.get(0).equals("상관없음"))) {
+                System.out.println("!category.isEmpty() && rule.size()==1 && rule.get(0).equals(상관없음)");
+                teams=teamKeywordRepository.findAllByFilterWithoutRuleAndSearch(category,subject,pageable);
+            }else{
+                System.out.println("!category.isEmpty() && rule.size()>1");
+                teams=teamKeywordRepository.findAllByFilterWithoutSearch(category, subject, rule, pageable);
+            }
+
+
+
             int totalPage = teams.getTotalPages();
             return ResponseForm.builder().message("팀을 반환합니다").data(teams.getContent()).metadata(Metadata.builder().currentPage(page).totalPage(totalPage).build()).build();
         }else{
+            Page<Team> teams = null;
             System.out.println("search : "+search);
-            Page<Team> teams = teamKeywordRepository.findAllByFilter(category, subject, rule, search, pageable);
+            if(category.isEmpty() && (rule.size()==1 && rule.get(0).equals("상관없음"))){
+                System.out.println("category.isEmpty() && rule.size()==1 && rule.get(0).equals(상관없음)");
+                teams=teamKeywordRepository.findAllByFilterWithoutCategoryAndRule(subject,search,pageable);
+            } else if (category.isEmpty() && !(rule.size()==1 && rule.get(0).equals("상관없음"))) {
+                System.out.println("category.isEmpty() && rule.size()>1");
+                teams=teamKeywordRepository.findAllByFilterWithoutCategory(subject,rule,search,pageable);
+            } else if (!category.isEmpty() && (rule.size()==1 && rule.get(0).equals("상관없음"))) {
+                System.out.println("!category.isEmpty() && rule.size()==1 && rule.get(0).equalse(상관없음)");
+                teams=teamKeywordRepository.findAllByFilterWithoutRule(category,subject,search,pageable);
+            }else{
+                System.out.println("!category.isEmpty() && rule.size()>1");
+                teams=teamKeywordRepository.findAllByFilter(category,subject,rule,search,pageable);
+            }
             int totalPage = teams.getTotalPages();
             return ResponseForm.builder().message("팀을 반환합니다").data(teams.getContent()).metadata(Metadata.builder().currentPage(page).totalPage(totalPage).build()).build();
         }

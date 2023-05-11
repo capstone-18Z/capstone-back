@@ -102,6 +102,4 @@ public class MatchingUserToTeamController {
             return ResponseEntity.badRequest().body(error);
         }
     }
-
-
 }

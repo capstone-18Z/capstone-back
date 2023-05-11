@@ -27,8 +27,25 @@ public interface TeamKeywordRepository extends JpaRepository<TeamKeyword, Long> 
     @Query("SELECT t FROM Team t JOIN t.teamKeyword k WHERE t.title like %:search% AND ((k.field IN :rule and k.category IN :category) OR k.field IN :subject ) order by t.updateDate desc")
     Page<Team> findAllByFilter(@Param("category") List<String> category, @Param("subject") List<String> subject, @Param("rule") List<String> rule,@Param("search") String search, Pageable pageable);
 
-    @Query("select team from TeamKeyword  where (field in :rule and category in :category) or field in :subject order by team.updateDate desc")
-    Page<Team> findAllByFilter(@Param("category") List<String> category, @Param("subject") List<String> subject, @Param("rule") List<String> rule, Pageable pageable);
+    @Query("SELECT t FROM Team t JOIN t.teamKeyword k WHERE t.title like %:search% AND (k.field IN :rule  OR k.field IN :subject ) order by t.updateDate desc")
+    Page<Team> findAllByFilterWithoutCategory( @Param("subject") List<String> subject, @Param("rule") List<String> rule,@Param("search") String search, Pageable pageable);
 
+    @Query("SELECT t FROM Team t JOIN t.teamKeyword k WHERE t.title like %:search% AND (k.category IN :category OR k.field IN :subject)  order by t.updateDate desc")
+    Page<Team> findAllByFilterWithoutRule( @Param("category") List<String> category,@Param("subject") List<String> subject, @Param("search") String search, Pageable pageable);
+
+    @Query("SELECT t FROM Team t JOIN t.teamKeyword k WHERE t.title like %:search% AND  k.field IN :subject  order by t.updateDate desc")
+    Page<Team> findAllByFilterWithoutCategoryAndRule( @Param("subject") List<String> subject, @Param("search") String search, Pageable pageable);
+    @Query("select team from TeamKeyword  where (field in :rule and category in :category) or field in :subject order by team.updateDate desc")
+    Page<Team> findAllByFilterWithoutSearch(@Param("category") List<String> category, @Param("subject") List<String> subject, @Param("rule") List<String> rule, Pageable pageable);
+
+
+    @Query("SELECT t FROM Team t JOIN t.teamKeyword k WHERE   k.field IN :rule  OR k.field IN :subject  order by t.updateDate desc")
+    Page<Team> findAllByFilterWithoutCategoryAndSearch( @Param("subject") List<String> subject, @Param("rule") List<String> rule, Pageable pageable);
+
+    @Query("SELECT t FROM Team t JOIN t.teamKeyword k WHERE  k.category IN :category OR k.field IN :subject  order by t.updateDate desc")
+    Page<Team> findAllByFilterWithoutRuleAndSearch( @Param("category") List<String> category,@Param("subject") List<String> subject, Pageable pageable);
+
+    @Query("SELECT t FROM Team t JOIN t.teamKeyword k WHERE    k.field IN :subject  order by t.updateDate desc")
+    Page<Team> findAllByFilterWithoutCategoryAndRuleAndSearch( @Param("subject") List<String> subject,  Pageable pageable);
 
 }

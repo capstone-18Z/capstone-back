@@ -85,8 +85,11 @@ public class WebSocketConfig implements WebSocketConfigurer {
 
                 } else if (payload.startsWith("ROOM:")) {
                     UUID where = UUID.fromString(payload.substring(5).split("##")[0]);
+                    System.out.println("아아 : "+payload.substring(5).split("##")[1]);
                     UUID to = UUID.fromString(payload.substring(5).split("##")[1]);
-                    sendTeamChatToAnother(session, payload.substring(5).split("##")[2], where, to);
+                    String nickName = payload.substring(5).split("##")[3];
+                    String mode = payload.substring(5).split("##")[4];
+                    sendTeamChatToAnother(session, payload.substring(5).split("##")[2], where, to,nickName,mode);
                     System.out.println(payload.substring(5));
                 } else if (payload.startsWith("enterRoom:")) {
                     UUID waitingId = UUID.fromString(payload.substring(10).split("##")[0]);
@@ -111,9 +114,13 @@ public class WebSocketConfig implements WebSocketConfigurer {
                     } else {
                         isEnterd.get(waitingId).add(session);
                     }
-                    sendEnterNotifocationTeamChat(nickname+"님이 입장했습니다",nickname,waitingId);
-                } else {
-
+                    sendEnterNotifocationTeamChat(nickname+"님이 입장했습니다",nickname,waitingId,userId);
+                } else if(payload.startsWith("exitRoom:")){
+                    UUID waitingId = UUID.fromString(payload.substring(9).split("##")[0]);
+                    String token = payload.substring(9).split("##")[1];
+                    String nickname = payload.substring(9).split("##")[2];
+                    UUID userId = jwtTokenProvider.getUserId(token);
+                    sendExitNotifocationTeamChat(nickname+"님이 퇴장했습니다",nickname,waitingId,userId);
                 }
             } else {
 
@@ -132,7 +139,6 @@ public class WebSocketConfig implements WebSocketConfigurer {
 
             System.out.println("closeStatus : " + closeStatus.getCode());
             UUID userId = getUserIdFromSession(session);
-
             if (userId != null) {
 
                 sessions.get(userId).deleteSession(session);
@@ -163,7 +169,7 @@ public class WebSocketConfig implements WebSocketConfigurer {
             }
         }
 
-        public static void sendTeamChatToAnother(WebSocketSession sendUser, String msg, UUID where, UUID to) throws IOException {
+        public static void sendTeamChatToAnother(WebSocketSession sendUser, String msg, UUID where, UUID to,String nickName,String mode) throws IOException {
             List<WebSocketSession> userList = isEnterd.get(where);
             if (isEnterd.get(where) != null && sessions.get(to) != null && sessions.get(to).getRoomSessions() != null) {
                 boolean isContained = false;
@@ -176,7 +182,8 @@ public class WebSocketConfig implements WebSocketConfigurer {
                             Gson gson = new Gson();
                             Map<String, String> payloadMap = new HashMap<>();
                             payloadMap.put("type", "message");
-                            payloadMap.put("message", "a:" + msg);
+                            payloadMap.put("message", "a:" +" "+nickName+" "+ msg);
+                            payloadMap.put("nickname", nickName);
                             String payload = gson.toJson(payloadMap);
                             TextMessage message = new TextMessage(payload);
                             user.sendMessage(message);
@@ -186,10 +193,18 @@ public class WebSocketConfig implements WebSocketConfigurer {
                 }
                 if (!isContained) {
                     if (sessions.get(to) != null && sessions.get(to).getSession() != null) {
+                        System.out.println("위에꺼");
                         Gson gson = new Gson();
                         Map<String, String> payloadMap = new HashMap<>();
                         payloadMap.put("type", "notificationFromChat");
-                        payloadMap.put("message", "신청 팀으로부터 채팅이 왔습니다");
+                        if(mode.equals("team")) {
+                            payloadMap.put("message", "신청 팀으로부터 채팅이 왔습니다");
+                        }
+                        if(mode.equals("user")) {
+                            payloadMap.put("message", "유저로부터 채팅이 왔습니다");
+                        }
+                        payloadMap.put("userId",getUserIdFromSession(sendUser).toString());
+                        payloadMap.put("mode",mode);
                         payloadMap.put("waitingId", where.toString());
                         payloadMap.put("teamLeader", getUserIdFromSession(sendUser).toString());
                         String payload = gson.toJson(payloadMap);
@@ -199,10 +214,17 @@ public class WebSocketConfig implements WebSocketConfigurer {
                 }
             } else {
                 if (sessions.get(to) != null && sessions.get(to).getSession() != null) {
+                    System.out.println("아래꺼 ");
                     Gson gson = new Gson();
                     Map<String, String> payloadMap = new HashMap<>();
                     payloadMap.put("type", "notificationFromChat");
-                    payloadMap.put("message", "신청 팀으로부터 채팅이 왔습니다");
+                    if(mode.equals("team")) {
+                        payloadMap.put("message", "신청 팀으로부터 채팅이 왔습니다");
+                    }
+                    if(mode.equals("user")) {
+                        payloadMap.put("message", "유저로부터 채팅이 왔습니다");
+                    }
+                    payloadMap.put("mode",mode);
                     payloadMap.put("waitingId", where.toString());
                     payloadMap.put("teamLeader", getUserIdFromSession(sendUser).toString());
                     String payload = gson.toJson(payloadMap);
@@ -212,7 +234,7 @@ public class WebSocketConfig implements WebSocketConfigurer {
             }
         }
 
-        public static void sendEnterNotifocationTeamChat(String msg,String nickname, UUID where) throws IOException {
+        public static void sendEnterNotifocationTeamChat(String msg,String nickname, UUID where,UUID userId) throws IOException {
             List<WebSocketSession> userList = isEnterd.get(where);
             if (userList != null) {
                 for (WebSocketSession user : userList) {
@@ -220,14 +242,35 @@ public class WebSocketConfig implements WebSocketConfigurer {
                         Gson gson = new Gson();
                         Map<String, String> payloadMap = new HashMap<>();
                         payloadMap.put("type", "enter");
-                        payloadMap.put("message", "n:" + msg);
-                        payloadMap.put("nickname", nickname);
+                        payloadMap.put("message", "n:" +" "+nickname+" "+ msg);
+                        payloadMap.put("checkUser", userId.toString());
                         String payload = gson.toJson(payloadMap);
                         TextMessage message = new TextMessage(payload);
                         user.sendMessage(message);
                 }
             }
         }
+
+        public static void sendExitNotifocationTeamChat(String msg,String nickname, UUID where,UUID userId) throws IOException {
+            System.out.println("exit");
+            List<WebSocketSession> userList = isEnterd.get(where);
+            if (userList != null) {
+                for (WebSocketSession user : userList) {
+
+                    Gson gson = new Gson();
+                    Map<String, String> payloadMap = new HashMap<>();
+                    payloadMap.put("type", "enter");
+                    payloadMap.put("message", "n:" +" "+nickname+" "+ msg);
+                    payloadMap.put("checkUser", userId.toString());
+                    String payload = gson.toJson(payloadMap);
+                    TextMessage message = new TextMessage(payload);
+                    user.sendMessage(message);
+                }
+            }else{
+                System.out.println("userList==null");
+            }
+        }
+
 
 
         private static UUID getUserIdFromSession(WebSocketSession session) {

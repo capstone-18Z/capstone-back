@@ -44,7 +44,7 @@ public class TeamController {
     public ResponseEntity<ResponseForm> mainPost(){
         Pageable pageable = PageRequest.of(0, 4);
         List<Team> teams = teamRepository.getAllTeamOrderByUpdateDesc(pageable);
-        ResponseForm responseForm = ResponseForm.builder().message("모든 팀을 조회합니다").state(HttpStatus.OK.value()).data(teams).build();
+        ResponseForm responseForm = ResponseForm.builder().message("최근 팀을 조회합니다.").state(HttpStatus.OK.value()).data(teams).build();
         return ResponseEntity.ok().body(responseForm);
     }
 
