@@ -39,6 +39,8 @@ public class MatchingUserToTeamService {
     @Autowired
     RefreshTokenRepository refreshTokenRepository;
 
+    @Autowired
+    ChatRepository chatRepository;
 
 
     public MatchingUserToTeamService(TeamMemberRepository teamMemberRepository, WaitingListUserToTeamRepository waitingListRepository, SpringDataTeamRepository springDataTeamRepository, MemberRepository memberRepository){
@@ -97,7 +99,7 @@ public class MatchingUserToTeamService {
             //매칭이 완료외었으므로 해당 대기인원 data는 삭제한다
 
             //waitingListRepository.delete(waitingList);
-
+            chatRepository.deleteAllByRoom(waitingListId);
             waitingListRepository.delete(waitingList);
             //이후, 팀멤버 테이블에 해당 사용자를 추가
 
@@ -150,7 +152,7 @@ public class MatchingUserToTeamService {
             Team team = waitingListOfMatchingUserToTeam.getTeam();
 
             team.getRequestList().removeIf(req -> req.equals(waitingListOfMatchingUserToTeam));
-
+            chatRepository.deleteAllByRoom(waitingListId);
             //매칭이 완료외었으므로 해당 대기인원 data는 삭제한다
             waitingListRepository.delete(waitingListOfMatchingUserToTeam);
             springDataTeamRepository.save(team);

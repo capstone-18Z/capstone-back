@@ -432,7 +432,7 @@ public class MemberService {
         long memberDatabaseId=member.getMemberDB().getId();
         long startTime=System.currentTimeMillis();
         Pageable pageable= PageRequest.of(0,5);
-       // if (jwtTokenProvider.isValidAccessToken(loginToken)){
+        if (jwtTokenProvider.isValidAccessToken(loginToken)){
             List<UUID> teams=memberRepository.findTeamWithSameKeyword(userId);
             for(UUID teamId : teams){
                 System.out.println("teamId : " +teamId);
@@ -477,9 +477,9 @@ public class MemberService {
         }
 
             return ResponseForm.builder().message("추천 팀을 반환합니다").data(list).build();
-        //}else{
-        //    return checkRefreshToken(refreshToken);
-        //}
+        }else{
+            return checkRefreshToken(refreshToken);
+        }
 
     }
 

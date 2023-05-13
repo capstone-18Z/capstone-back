@@ -521,7 +521,7 @@ public class MemberController {
         }
     }
 
-    @PostMapping("/recommend")
+    @GetMapping("/recommend")
     public ResponseEntity<ResponseForm> recommendList(HttpServletRequest request){
         String accessToken=request.getHeader("login-token");
         String refreshToken=request.getHeader("refresh-token");

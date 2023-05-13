@@ -1,12 +1,11 @@
 package com.makedreamteam.capstoneback;
 
 import com.google.gson.Gson;
+import com.makedreamteam.capstoneback.domain.Chat;
 import com.makedreamteam.capstoneback.domain.TeamMember;
 import com.makedreamteam.capstoneback.domain.WaitingListOfMatchingTeamToUser;
 import com.makedreamteam.capstoneback.form.WebSocketSessionList;
-import com.makedreamteam.capstoneback.repository.TeamMemberRepository;
-import com.makedreamteam.capstoneback.repository.WaitingListTeamToUserRepository;
-import com.makedreamteam.capstoneback.repository.WaitingListUserToTeamRepository;
+import com.makedreamteam.capstoneback.repository.*;
 import io.jsonwebtoken.Claims;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.ansi.AnsiOutput;
@@ -41,6 +40,11 @@ public class WebSocketConfig implements WebSocketConfigurer {
     private WaitingListTeamToUserRepository waitingListTeamToUserRepository;
     @Autowired
     private WaitingListUserToTeamRepository waitingListUserToTeamRepository;
+
+    @Autowired
+    private ChatRepository chatRepository;
+    @Autowired
+    private NotificationRepository notificationRepository;
 
 
     @Override
@@ -169,7 +173,7 @@ public class WebSocketConfig implements WebSocketConfigurer {
             }
         }
 
-        public static void sendTeamChatToAnother(WebSocketSession sendUser, String msg, UUID where, UUID to,String nickName,String mode) throws IOException {
+        public void sendTeamChatToAnother(WebSocketSession sendUser, String msg, UUID where, UUID to,String nickName,String mode) throws IOException {
             List<WebSocketSession> userList = isEnterd.get(where);
             if (isEnterd.get(where) != null && sessions.get(to) != null && sessions.get(to).getRoomSessions() != null) {
                 boolean isContained = false;
@@ -187,8 +191,20 @@ public class WebSocketConfig implements WebSocketConfigurer {
                             String payload = gson.toJson(payloadMap);
                             TextMessage message = new TextMessage(payload);
                             user.sendMessage(message);
+                            Chat chat= Chat.builder().from(getUserIdFromSession(sendUser)).to(to).room(where).date(new Date()).msg("a:" +" "+nickName+" "+ msg).build();
+                            chatRepository.save(chat);
                             isContained = true;
                         }
+                    }else if(userList.size()==1 && user == sendUser){
+                        System.out.println("userList.size()==1 && user == sendUser");
+                        Chat chat= Chat.builder().from(getUserIdFromSession(sendUser)).to(getUserIdFromSession(sendUser)).room(where).date(new Date()).msg("m:" +" "+nickName+" "+ msg).build();
+                        Chat chat2= Chat.builder().from(getUserIdFromSession(sendUser)).to(to).room(where).date(new Date()).msg("a:" +" "+nickName+" "+ msg).build();
+                        chatRepository.save(chat);
+                        chatRepository.save(chat2);
+                    }else if(userList.size()>1 && user == sendUser){
+                        System.out.println("userList.size()>1 && user == sendUser");
+                        Chat chat= Chat.builder().from(getUserIdFromSession(sendUser)).to(getUserIdFromSession(sendUser)).room(where).date(new Date()).msg("m:" +" "+nickName+" "+ msg).build();
+                        chatRepository.save(chat);
                     }
                 }
                 if (!isContained) {

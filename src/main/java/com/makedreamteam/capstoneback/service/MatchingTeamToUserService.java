@@ -10,10 +10,7 @@ import com.makedreamteam.capstoneback.domain.WaitingListOfMatchingTeamToUser;
 import com.makedreamteam.capstoneback.form.MypageFormForList;
 import com.makedreamteam.capstoneback.form.RequestData;
 import com.makedreamteam.capstoneback.form.ResponseForm;
-import com.makedreamteam.capstoneback.repository.MemberRepository;
-import com.makedreamteam.capstoneback.repository.SpringDataTeamRepository;
-import com.makedreamteam.capstoneback.repository.TeamMemberRepository;
-import com.makedreamteam.capstoneback.repository.WaitingListTeamToUserRepository;
+import com.makedreamteam.capstoneback.repository.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -30,7 +27,8 @@ public class MatchingTeamToUserService {
     private final TeamMemberRepository teamMemberRepository;
     @Autowired
     private final JwtTokenProvider jwtTokenProvider;
-
+    @Autowired
+    private ChatRepository chatRepository;
     @Autowired
     MemberRepository memberRepository;
     @Autowired
@@ -89,7 +87,9 @@ public class MatchingTeamToUserService {
             }
             TeamMember newTeamMember=TeamMember.builder().teamLeader(team.getTeamLeader()).teamId(teamId).userId(userId).build();
             TeamMember save = teamMemberRepository.save(newTeamMember);
+            chatRepository.deleteAllByRoom(waitingListOfMatchingTeamToUser.getId());
             waitingListTeamToUserRepository.delete(waitingListOfMatchingTeamToUser);
+
             WebSocketConfig.MyWebSocketHandler.sendNotificationToUser(team.getTeamLeader(),"신청이 수락되었습니다.");
             return ResponseForm.builder().data(save).message("신청을 수락했습니다").build();
         }else{
@@ -135,6 +135,7 @@ public class MatchingTeamToUserService {
             UUID teamLeader=springDataTeamRepository.findById(request.getTeamId()).orElseThrow(()->{
                 throw new RuntimeException("팀원 신청한 팀이 존재하지 않습니다.");
             }).getTeamLeader();
+            chatRepository.deleteAllByRoom(request.getId());
             waitingListTeamToUserRepository.delete(request);
             WebSocketConfig.MyWebSocketHandler.sendNotificationToUser(teamLeader,"신청이 거절되었습니다.");
             return ResponseForm.builder().message("신청을 거절했습니다.").build();
