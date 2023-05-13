@@ -5,6 +5,7 @@ import java.util.*;
 import com.makedreamteam.capstoneback.domain.Member;
 import com.makedreamteam.capstoneback.domain.Team;
 import org.springframework.data.domain.Example;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -41,5 +42,5 @@ public interface MemberRepository extends JpaRepository<Member, UUID> {
     @Query("select td.team,(md.mariadbL*td.mariadbL+md.mongodbL*td.mongodbL+md.mysqlL*td.mysqlL+md.schemaL*td.schemaL) from MemberDatabase md,TeamDatabase td WHERE md.member.id= :memberId and td.team.teamId in :teamId order by (md.mariadbL*td.mariadbL+md.mongodbL*td.mongodbL+md.mysqlL*td.mysqlL+md.schemaL*td.schemaL) desc ")
     List<Object[]> recommendTeamWithDatabase(@Param("teamId")List<UUID> teamId, @Param("memberId") UUID memberId, Pageable pageable);
 
-
+    Page<Member> findMembersByNicknameContaining(String nickname, Pageable page);
 }
