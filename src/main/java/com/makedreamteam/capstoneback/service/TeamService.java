@@ -353,14 +353,8 @@ public class TeamService {
     public ResponseForm getAllTeamsByTeamLeader(String accessToken, String refreshToken) {
         if(jwtTokenProvider.isValidAccessToken(accessToken)){
             UUID userId=jwtTokenProvider.getUserId(accessToken);
-
             List<Team> teamsByTeamLeader = springDataTeamRepository.findTeamsByTeamLeader(userId);
-            List<MyTeam> myTeams=new ArrayList<>();
-            for (Team team : teamsByTeamLeader){
-                MyTeam myTeam=MyTeam.builder().teamId(team.getTeamId()).title(team.getTitle()).build();
-                myTeams.add(myTeam);
-            }
-            return ResponseForm.builder().message("해당 유저의 팀을 반환합니다.").data(myTeams).build();
+            return ResponseForm.builder().message("해당 유저의 팀을 반환합니다.").data(teamsByTeamLeader).build();
         }else{
             return checkRefreshToken(refreshToken);
         }

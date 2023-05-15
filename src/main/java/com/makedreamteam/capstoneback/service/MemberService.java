@@ -76,7 +76,7 @@ public class MemberService {
     public Member MemberJoin(Member post) {
         try {
             if (!checkEmailDuplicate(post.getEmail()) && !checkNicknameDuplicate(post.getNickname())) {
-               // if (verifiedUserMap.get(post.getEmail()) != null && verifiedUserMap.get(post.getEmail()).isVerified()) {
+                if (verifiedUserMap.get(post.getEmail()) != null && verifiedUserMap.get(post.getEmail()).isVerified()) {
                     Member save = memberRepository.save(post);
 
                     MemberLang memberLang = new MemberLang();
@@ -94,9 +94,9 @@ public class MemberService {
                     System.out.println("저장이 완료되었습니다!");
                     verifiedUserMap.remove(post.getEmail());
                     return save;
-               // } else {
-               //     throw new RuntimeException("이메일 인증을 해주세요.");
-               // }
+                } else {
+                    throw new RuntimeException("이메일 인증을 해주세요.");
+                }
             } else if (checkNicknameDuplicate(post.getNickname())) {
                 throw new IllegalArgumentException("이미 존재하는 닉네임입니다.");
             } else {
@@ -420,7 +420,7 @@ public class MemberService {
 
             return ResponseForm.builder().message("추천 팀을 반환합니다").data(list).build();
         }else{
-            return checkRefreshToken(refreshToken);
+            return jwtTokenProvider.checkRefreshToken(refreshToken);
         }
 
     }

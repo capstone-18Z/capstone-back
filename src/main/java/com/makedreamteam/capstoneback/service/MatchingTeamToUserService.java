@@ -34,6 +34,9 @@ public class MatchingTeamToUserService {
     @Autowired
     private final SpringDataTeamRepository springDataTeamRepository;
 
+    @Autowired
+    private WebSocketConfig.MyWebSocketHandler myWebSocketHandler;
+
     public MatchingTeamToUserService(WaitingListTeamToUserRepository waitingListTeamToUserRepository, TeamMemberRepository teamMemberRepository, JwtTokenProvider jwtTokenProvider, SpringDataTeamRepository springDataTeamRepository) {
         this.waitingListTeamToUserRepository = waitingListTeamToUserRepository;
         this.teamMemberRepository = teamMemberRepository;
@@ -54,7 +57,7 @@ public class MatchingTeamToUserService {
 
             if(waitingListOfMatchingTeamToUser==null){
                 WaitingListOfMatchingTeamToUser request= WaitingListOfMatchingTeamToUser.builder().teamId(teamId).memberId(user).build();
-                WebSocketConfig.MyWebSocketHandler.sendNotificationToUser(user,"팀원 신청 요청이 왔습니다.");
+                myWebSocketHandler.sendNotificationToUser(user,"팀원 신청 요청이 왔습니다.");
                 return ResponseForm.builder().message("신청을 완료했습니다.").data(waitingListTeamToUserRepository.save(request)).build();
             }else
                 throw new RuntimeException("이미 신청한 유저 입니다.");
@@ -79,7 +82,7 @@ public class MatchingTeamToUserService {
                 waitingListTeamToUserRepository.delete(waitingListOfMatchingTeamToUser);
                 throw new RuntimeException("해당 팀이 존재하지 않습니다");
             });
-
+            springDataTeamRepository.save(settingTeamMember(team));
             List<UUID> uuids = teamMemberRepository.getMapTeamMember(teamId);
             if(uuids!=null && uuids.contains(userId)){
                 waitingListTeamToUserRepository.delete(waitingListOfMatchingTeamToUser);
@@ -90,7 +93,7 @@ public class MatchingTeamToUserService {
             chatRepository.deleteAllByRoom(waitingListOfMatchingTeamToUser.getId());
             waitingListTeamToUserRepository.delete(waitingListOfMatchingTeamToUser);
 
-            WebSocketConfig.MyWebSocketHandler.sendNotificationToUser(team.getTeamLeader(),"신청이 수락되었습니다.");
+            myWebSocketHandler.sendNotificationToUser(team.getTeamLeader(),"신청이 수락되었습니다.");
             return ResponseForm.builder().data(save).message("신청을 수락했습니다").build();
         }else{
             return jwtTokenProvider.checkRefreshToken(refreshToken);
@@ -137,7 +140,7 @@ public class MatchingTeamToUserService {
             }).getTeamLeader();
             chatRepository.deleteAllByRoom(request.getId());
             waitingListTeamToUserRepository.delete(request);
-            WebSocketConfig.MyWebSocketHandler.sendNotificationToUser(teamLeader,"신청이 거절되었습니다.");
+            myWebSocketHandler.sendNotificationToUser(teamLeader,"신청이 거절되었습니다.");
             return ResponseForm.builder().message("신청을 거절했습니다.").build();
         }else{
             return jwtTokenProvider.checkRefreshToken(refreshToken);
@@ -189,5 +192,15 @@ public class MatchingTeamToUserService {
             waitingListTeamToUserRepository.deleteById(matchId);
             return ResponseForm.builder().message("신청을 취소했습니다.").build();
         }else return jwtTokenProvider.checkRefreshToken(refreshToken);
+    }
+
+    public Team settingTeamMember(Team team){
+        int currentMember= team.getCurrentTeamMemberCount();
+        int wantedMember=team.getWantTeamMemberCount();
+        if(wantedMember-1<0)
+            throw new RuntimeException("더이상 팀원을 받을 수 없습니다");
+        team.setCurrentTeamMemberCount((byte) (currentMember+1));
+        team.setWantTeamMemberCount((byte) (wantedMember-1));
+        return team;
     }
 }

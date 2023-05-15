@@ -4,6 +4,7 @@ package com.makedreamteam.capstoneback.domain;
 import jakarta.persistence.*;
 import lombok.*;
 import org.checkerframework.checker.index.qual.SearchIndexBottom;
+import org.springframework.web.socket.TextMessage;
 
 import java.util.UUID;
 
@@ -19,8 +20,10 @@ public class Notification {
     private Long id;
 
     @Column
-    private UUID user;
+    private UUID userId;
 
     @Column
     private String msg;
+
+
 }

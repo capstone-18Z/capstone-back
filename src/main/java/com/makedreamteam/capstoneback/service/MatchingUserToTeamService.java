@@ -41,6 +41,8 @@ public class MatchingUserToTeamService {
 
     @Autowired
     ChatRepository chatRepository;
+    @Autowired
+    WebSocketConfig.MyWebSocketHandler myWebSocketHandler;
 
 
     public MatchingUserToTeamService(TeamMemberRepository teamMemberRepository, WaitingListUserToTeamRepository waitingListRepository, SpringDataTeamRepository springDataTeamRepository, MemberRepository memberRepository){
@@ -69,7 +71,7 @@ public class MatchingUserToTeamService {
                         throw new RuntimeException("이미 같은팀에 속해있습니다.");
                     });
             UUID teamLeader=team.getTeamLeader();
-            WebSocketConfig.MyWebSocketHandler.sendNotificationToUser(teamLeader,"팀원 신청이 왔습니다.");
+            myWebSocketHandler.sendNotificationToUser(teamLeader,"팀원 신청이 왔습니다.");
             waitingListOfMatchingUserToTeam.setUserId(userId);
             waitingListOfMatchingUserToTeam.setTeam(team);
             WaitingListOfMatchingUserToTeam savedData = waitingListRepository.save(waitingListOfMatchingUserToTeam);
@@ -106,7 +108,7 @@ public class MatchingUserToTeamService {
             teamMemberRepository.save(teamMember);
 
             springDataTeamRepository.save(settingTeamMember(team));
-            WebSocketConfig.MyWebSocketHandler.sendNotificationToUser(userId,"신청이 수락되었습니다.");
+            myWebSocketHandler.sendNotificationToUser(userId,"신청이 수락되었습니다.");
 
             return ResponseForm.builder().message("사용자를 팀에 추가했습니다").build();
         }else{
@@ -156,7 +158,7 @@ public class MatchingUserToTeamService {
             //매칭이 완료외었으므로 해당 대기인원 data는 삭제한다
             waitingListRepository.delete(waitingListOfMatchingUserToTeam);
             springDataTeamRepository.save(team);
-            WebSocketConfig.MyWebSocketHandler.sendNotificationToUser(waitingListOfMatchingUserToTeam.getUserId(),"신청이 거절되었습니다");
+            myWebSocketHandler.sendNotificationToUser(waitingListOfMatchingUserToTeam.getUserId(),"신청이 거절되었습니다");
             return ResponseForm.builder().message("해당 요청을 거절했습니다.").build();
         }else{
             return checkRefreshToken(refreshToken);
