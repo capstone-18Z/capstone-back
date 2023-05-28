@@ -238,11 +238,11 @@ public class MemberController {
     }
 
     @GetMapping("/recommend")
-    public ResponseEntity<ResponseForm> recommendList(HttpServletRequest request){
+    public ResponseEntity<ResponseForm> recommendList(HttpServletRequest request,@RequestParam("category")String category,@RequestParam("field")String field,@RequestParam("sub")String sub){
         String accessToken=request.getHeader("login-token");
         String refreshToken=request.getHeader("refresh-token");
         try {
-            ResponseForm responseForm = memberService.recommendTeams(accessToken, refreshToken);
+            ResponseForm responseForm = memberService.recommendTeams(accessToken, refreshToken,category,field,sub);
             return ResponseEntity.ok(responseForm);
         }catch (RuntimeException e){
             ResponseForm error=ResponseForm.builder().message(e.getMessage()).build();

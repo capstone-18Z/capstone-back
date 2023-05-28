@@ -26,6 +26,8 @@ public class Chat {
     private UUID from;
     @Column(name = "`to`")
     private UUID to;
+    @Column
+    private String mode;
 
     @Column
     @Temporal(TemporalType.TIMESTAMP)

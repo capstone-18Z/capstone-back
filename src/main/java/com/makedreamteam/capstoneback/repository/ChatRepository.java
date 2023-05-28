@@ -16,5 +16,8 @@ public interface ChatRepository extends JpaRepository<Chat,Long> {
     @Query("select msg from Chat where room=:roomId and to =:to")
     List<String> findMsgByRoomAndToOrderByDate(@Param("roomId") UUID roomId,@Param("to") UUID to);
 
+
+    List<Chat> findAllByRoomOrderByDate(UUID roomId);
+
     void deleteAllByRoom(UUID roomId);
 }

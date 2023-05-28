@@ -63,7 +63,7 @@ public class WebSocketConfig implements WebSocketConfigurer {
 
             String uuid = UUID.randomUUID().toString();
             session.sendMessage(new TextMessage("{\"type\":\"uuid\",\"uuid\":\"" + uuid + "\",\"welcome\" : \"어서오세요\"}"));
-
+            System.out.println("웹소켓 접속 : "+session.toString());
 
         }
 
@@ -92,12 +92,18 @@ public class WebSocketConfig implements WebSocketConfigurer {
 
                 } else if (payload.startsWith("ROOM:")) {
                     UUID where = UUID.fromString(payload.substring(5).split("##")[0]);
-                    System.out.println("아아 : "+payload.substring(5).split("##")[1]);
+                    System.out.println("아아 : " + payload.substring(5).split("##")[1]);
                     UUID to = UUID.fromString(payload.substring(5).split("##")[1]);
                     String nickName = payload.substring(5).split("##")[3];
                     String mode = payload.substring(5).split("##")[4];
-                    sendTeamChatToAnother(session, payload.substring(5).split("##")[2], where, to,nickName,mode);
+                    sendTeamChatToAnother(session, payload.substring(5).split("##")[2], where, to, nickName, mode);
                     System.out.println(payload.substring(5));
+                } else if (payload.startsWith("TEAM:")) {
+                    UUID where = UUID.fromString(payload.substring(5).split("##")[0]);
+                    String msg = payload.substring(5).split("##")[1];
+                    String nickName = payload.substring(5).split("##")[2];
+                    String mode = payload.substring(5).split("##")[3];
+                    sendTeamChatToAnother(session,msg,where,nickName,mode);
                 } else if (payload.startsWith("enterRoom:")) {
                     UUID waitingId = UUID.fromString(payload.substring(10).split("##")[0]);
                     String token = payload.substring(10).split("##")[1];
@@ -121,13 +127,13 @@ public class WebSocketConfig implements WebSocketConfigurer {
                     } else {
                         isEnterd.get(waitingId).add(session);
                     }
-                    sendEnterNotifocationTeamChat(nickname+"님이 입장했습니다",nickname,waitingId,userId);
-                } else if(payload.startsWith("exitRoom:")){
+                    sendEnterNotifocationTeamChat(nickname + "님이 입장했습니다", nickname, waitingId, userId);
+                } else if (payload.startsWith("exitRoom:")) {
                     UUID waitingId = UUID.fromString(payload.substring(9).split("##")[0]);
                     String token = payload.substring(9).split("##")[1];
                     String nickname = payload.substring(9).split("##")[2];
                     UUID userId = jwtTokenProvider.getUserId(token);
-                    sendExitNotifocationTeamChat(nickname+"님이 퇴장했습니다",nickname,waitingId,userId);
+                    sendExitNotifocationTeamChat(nickname + "님이 퇴장했습니다", nickname, waitingId, userId);
                 }
             } else {
 
@@ -158,8 +164,8 @@ public class WebSocketConfig implements WebSocketConfigurer {
         }
 
 
-        public void sendNotificationToUser(UUID userId,String msg) throws IOException {
-            if(sessions.get(userId)!=null) {
+        public void sendNotificationToUser(UUID userId, String msg) throws IOException {
+            if (sessions.get(userId) != null) {
                 WebSocketSession session = sessions.get(userId).getSession();
                 if (session != null) {
                     Gson gson = new Gson();
@@ -176,25 +182,26 @@ public class WebSocketConfig implements WebSocketConfigurer {
                     payloadMap.put("type", "notification");
                     payloadMap.put("message", msg);
                     String payload = gson.toJson(payloadMap);
-                    Notification notification=new Notification();
+                    Notification notification = new Notification();
                     notification.setMsg(gson.toJson(payloadMap));
                     notification.setUserId(userId);
                     notificationRepository.save(notification);
                 }
-            }else{
+            } else {
                 Gson gson = new Gson();
                 Map<String, String> payloadMap = new HashMap<>();
                 payloadMap.put("type", "notification");
                 payloadMap.put("message", msg);
                 String payload = gson.toJson(payloadMap);
-                Notification notification=new Notification();
+                Notification notification = new Notification();
                 notification.setMsg(gson.toJson(payloadMap));
                 notification.setUserId(userId);
                 notificationRepository.save(notification);
             }
         }
 
-        public void sendTeamChatToAnother(WebSocketSession sendUser, String msg, UUID where, UUID to,String nickName,String mode) throws IOException {
+        public void sendTeamChatToAnother(WebSocketSession sendUser, String msg, UUID where, UUID to, String nickName, String mode) throws IOException {
+            System.out.println("into sendTeamChat");
             List<WebSocketSession> userList = isEnterd.get(where);
             if (isEnterd.get(where) != null && sessions.get(to) != null && sessions.get(to).getRoomSessions() != null) {
                 boolean isContained = false;
@@ -207,24 +214,24 @@ public class WebSocketConfig implements WebSocketConfigurer {
                             Gson gson = new Gson();
                             Map<String, String> payloadMap = new HashMap<>();
                             payloadMap.put("type", "message");
-                            payloadMap.put("message", "a:" +" "+nickName+" "+ msg);
+                            payloadMap.put("message", "a:" + " " + nickName + " " + msg);
                             payloadMap.put("nickname", nickName);
                             String payload = gson.toJson(payloadMap);
                             TextMessage message = new TextMessage(payload);
                             user.sendMessage(message);
-                            Chat chat= Chat.builder().from(getUserIdFromSession(sendUser)).to(to).room(where).date(new Date()).msg("a:" +" "+nickName+" "+ msg).build();
+                            Chat chat = Chat.builder().from(getUserIdFromSession(sendUser)).mode("chat").to(to).room(where).date(new Date()).msg("a:" + " " + nickName + " " + msg).build();
                             chatRepository.save(chat);
                             isContained = true;
                         }
-                    }else if(userList.size()==1 && user == sendUser){
+                    } else if (userList.size() == 1 && user == sendUser) {
                         System.out.println("userList.size()==1 && user == sendUser");
-                        Chat chat= Chat.builder().from(getUserIdFromSession(sendUser)).to(getUserIdFromSession(sendUser)).room(where).date(new Date()).msg("m:" +" "+nickName+" "+ msg).build();
-                        Chat chat2= Chat.builder().from(getUserIdFromSession(sendUser)).to(to).room(where).date(new Date()).msg("a:" +" "+nickName+" "+ msg).build();
+                        Chat chat = Chat.builder().from(getUserIdFromSession(sendUser)).mode("chat").to(getUserIdFromSession(sendUser)).room(where).date(new Date()).msg("m:" + " " + nickName + " " + msg).build();
+                        Chat chat2 = Chat.builder().from(getUserIdFromSession(sendUser)).mode("chat").to(to).room(where).date(new Date()).msg("a:" + " " + nickName + " " + msg).build();
                         chatRepository.save(chat);
                         chatRepository.save(chat2);
-                    }else if(userList.size()>1 && user == sendUser){
+                    } else if (userList.size() > 1 && user == sendUser) {
                         System.out.println("userList.size()>1 && user == sendUser");
-                        Chat chat= Chat.builder().from(getUserIdFromSession(sendUser)).to(getUserIdFromSession(sendUser)).room(where).date(new Date()).msg("m:" +" "+nickName+" "+ msg).build();
+                        Chat chat = Chat.builder().from(getUserIdFromSession(sendUser)).mode("chat").to(getUserIdFromSession(sendUser)).room(where).date(new Date()).msg("m:" + " " + nickName + " " + msg).build();
                         chatRepository.save(chat);
                     }
                 }
@@ -234,20 +241,20 @@ public class WebSocketConfig implements WebSocketConfigurer {
                         Gson gson = new Gson();
                         Map<String, String> payloadMap = new HashMap<>();
                         payloadMap.put("type", "notificationFromChat");
-                        payloadMap.put("userId",getUserIdFromSession(sendUser).toString());
-                        payloadMap.put("mode",mode);
+                        payloadMap.put("userId", getUserIdFromSession(sendUser).toString());
+                        payloadMap.put("mode", mode);
                         payloadMap.put("waitingId", where.toString());
                         payloadMap.put("teamLeader", getUserIdFromSession(sendUser).toString());
-                        if(mode.equals("team")) {
+                        if (mode.equals("team")) {
                             payloadMap.put("message", "신청 팀으로부터 채팅이 왔습니다");
-                            Notification notification=new Notification();
+                            Notification notification = new Notification();
                             notification.setMsg(gson.toJson(payloadMap));
                             notification.setUserId(to);
                             notificationRepository.save(notification);
                         }
-                        if(mode.equals("user")) {
+                        if (mode.equals("user")) {
                             payloadMap.put("message", "유저로부터 채팅이 왔습니다");
-                            Notification notification=new Notification();
+                            Notification notification = new Notification();
                             notification.setMsg(gson.toJson(payloadMap));
                             notification.setUserId(to);
                             notificationRepository.save(notification);
@@ -263,19 +270,19 @@ public class WebSocketConfig implements WebSocketConfigurer {
                     Gson gson = new Gson();
                     Map<String, String> payloadMap = new HashMap<>();
                     payloadMap.put("type", "notificationFromChat");
-                    payloadMap.put("mode",mode);
+                    payloadMap.put("mode", mode);
                     payloadMap.put("waitingId", where.toString());
                     payloadMap.put("teamLeader", getUserIdFromSession(sendUser).toString());
-                    if(mode.equals("team")) {
+                    if (mode.equals("team")) {
                         payloadMap.put("message", "신청 팀으로부터 채팅이 왔습니다");
-                        Notification notification=new Notification();
+                        Notification notification = new Notification();
                         notification.setMsg(gson.toJson(payloadMap));
                         notification.setUserId(to);
                         notificationRepository.save(notification);
                     }
-                    if(mode.equals("user")) {
+                    if (mode.equals("user")) {
                         payloadMap.put("message", "유저로부터 채팅이 왔습니다");
-                        Notification notification=new Notification();
+                        Notification notification = new Notification();
                         notification.setMsg(gson.toJson(payloadMap));
                         notification.setUserId(to);
                         notificationRepository.save(notification);
@@ -283,47 +290,86 @@ public class WebSocketConfig implements WebSocketConfigurer {
                     String payload = gson.toJson(payloadMap);
                     TextMessage message = new TextMessage(payload);
                     sessions.get(to).getSession().sendMessage(message);
+                    Chat chat = Chat.builder().from(getUserIdFromSession(sendUser)).mode("chat").to(getUserIdFromSession(sendUser)).room(where).date(new Date()).msg("m:" + " " + nickName + " " + msg).build();
+                    Chat chat2 = Chat.builder().from(getUserIdFromSession(sendUser)).mode("chat").to(to).room(where).date(new Date()).msg("a:" + " " + nickName + " " + msg).build();
+                    chatRepository.save(chat);
+                    chatRepository.save(chat2);
+
+                }
+                else{
+                    Chat chat = Chat.builder().from(getUserIdFromSession(sendUser)).mode("chat").to(getUserIdFromSession(sendUser)).room(where).date(new Date()).msg("m:" + " " + nickName + " " + msg).build();
+                    Chat chat2 = Chat.builder().from(getUserIdFromSession(sendUser)).mode("chat").to(to).room(where).date(new Date()).msg("a:" + " " + nickName + " " + msg).build();
+                    chatRepository.save(chat);
+                    chatRepository.save(chat2);
                 }
             }
         }
 
-        public static void sendEnterNotifocationTeamChat(String msg,String nickname, UUID where,UUID userId) throws IOException {
+        public void sendTeamChatToAnother(WebSocketSession sendUser, String msg, UUID where, String nickName, String mode) throws IOException {
             List<WebSocketSession> userList = isEnterd.get(where);
             if (userList != null) {
+                boolean isContained = false;
+                Chat chat = Chat.builder().from(getUserIdFromSession(sendUser)).mode("chat").room(where).date(new Date()).msg(nickName + " " + msg).build();
+                chatRepository.save(chat);
                 for (WebSocketSession user : userList) {
-                        System.out.println("isEnterd.get(where).contains(user) || sessions.get(to).getRoomSessions().contains(user)");
+                    if (user != sendUser) {
                         Gson gson = new Gson();
                         Map<String, String> payloadMap = new HashMap<>();
-                        payloadMap.put("type", "enter");
-                        payloadMap.put("message", "n:" +" "+nickname+" "+ msg);
-                        payloadMap.put("checkUser", userId.toString());
+                        payloadMap.put("type", "message");
+                        payloadMap.put("message", "a: "+nickName + " " + msg);
+                        payloadMap.put("nickname", nickName);
                         String payload = gson.toJson(payloadMap);
                         TextMessage message = new TextMessage(payload);
                         user.sendMessage(message);
+                        isContained = true;
+                    }
+                }
+
+            }
+
+        }
+
+        public void sendEnterNotifocationTeamChat(String msg, String nickname, UUID where, UUID userId) throws IOException {
+            List<WebSocketSession> userList = isEnterd.get(where);
+            if (userList != null) {
+                Chat chat = Chat.builder().mode("noti").room(where).date(new Date()).msg("n:" + " " + nickname + " " + msg).build();
+                chatRepository.save(chat);
+                for (WebSocketSession user : userList) {
+                    System.out.println("isEnterd.get(where).contains(user) || sessions.get(to).getRoomSessions().contains(user)");
+                    Gson gson = new Gson();
+                    Map<String, String> payloadMap = new HashMap<>();
+                    payloadMap.put("type", "enter");
+                    payloadMap.put("message", "n:" + " " + nickname + " " + msg);
+                    payloadMap.put("checkUser", userId.toString());
+                    String payload = gson.toJson(payloadMap);
+
+                    TextMessage message = new TextMessage(payload);
+                    user.sendMessage(message);
                 }
             }
         }
 
-        public static void sendExitNotifocationTeamChat(String msg,String nickname, UUID where,UUID userId) throws IOException {
+        public void sendExitNotifocationTeamChat(String msg, String nickname, UUID where, UUID userId) throws IOException {
             System.out.println("exit");
             List<WebSocketSession> userList = isEnterd.get(where);
             if (userList != null) {
+                Chat chat = Chat.builder().mode("noti").room(where).date(new Date()).msg("n:" + " " + nickname + " " + msg).build();
+                chatRepository.save(chat);
                 for (WebSocketSession user : userList) {
 
                     Gson gson = new Gson();
                     Map<String, String> payloadMap = new HashMap<>();
                     payloadMap.put("type", "enter");
-                    payloadMap.put("message", "n:" +" "+nickname+" "+ msg);
+                    payloadMap.put("message", "n:" + " " + nickname + " " + msg);
                     payloadMap.put("checkUser", userId.toString());
                     String payload = gson.toJson(payloadMap);
                     TextMessage message = new TextMessage(payload);
                     user.sendMessage(message);
                 }
-            }else{
+            } else {
                 System.out.println("userList==null");
             }
         }
-
 
 
         private static UUID getUserIdFromSession(WebSocketSession session) {

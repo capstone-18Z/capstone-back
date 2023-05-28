@@ -372,12 +372,13 @@ public class TeamService {
         if(search.equals("")) {
             Page<Team> teams = null;
 
-            if(category.isEmpty() && (rule.size()==1 && rule.get(0).equals("상관없음"))){
+            if(category.isEmpty() && rule.size()==0 ){
                 System.out.println("category.isEmpty() && rule.size()==1 && rule.get(0).equalse(상관없음)");
                 teams=teamKeywordRepository.findAllByFilterWithoutCategoryAndRuleAndSearch(subject,pageable);
-            } else if (category.isEmpty() && !(rule.size()==1 && rule.get(0).equals("상관없음"))) {
+            } else if (category.isEmpty() && rule.size()!=0 ) {
+
                 rule.add("상관없음");
-                System.out.println("category.isEmpty() && rule.size()>1");
+                System.out.println("category.isEmpty() && rule.size()>1 size"+rule.size() + " "+ rule.get(0).equals("상관없음")+" "+category.isEmpty());
                 teams=teamKeywordRepository.findAllByFilterWithoutCategoryAndSearch(subject,rule,pageable);
             } else if (!category.isEmpty() && (rule.size()==1 && rule.get(0).equals("상관없음"))) {
                 System.out.println("!category.isEmpty() && rule.size()==1 && rule.get(0).equals(상관없음)");
@@ -395,11 +396,11 @@ public class TeamService {
         }else{
             Page<Team> teams = null;
             System.out.println("search : "+search);
-            if(category.isEmpty() && (rule.size()==1 && rule.get(0).equals("상관없음"))){
+            if(category.isEmpty() && rule.size()==0 ){
                 System.out.println("category.isEmpty() && rule.size()==1 && rule.get(0).equals(상관없음)");
                 teams=teamKeywordRepository.findAllByFilterWithoutCategoryAndRule(subject,search,pageable);
-            } else if (category.isEmpty() && !(rule.size()==1 && rule.get(0).equals("상관없음"))) {
-                System.out.println("category.isEmpty() && rule.size()>1");
+            } else if (category.isEmpty() && rule.size()!=0 ) {
+
                 rule.add("상관없음");
                 teams=teamKeywordRepository.findAllByFilterWithoutCategory(subject,rule,search,pageable);
             } else if (!category.isEmpty() && (rule.size()==1 && rule.get(0).equals("상관없음"))) {
@@ -453,8 +454,16 @@ public class TeamService {
                 throw new RuntimeException("팀장은 팀을 나갈 수 없습니다");
             }
             teamMemberRepository.delete(teamMember);
+            springDataTeamRepository.save(addTeamMemberCount(team));
             return ResponseForm.builder().message("맴버가 팀에서 나갔습니다.").build();
 
         }else return jwtTokenProvider.checkRefreshToken(refreshToken);
+    }
+    public Team addTeamMemberCount(Team team){
+        int currentMember= team.getCurrentTeamMemberCount();
+        int wantedMember=team.getWantTeamMemberCount();
+        team.setCurrentTeamMemberCount((byte) (currentMember-1));
+        team.setWantTeamMemberCount((byte) (wantedMember+1));
+        return team;
     }
 }

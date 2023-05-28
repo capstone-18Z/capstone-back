@@ -52,6 +52,9 @@ public class Team{
     @Column
     private byte currentTeamMemberCount;
 
+    @Column
+    private String teamURL;
+
     @Column(columnDefinition = "VARCHAR(50) CHARACTER SET utf8 COLLATE utf8_general_ci")
     private String title;
     @Column(columnDefinition = "VARCHAR(20) CHARACTER SET utf8 COLLATE utf8_general_ci")
@@ -85,6 +88,7 @@ public class Team{
     @OneToOne(mappedBy = "team",cascade = CascadeType.ALL ,orphanRemoval = true,fetch = FetchType.LAZY)
     @JsonIgnoreProperties({"team"})
     private TeamDatabase teamDatabase;
+
 
 
     @ElementCollection(fetch = FetchType.EAGER)

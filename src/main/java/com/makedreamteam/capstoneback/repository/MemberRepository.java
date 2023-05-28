@@ -34,6 +34,13 @@ public interface MemberRepository extends JpaRepository<Member, UUID> {
             " WHERE mk.category = tk.category and mk.field=tk.field and mk.sub=tk.sub AND mk.member.id=:userId AND mk.member.id<>tk.team.teamLeader" +
             ")")
     List<UUID> findTeamWithSameKeyword(@Param("userId") UUID userId);
+
+    @Query("SELECT tk.team.teamId  FROM TeamKeyword tk " +
+            "WHERE EXISTS (" +
+            " SELECT 1 FROM MemberKeyword mk" +
+            " WHERE :category = tk.category and :field=tk.field and :sub=tk.sub AND mk.member.id=:userId AND mk.member.id<>tk.team.teamLeader" +
+            ")")
+    List<UUID> findTeamWithSameKeyword(@Param("userId") UUID userId,@Param("category")String category,@Param("field")String field,@Param("sub")String sub);
     @Query("SELECT tl.team, (ml.c*tl.c + ml.cpp*tl.cpp+ml.cs*tl.cs+ml.html*tl.html+ml.java*tl.java+ml.javascript*tl.javascript+ml.kotlin*tl.kotlin+ml.python*tl.python+ml.R*tl.R+ml.sql_Lang*tl.sql_Lang+ml.swift*tl.swift+ml.typescript*tl.typescript) " +
             " FROM  MemberLang ml, TeamLanguage  tl  WHERE ml.member.id = :memberId and tl.team.teamId in :teamId order by (ml.c*tl.c + ml.cpp*tl.cpp+ml.cs*tl.cs+ml.html*tl.html+ml.java*tl.java+ml.javascript*tl.javascript+ml.kotlin*tl.kotlin+ml.python*tl.python+ml.R*tl.R+ml.sql_Lang*tl.sql_Lang+ml.swift*tl.swift+ml.typescript*tl.typescript) DESC,ml.member.id desc")
     List<Object[]> recommendTeamWithLang(@Param("teamId")List<UUID> teamId, @Param("memberId") UUID memberId, Pageable pageable);

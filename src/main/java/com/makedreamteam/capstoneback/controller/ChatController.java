@@ -34,4 +34,16 @@ public class ChatController {
             return ResponseEntity.ok(error);
         }
     }
+    @GetMapping("/team")
+    public ResponseEntity<ResponseForm> getAllTeamChat(HttpServletRequest request, @RequestParam("roomId") UUID roomId){
+        String accessToken= request.getHeader("login-token");
+        String refreshToken=request.getHeader("refresh-token");
+        try {
+            ResponseForm responseForm = chatService.getAllTeamChat(roomId, accessToken, refreshToken);
+            return ResponseEntity.ok(responseForm);
+        }catch (RuntimeException e){
+            ResponseForm error=ResponseForm.builder().message(e.getMessage()).build();
+            return ResponseEntity.ok(error);
+        }
+    }
 }

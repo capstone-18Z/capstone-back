@@ -364,7 +364,7 @@ public class MemberService {
         return code.toString();
     }
 
-    public ResponseForm recommendTeams(String loginToken,String refreshToken){
+    public ResponseForm recommendTeams(String loginToken,String refreshToken,String category,String field,String sub){
         Map<Team,Double> recommendList=new HashMap<>();
         UUID userId=jwtTokenProvider.getUserId(loginToken);
         Member member=memberRepository.findById(userId).orElseThrow(()->{
@@ -373,9 +373,9 @@ public class MemberService {
         long memberFrameworkId=member.getMemberFramework().getId();
         long memberDatabaseId=member.getMemberDB().getId();
         long startTime=System.currentTimeMillis();
-        Pageable pageable= PageRequest.of(0,5);
+        Pageable pageable= PageRequest.of(0,6);
         if (jwtTokenProvider.isValidAccessToken(loginToken)){
-            List<UUID> teams=memberRepository.findTeamWithSameKeyword(userId);
+            List<UUID> teams=memberRepository.findTeamWithSameKeyword(userId,category,field,sub);
             for(UUID teamId : teams){
                 System.out.println("teamId : " +teamId);
             }

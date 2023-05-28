@@ -31,4 +31,12 @@ public class ChatService {
         }else
             return jwtTokenProvider.checkRefreshToken(refreshToken);
     }
+    public ResponseForm getAllTeamChat(UUID roomId, String accessToken, String refreshToken) {
+        if(jwtTokenProvider.isValidAccessToken(accessToken)){
+            UUID userId=jwtTokenProvider.getUserId(accessToken);
+            List<Chat> allByRoomAndTo = chatRepository.findAllByRoomOrderByDate(roomId);
+            return ResponseForm.builder().data(allByRoomAndTo).message("대화내용을 반환").build();
+        }else
+            return jwtTokenProvider.checkRefreshToken(refreshToken);
+    }
 }
