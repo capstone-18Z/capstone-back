@@ -55,7 +55,7 @@ public class Team{
     @Column
     private String teamURL;
 
-    @Column(columnDefinition = "VARCHAR(50) CHARACTER SET utf8 COLLATE utf8_general_ci")
+    @Column(columnDefinition = "VARCHAR(100) CHARACTER SET utf8 COLLATE utf8_general_ci")
     private String title;
     @Column(columnDefinition = "VARCHAR(20) CHARACTER SET utf8 COLLATE utf8_general_ci")
     private String writer;
@@ -66,7 +66,7 @@ public class Team{
     @Column
     private Date updateDate=new Date();
 
-    @Column(columnDefinition = "VARCHAR(255) CHARACTER SET utf8 COLLATE utf8_general_ci")
+    @Column(columnDefinition = "VARCHAR(9999) CHARACTER SET utf8 COLLATE utf8_general_ci")
     private String detail;
 
     @OneToMany(mappedBy = "team", cascade = CascadeType.ALL, orphanRemoval = true,fetch = FetchType.EAGER)
