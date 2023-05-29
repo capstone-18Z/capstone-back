@@ -2,19 +2,13 @@ package com.makedreamteam.capstoneback;
 
 import com.google.gson.Gson;
 import com.makedreamteam.capstoneback.domain.Chat;
-import com.makedreamteam.capstoneback.domain.Notification;
-import com.makedreamteam.capstoneback.domain.TeamMember;
-import com.makedreamteam.capstoneback.domain.WaitingListOfMatchingTeamToUser;
 import com.makedreamteam.capstoneback.form.WebSocketSessionList;
 import com.makedreamteam.capstoneback.repository.*;
 import io.jsonwebtoken.Claims;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.ansi.AnsiOutput;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
-import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.stereotype.Component;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.socket.*;
@@ -45,8 +39,7 @@ public class WebSocketConfig implements WebSocketConfigurer {
 
     @Autowired
     private ChatRepository chatRepository;
-    @Autowired
-    private NotificationRepository notificationRepository;
+
 
 
     @Override
@@ -182,10 +175,7 @@ public class WebSocketConfig implements WebSocketConfigurer {
                     payloadMap.put("type", "notification");
                     payloadMap.put("message", msg);
                     String payload = gson.toJson(payloadMap);
-                    Notification notification = new Notification();
-                    notification.setMsg(gson.toJson(payloadMap));
-                    notification.setUserId(userId);
-                    notificationRepository.save(notification);
+
                 }
             } else {
                 Gson gson = new Gson();
@@ -193,10 +183,7 @@ public class WebSocketConfig implements WebSocketConfigurer {
                 payloadMap.put("type", "notification");
                 payloadMap.put("message", msg);
                 String payload = gson.toJson(payloadMap);
-                Notification notification = new Notification();
-                notification.setMsg(gson.toJson(payloadMap));
-                notification.setUserId(userId);
-                notificationRepository.save(notification);
+
             }
         }
 
@@ -247,17 +234,11 @@ public class WebSocketConfig implements WebSocketConfigurer {
                         payloadMap.put("teamLeader", getUserIdFromSession(sendUser).toString());
                         if (mode.equals("team")) {
                             payloadMap.put("message", "신청 팀으로부터 채팅이 왔습니다");
-                            Notification notification = new Notification();
-                            notification.setMsg(gson.toJson(payloadMap));
-                            notification.setUserId(to);
-                            notificationRepository.save(notification);
+
                         }
                         if (mode.equals("user")) {
                             payloadMap.put("message", "유저로부터 채팅이 왔습니다");
-                            Notification notification = new Notification();
-                            notification.setMsg(gson.toJson(payloadMap));
-                            notification.setUserId(to);
-                            notificationRepository.save(notification);
+
                         }
                         String payload = gson.toJson(payloadMap);
                         TextMessage message = new TextMessage(payload);
@@ -275,17 +256,11 @@ public class WebSocketConfig implements WebSocketConfigurer {
                     payloadMap.put("teamLeader", getUserIdFromSession(sendUser).toString());
                     if (mode.equals("team")) {
                         payloadMap.put("message", "신청 팀으로부터 채팅이 왔습니다");
-                        Notification notification = new Notification();
-                        notification.setMsg(gson.toJson(payloadMap));
-                        notification.setUserId(to);
-                        notificationRepository.save(notification);
+
                     }
                     if (mode.equals("user")) {
                         payloadMap.put("message", "유저로부터 채팅이 왔습니다");
-                        Notification notification = new Notification();
-                        notification.setMsg(gson.toJson(payloadMap));
-                        notification.setUserId(to);
-                        notificationRepository.save(notification);
+
                     }
                     String payload = gson.toJson(payloadMap);
                     TextMessage message = new TextMessage(payload);
