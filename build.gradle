@@ -48,7 +48,9 @@ dependencies {
 	}
 	compileOnly("org.springframework.boot:spring-boot-devtools")
 }
-
+jar{
+	enabled=false
+}
 tasks.named('test') {
 	useJUnitPlatform()
 }
