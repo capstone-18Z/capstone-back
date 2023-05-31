@@ -231,7 +231,13 @@ public class MatchingUserToTeamService {
             if(byId.isEmpty()){
                 throw new RuntimeException("해당 요청이 존재하지 않습니다.");
             }
-            waitingListRepository.deleteById(waitingId);
+            WaitingListOfMatchingUserToTeam waitingListOfMatchingUserToTeam=byId.get();
+
+            Team team = waitingListOfMatchingUserToTeam.getTeam();
+            team.getRequestList().remove(waitingListOfMatchingUserToTeam);
+            springDataTeamRepository.save(team);
+            waitingListOfMatchingUserToTeam.setTeam(null);
+            waitingListRepository.delete(waitingListOfMatchingUserToTeam);
             return ResponseForm.builder().message("신청을 취소했습니다.").build();
         }else return jwtTokenProvider.checkRefreshToken(refreshToken);
     }
