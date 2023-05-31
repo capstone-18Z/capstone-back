@@ -102,4 +102,18 @@ public class MatchingUserToTeamController {
             return ResponseEntity.badRequest().body(error);
         }
     }
+
+    @PostMapping("/{waitingId}/delete")
+    public ResponseEntity<ResponseForm> deleteRequest(HttpServletRequest request,@PathVariable UUID waitingId){
+        String accessToken= request.getHeader("login-token");
+        String refreshToken= request.getHeader("refresh-token");
+        System.out.println("delete 요청");
+        try {
+            ResponseForm responseForm = matchingUserToTeamService.deleteRequest(waitingId, accessToken, refreshToken);
+            return ResponseEntity.ok(responseForm);
+        }catch (RuntimeException e){
+            ResponseForm error= ResponseForm.builder().message(e.getMessage()).build();
+            return ResponseEntity.badRequest().body(error);
+        }
+    }
 }

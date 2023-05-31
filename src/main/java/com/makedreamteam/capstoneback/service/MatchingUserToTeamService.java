@@ -224,4 +224,15 @@ public class MatchingUserToTeamService {
             } else return ResponseForm.builder().data(data).message("요청리스트를 반환합니다").build();
         } else return jwtTokenProvider.checkRefreshToken(refreshToken);
     }
+
+    public ResponseForm deleteRequest(UUID waitingId, String accessToken, String refreshToken) {
+        if(jwtTokenProvider.isValidAccessToken(accessToken)){
+            Optional<WaitingListOfMatchingUserToTeam> byId = waitingListRepository.findById(waitingId);
+            if(byId.isEmpty()){
+                throw new RuntimeException("해당 요청이 존재하지 않습니다.");
+            }
+            waitingListRepository.deleteById(waitingId);
+            return ResponseForm.builder().message("신청을 취소했습니다.").build();
+        }else return jwtTokenProvider.checkRefreshToken(refreshToken);
+    }
 }
