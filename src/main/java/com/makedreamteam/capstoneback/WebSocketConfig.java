@@ -151,7 +151,7 @@ public class WebSocketConfig implements WebSocketConfigurer {
                 deleteUserFromChatRoom(session);
 
             } else {
-                System.out.println("문제문제문제문제문제문제문제문제문제문제문제문제");
+                System.out.println("해당유저의 세션이 존재하지 않습니다");
             }
 
         }
@@ -368,6 +368,12 @@ public class WebSocketConfig implements WebSocketConfigurer {
             for (List<WebSocketSession> list : isEnterd.values()) {
                 if (list.contains(session))
                     list.remove(session);
+            }
+        }
+
+        public void deleteSession(UUID userId){
+            if(userId!=null) {
+                sessions.remove(userId);
             }
         }
     }
