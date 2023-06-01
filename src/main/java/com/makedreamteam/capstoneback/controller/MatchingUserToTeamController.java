@@ -107,7 +107,6 @@ public class MatchingUserToTeamController {
     public ResponseEntity<ResponseForm> deleteRequest(HttpServletRequest request,@PathVariable UUID waitingId){
         String accessToken= request.getHeader("login-token");
         String refreshToken= request.getHeader("refresh-token");
-        System.out.println("delete 요청");
         try {
             ResponseForm responseForm = matchingUserToTeamService.deleteRequest(waitingId, accessToken, refreshToken);
             return ResponseEntity.ok(responseForm);

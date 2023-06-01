@@ -124,12 +124,7 @@ public class TeamController {
 
         ResponseForm responseForm=teamService.doFilteringTeams(category,subject,rule,search,page);
 
-        System.out.println("search : "+ search);
-        System.out.println("category : "+ category);
-        System.out.println("subject : "+subject);
-        System.out.println("rule : "+ rule);
 
-        System.out.println("page : "+page);
         return ResponseEntity.ok().body(responseForm);
     }
 

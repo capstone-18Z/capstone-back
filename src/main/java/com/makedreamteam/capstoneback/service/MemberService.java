@@ -95,7 +95,8 @@ public class MemberService {
                     memberDatabase.setMember(save);
                     save.setMemberDB(memberDatabase);
 
-                    System.out.println("저장이 완료되었습니다!");
+
+
                     verifiedUserMap.remove(post.getEmail());
                     return save;
                 } else {
@@ -164,10 +165,12 @@ public class MemberService {
             if (file != null) {
                 if (!originalMember.getProfileImageUrl().equals(defaultprofileurl)) {
                     fileService.deleteFile(originalMember.getProfileImageUrl());
-                    System.out.println("파일 삭제 실행");
+
+
                 }
                 member.setProfileImageUrl(fileService.uploadProfile(file, uid).getImageURL());
-                System.out.println("파일 저장실행");
+
+
             } else{
                 member.setProfileImageUrl(originalMember.getProfileImageUrl());
             }
@@ -181,26 +184,27 @@ public class MemberService {
     public void updateMemberPost(PostMember member, String authToken, String refreshToken) throws RefreshTokenExpiredException, AuthenticationException, LoginTokenExpiredException, TokenException, CannotFindTeamOrMember, DatabaseException {
         try {
             if (jwtTokenProvider.isValidAccessToken(authToken)) {
-                System.out.println("accesstoken이 유효합니다");
+
+
                 postMemberRepository.save(member);
             } else {//accesstoken 만료
                 if (jwtTokenProvider.isValidRefreshToken(refreshToken)) {//refreshtoken 유효성검사
                     //refreshtoken db 검사
-                    System.out.println("accesstoken이 만료되었습니다");
-                    System.out.println("refreshtoken 유효성 검사를 시작합니다");
+
+
                     Claims userinfo = jwtTokenProvider.getClaimsToken(refreshToken);
                     UUID userId = UUID.fromString((String) userinfo.get("userId"));
                     Optional<RefreshToken> optionalRefreshToken = refreshTokenRepository.findById(userId);
                     if (optionalRefreshToken.isPresent()) {
-                        //db에 존재하므로 access토큰 재발급 문자 출력
-                        System.out.println("accseetoken 재발급이 필요합니다.");
+
+
                     } else {
-                        //db에 없는 토큰이므로 오류메시지 출력
-                        System.out.println("허용되지 않은 refreshtoken 입니다");
+
+
                     }
                 } else {
-                    // 다시 login 시도
-                    System.out.println("refreshtoken이 만료되었습니다, 다시 로그인 해주세요");
+
+
                 }
             }
         }catch (DataIntegrityViolationException | JpaSystemException | TransactionSystemException e) {
@@ -214,7 +218,8 @@ public class MemberService {
     public UUID checkUserIdAndToken(String authToken, String refreshToken) throws AuthenticationException {
         if(jwtTokenProvider.isValidAccessToken(authToken)) {//accesstoken 유효
             //addPost 진행
-            System.out.println("accesstoken이 유효합니다");
+
+
             Claims userinfo = jwtTokenProvider.getClaimsToken(refreshToken);
             UUID uid = UUID.fromString((String) userinfo.get("userId"));
             return uid;
@@ -222,25 +227,28 @@ public class MemberService {
         else{//accesstoken 만료
             if(jwtTokenProvider.isValidRefreshToken(refreshToken)){//refreshtoken 유효성검사
                 //refreshtoken db 검사
-                System.out.println("accesstoken이 만료되었습니다");
-                System.out.println("refreshtoken 유효성 검사를 시작합니다");
+
+
                 Claims userinfo= jwtTokenProvider.getClaimsToken(refreshToken);
                 UUID userId=UUID.fromString((String)userinfo.get("userId"));
                 Optional<RefreshToken> optionalRefreshToken = refreshTokenRepository.findById(userId);
                 if(optionalRefreshToken.isPresent()){
                     //db에 존재하므로 access토큰 재발급 문자 출력
-                    System.out.println("accseetoken 재발급이 필요합니다.");
+
+
                     throw new AuthenticationException("accseetoken 재발급이 필요합니다.");
                 }
                 else{
                     //db에 없는 토큰이므로 오류메시지 출력
-                    System.out.println("허용되지 않은 refreshtoken 입니다");
+
+
                     throw new AuthenticationException("허용되지 않은 refreshtoken 입니다");
                 }
             }
             else{
                 // 다시 login 시도
-                System.out.println("refreshtoken이 만료되었습니다, 다시 로그인 해주세요");
+
+
                 throw new AuthenticationException("refreshtoken이 만료되었습니다, 다시 로그인 해주세요");
             }
         }
@@ -253,7 +261,8 @@ public class MemberService {
             //임시
             if(jwtTokenProvider.isValidAccessToken(authToken)){//accesstoken 유효
                 //addPost 진행
-                System.out.println("accesstoken이 유효합니다 게시물을 추가합니다.");
+
+
                 Claims userinfo= jwtTokenProvider.getClaimsToken(refreshToken);
                 UUID writer=UUID.fromString((String)userinfo.get("userId"));
 
@@ -272,25 +281,28 @@ public class MemberService {
             }else{//accesstoken 만료
                 if(jwtTokenProvider.isValidRefreshToken(refreshToken)){//refreshtoken 유효성검사
                     //refreshtoken db 검사
-                    System.out.println("accesstoken이 만료되었습니다");
-                    System.out.println("refreshtoken 유효성 검사를 시작합니다");
+
+
                     Claims userinfo= jwtTokenProvider.getClaimsToken(refreshToken);
                     UUID userId=UUID.fromString((String)userinfo.get("userId"));
                     Optional<RefreshToken> optionalRefreshToken = refreshTokenRepository.findById(userId);
                     if(optionalRefreshToken.isPresent()){
                         //db에 존재하므로 access토큰 재발급 문자 출력
-                        System.out.println("accseetoken 재발급이 필요합니다.");
+
+
                         return PostResponseForm.builder().message("LonginToken 재발급이 필요합니다.").build();
                     }
                     else{
                         //db에 없는 토큰이므로 오류메시지 출력
-                        System.out.println("허용되지 않은 refreshtoken 입니다");
+
+
                         return PostResponseForm.builder().message("허용되지 않은 RefreshToken 입니다").build();
                     }
                 }
                 else{
                     // 다시 login 시도
-                    System.out.println("refreshtoken이 만료되었습니다, 다시 로그인 해주세요");
+
+
                     return PostResponseForm.builder().message("RefreshToken 이 만료되었습니다, 다시 로그인 해주세요").build();
                 }
             }
@@ -330,7 +342,8 @@ public class MemberService {
     }
 
     public void sendVerificationEmail(String email) throws MessagingException {
-        System.out.println("email : "+email);
+
+
         Verification verification = new Verification();
         String code = createCode();
         verification.setCode(code);
@@ -381,28 +394,32 @@ public class MemberService {
         if (jwtTokenProvider.isValidAccessToken(loginToken)){
             List<UUID> teams=memberRepository.findTeamWithSameKeyword(userId,category,field,sub);
             for(UUID teamId : teams){
-                System.out.println("teamId : " +teamId);
+
+
             }
             List<Object[]> recommendTeamsByLanguage=memberRepository.recommendTeamWithLang(teams,userId,pageable);
             for(Object[] result : recommendTeamsByLanguage){
 
                 Team team=(Team) result[0];
                 double weight=(int) result[1]*1.1;
-                System.out.println("lang Team : "+team.getTeamId());
+
+
                 recommendList.put(team,weight);
             }
             List<Object[]> recommendTeamsByFramework=memberRepository.recommendTeamWithFramework(teams,userId,pageable);
             for(Object[] result : recommendTeamsByLanguage){
                 Team team=(Team) result[0];
                 double weight=(int) result[1];
-                System.out.println("frame Team : "+team.getTeamId());
+
+
                 recommendList.put(team,recommendList.get(team)+weight);
             }
             List<Object[]> recommendListByDatabase=memberRepository.recommendTeamWithDatabase(teams,userId,pageable);
             for(Object[] result : recommendTeamsByLanguage){
                 Team team=(Team) result[0];
                 double weight=(int) result[1];
-                System.out.println("DB Team : "+team.getTeamId());
+
+
                 recommendList.put(team,recommendList.get(team)+weight);
             }
             List<Team> list=new ArrayList<>(recommendList.keySet());
@@ -416,10 +433,12 @@ public class MemberService {
             });
             long endTime = System.currentTimeMillis();
             long elapsedTime = endTime - startTime;
-            System.out.println("코드의 수행 시간(ms) : " + elapsedTime);
+
+
 
         for (Team team : list) {
-            System.out.println("Team: " + team + ", Value: " + recommendList.get(team));
+
+
         }
 
             return ResponseForm.builder().message("추천 팀을 반환합니다").data(list).build();
@@ -442,16 +461,20 @@ public class MemberService {
             Page<Member> members = null;
 
             if(category.isEmpty() && (rule.size()==1 && rule.get(0).equals("상관없음"))){
-                System.out.println("category.isEmpty() && rule.size()==1 && rule.get(0).equalse(상관없음)");
+
+
                 members=memberKeywordRepository.findAllByFilterWithoutCategoryAndRuleAndSearch(subject,pageable);
             } else if (category.isEmpty() && !(rule.size()==1 && rule.get(0).equals("상관없음"))) {
-                System.out.println("category.isEmpty() && rule.size()>1");
+
+
                 members=memberKeywordRepository.findAllByFilterWithoutCategoryAndSearch(subject,rule,pageable);
             } else if (!category.isEmpty() && (rule.size()==1 && rule.get(0).equals("상관없음"))) {
-                System.out.println("!category.isEmpty() && rule.size()==1 && rule.get(0).equals(상관없음)");
+
+
                 members=memberKeywordRepository.findAllByFilterWithoutRuleAndSearch(category,subject,pageable);
             }else{
-                System.out.println("!category.isEmpty() && rule.size()>1");
+
+
                 members=memberKeywordRepository.findAllByFilterWithoutSearch(category, subject, rule, pageable);
             }
 
@@ -461,18 +484,23 @@ public class MemberService {
             return ResponseForm.builder().message("멤버를 반환합니다").data(members.getContent()).metadata(Metadata.builder().currentPage(page).totalPage(totalPage).build()).build();
         }else{
             Page<Member> members = null;
-            System.out.println("search : "+search);
+
+
             if(category.isEmpty() && (rule.size()==1 && rule.get(0).equals("상관없음"))){
-                System.out.println("category.isEmpty() && rule.size()==1 && rule.get(0).equals(상관없음)");
+
+
                 members=memberKeywordRepository.findAllByFilterWithoutCategoryAndRule(subject,search,pageable);
             } else if (category.isEmpty() && !(rule.size()==1 && rule.get(0).equals("상관없음"))) {
-                System.out.println("category.isEmpty() && rule.size()>1");
+
+
                 members=memberKeywordRepository.findAllByFilterWithoutCategory(subject,rule,search,pageable);
             } else if (!category.isEmpty() && (rule.size()==1 && rule.get(0).equals("상관없음"))) {
-                System.out.println("!category.isEmpty() && rule.size()==1 && rule.get(0).equalse(상관없음)");
+
+
                 members=memberKeywordRepository.findAllByFilterWithoutRule(category,subject,search,pageable);
             }else{
-                System.out.println("!category.isEmpty() && rule.size()>1");
+
+
                 members=memberKeywordRepository.findAllByFilter(category,subject,rule,search,pageable);
             }
             int totalPage = members.getTotalPages();

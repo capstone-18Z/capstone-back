@@ -202,7 +202,7 @@ public class MemberController {
 
     @GetMapping("/test")
     public void testcode(){
-        System.out.println("a");
+
         contestCrawlingService.crawlContest();
     }
 

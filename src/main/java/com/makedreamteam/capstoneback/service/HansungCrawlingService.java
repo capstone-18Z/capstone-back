@@ -46,10 +46,10 @@ public class HansungCrawlingService {
             driver.findElement(By.xpath("//*[@id=\"id\"]")).sendKeys(id);
             driver.findElement(By.xpath("//*[@id=\"passwd\"]")).sendKeys(pass);
             driver.findElement(By.xpath("//*[@id=\"loginBtn\"]")).click();
-            System.out.println("로그인 성공");
+
 
             driver.navigate().to("https://info.hansung.ac.kr/jsp_21/student/kyomu/h_sugang_search_s01_h.jsp");
-            System.out.println(driver.getCurrentUrl());
+
             WebElement parentElement = driver.findElement(By.xpath("//*[@id=\"div_print_area\"]/div/div[3]/div[2]/div/div"));
             List<WebElement> courseRows = parentElement.findElements(By.cssSelector("tr[bgcolor='#FFFFFF'], tr[bgcolor='#E9E9E9']"));
 

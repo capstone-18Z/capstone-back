@@ -141,23 +141,27 @@ public class FileService {
             BlobId blobId = BlobId.of("caps-1edf8.appspot.com", filePath);
             boolean deleted = storage.delete(blobId);
             if (deleted) {
-                System.out.println("Firebase Storage의 파일이 삭제되었습니다: " + filePath);
+
+
 
                 // Bucket에서도 파일 삭제
                 Bucket bucket = StorageClient.getInstance().bucket(bucketName);
                 Blob blob = bucket.get(filePath);
                 if (blob != null) {
                     blob.delete();
-                    System.out.println("Bucket의 파일이 삭제되었습니다: " + filePath);
+
+
                 }
             } else {
                 throw new IOException("Firebase Storage의 파일 삭제에 실패하였습니다: " + filePath);
             }
         } catch (StorageException e) {
-            System.out.println("Firebase Storage 파일 삭제에 실패했습니다. 이유: " + e.getMessage());
+
+
             throw new IOException("Firebase Storage의 파일 삭제에 실패하였습니다: " + filePath);
         } catch (Exception e) {
-            System.out.println("파일 삭제 중 오류가 발생했습니다. 이유: " + e.getMessage());
+
+
             throw new IOException("파일 삭제 중 오류가 발생했습니다.");
         }
 
@@ -167,13 +171,16 @@ public class FileService {
     public void deleteFile(String file){
         String[] urlArr = file.split("/"); // "/"를 기준으로 문자열 분리
         String fileName = urlArr[urlArr.length - 1].split("\\?")[0];
-        System.out.println("fileName = "+fileName);
+
+
         BlobId blobId = BlobId.of("caps-1edf8.appspot.com", fileName);
         boolean deleted = storage.delete(blobId);
         if (deleted) {
-            System.out.println("삭제됨");
+
+
         } else {
-            System.out.println("삭제안됨");
+
+
         }
     }
 }

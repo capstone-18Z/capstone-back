@@ -56,7 +56,6 @@ public class WebSocketConfig implements WebSocketConfigurer {
 
             String uuid = UUID.randomUUID().toString();
             session.sendMessage(new TextMessage("{\"type\":\"uuid\",\"uuid\":\"" + uuid + "\",\"welcome\" : \"어서오세요\"}"));
-            System.out.println("웹소켓 접속 : "+session.toString());
 
         }
 
@@ -85,12 +84,12 @@ public class WebSocketConfig implements WebSocketConfigurer {
 
                 } else if (payload.startsWith("ROOM:")) {
                     UUID where = UUID.fromString(payload.substring(5).split("##")[0]);
-                    System.out.println("아아 : " + payload.substring(5).split("##")[1]);
+
                     UUID to = UUID.fromString(payload.substring(5).split("##")[1]);
                     String nickName = payload.substring(5).split("##")[3];
                     String mode = payload.substring(5).split("##")[4];
                     sendTeamChatToAnother(session, payload.substring(5).split("##")[2], where, to, nickName, mode);
-                    System.out.println(payload.substring(5));
+
                 } else if (payload.startsWith("TEAM:")) {
                     UUID where = UUID.fromString(payload.substring(5).split("##")[0]);
                     String msg = payload.substring(5).split("##")[1];
@@ -110,7 +109,7 @@ public class WebSocketConfig implements WebSocketConfigurer {
                         webSocketSession.addSession(session);
                         sessions.put(userId, webSocketSession);
                     } else {
-                        System.out.println("cnrncrnkcnrkcnrknckr");
+
                         sessions.get(userId).addSession(session);
                     }
                     if (isEnterd.get(waitingId) == null) {
@@ -141,9 +140,7 @@ public class WebSocketConfig implements WebSocketConfigurer {
 
         @Override
         public void afterConnectionClosed(WebSocketSession session, CloseStatus closeStatus) throws Exception {
-            System.out.println("세션을 삭제합니다.");
 
-            System.out.println("closeStatus : " + closeStatus.getCode());
             UUID userId = getUserIdFromSession(session);
             if (userId != null) {
 
@@ -151,7 +148,7 @@ public class WebSocketConfig implements WebSocketConfigurer {
                 deleteUserFromChatRoom(session);
 
             } else {
-                System.out.println("해당유저의 세션이 존재하지 않습니다");
+
             }
 
         }
@@ -188,16 +185,15 @@ public class WebSocketConfig implements WebSocketConfigurer {
         }
 
         public void sendTeamChatToAnother(WebSocketSession sendUser, String msg, UUID where, UUID to, String nickName, String mode) throws IOException {
-            System.out.println("into sendTeamChat");
+
             List<WebSocketSession> userList = isEnterd.get(where);
             if (isEnterd.get(where) != null && sessions.get(to) != null && sessions.get(to).getRoomSessions() != null) {
                 boolean isContained = false;
                 for (WebSocketSession user : userList) {
-                    System.out.println("for문 들어왔다");
+
                     if (user != sendUser) {
-                        System.out.println("user != sendUser");
+
                         if (isEnterd.get(where).contains(user) || sessions.get(to).getRoomSessions().contains(user)) {
-                            System.out.println("isEnterd.get(where).contains(user) || sessions.get(to).getRoomSessions().contains(user)");
                             Gson gson = new Gson();
                             Map<String, String> payloadMap = new HashMap<>();
                             payloadMap.put("type", "message");
@@ -211,20 +207,20 @@ public class WebSocketConfig implements WebSocketConfigurer {
                             isContained = true;
                         }
                     } else if (userList.size() == 1 && user == sendUser) {
-                        System.out.println("userList.size()==1 && user == sendUser");
+
                         Chat chat = Chat.builder().from(getUserIdFromSession(sendUser)).mode("chat").to(getUserIdFromSession(sendUser)).room(where).date(new Date()).msg("m:" + " " + nickName + " " + msg).build();
                         Chat chat2 = Chat.builder().from(getUserIdFromSession(sendUser)).mode("chat").to(to).room(where).date(new Date()).msg("a:" + " " + nickName + " " + msg).build();
                         chatRepository.save(chat);
                         chatRepository.save(chat2);
                     } else if (userList.size() > 1 && user == sendUser) {
-                        System.out.println("userList.size()>1 && user == sendUser");
+
                         Chat chat = Chat.builder().from(getUserIdFromSession(sendUser)).mode("chat").to(getUserIdFromSession(sendUser)).room(where).date(new Date()).msg("m:" + " " + nickName + " " + msg).build();
                         chatRepository.save(chat);
                     }
                 }
                 if (!isContained) {
                     if (sessions.get(to) != null && sessions.get(to).getSession() != null) {
-                        System.out.println("위에꺼");
+
                         Gson gson = new Gson();
                         Map<String, String> payloadMap = new HashMap<>();
                         payloadMap.put("type", "notificationFromChat");
@@ -247,7 +243,7 @@ public class WebSocketConfig implements WebSocketConfigurer {
                 }
             } else {
                 if (sessions.get(to) != null && sessions.get(to).getSession() != null) {
-                    System.out.println("아래꺼 ");
+
                     Gson gson = new Gson();
                     Map<String, String> payloadMap = new HashMap<>();
                     payloadMap.put("type", "notificationFromChat");
@@ -310,7 +306,6 @@ public class WebSocketConfig implements WebSocketConfigurer {
                 Chat chat = Chat.builder().mode("noti").room(where).date(new Date()).msg("n:" + " " + nickname + " " + msg).build();
                 chatRepository.save(chat);
                 for (WebSocketSession user : userList) {
-                    System.out.println("isEnterd.get(where).contains(user) || sessions.get(to).getRoomSessions().contains(user)");
                     Gson gson = new Gson();
                     Map<String, String> payloadMap = new HashMap<>();
                     payloadMap.put("type", "enter");
@@ -325,7 +320,6 @@ public class WebSocketConfig implements WebSocketConfigurer {
         }
 
         public void sendExitNotifocationTeamChat(String msg, String nickname, UUID where, UUID userId) throws IOException {
-            System.out.println("exit");
             List<WebSocketSession> userList = isEnterd.get(where);
             if (userList != null) {
                 Chat chat = Chat.builder().mode("noti").room(where).date(new Date()).msg("n:" + " " + nickname + " " + msg).build();
@@ -342,7 +336,6 @@ public class WebSocketConfig implements WebSocketConfigurer {
                     user.sendMessage(message);
                 }
             } else {
-                System.out.println("userList==null");
             }
         }
 
@@ -350,11 +343,12 @@ public class WebSocketConfig implements WebSocketConfigurer {
         private static UUID getUserIdFromSession(WebSocketSession session) {
             for (WebSocketSessionList entry : sessions.values()) {
                 if (entry.isContains(session)) {
-                    System.out.println("해당하는 세션있습니다,유저id를 반환합니다. 삭제합니다");
+
+
                     return entry.getUserId();
                 }
             }
-            System.out.println("해당하는 세션이 없습니다");
+
             return null;
         }
 

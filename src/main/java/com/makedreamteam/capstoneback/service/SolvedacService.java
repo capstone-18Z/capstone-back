@@ -20,7 +20,7 @@ public class SolvedacService {
 
     public SolvedAcUser getUser(String username) {
         String url = String.format("https://solved.ac/api/v3/user/show?handle=%s", username);
-        System.out.println(url);
+
         try {
             ResponseEntity<SolvedAcUser> response = restTemplate.getForEntity(url, SolvedAcUser.class);
             if (response.getStatusCode() == HttpStatus.OK) {
