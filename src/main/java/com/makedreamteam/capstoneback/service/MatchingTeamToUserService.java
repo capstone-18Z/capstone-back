@@ -112,9 +112,9 @@ public class MatchingTeamToUserService {
             List<Object[]> allTeamsRequestToMe = waitingListTeamToUserRepository.getAllTeamsRequestToMe(userId);
             for (Object[] entry : allTeamsRequestToMe) {
                 UUID teamId = (UUID)entry[0];
-                System.out.println("teamId = " + teamId);
+
                 UUID matchId = (UUID)entry[1];
-                System.out.println("matchId = " + matchId);
+
                 if (teamId != null && matchId != null) {
                     teamIds.add(teamId);
                     matchIds.add(matchId);
