@@ -1,6 +1,7 @@
 package com.makedreamteam.capstoneback.service;
 
 import com.makedreamteam.capstoneback.JwtTokenProvider;
+import com.makedreamteam.capstoneback.WebSocketConfig;
 import com.makedreamteam.capstoneback.controller.MemberData;
 import com.makedreamteam.capstoneback.domain.*;
 import com.makedreamteam.capstoneback.exception.*;
@@ -56,6 +57,9 @@ public class MemberService {
     private SolvedacService solvedacService;
     @Autowired
     private MemberKeywordRepository memberKeywordRepository;
+
+    @Autowired
+    private WebSocketConfig.MyWebSocketHandler myWebSocketHandler;
 
     private static final Map<String, Verification> verifiedUserMap = new HashMap<>();
 
@@ -474,5 +478,13 @@ public class MemberService {
             int totalPage = members.getTotalPages();
             return ResponseForm.builder().message("멤버를 반환합니다").data(members.getContent()).metadata(Metadata.builder().currentPage(page).totalPage(totalPage).build()).build();
         }
+    }
+
+    public ResponseForm doLogout(String authToken, String refreshToken) {
+        if(jwtTokenProvider.isValidAccessToken(authToken)){
+            UUID userId=jwtTokenProvider.getUserId(authToken);
+            myWebSocketHandler.deleteSession(userId);
+            return ResponseForm.builder().message("Delete user's session").build();
+        }return jwtTokenProvider.checkRefreshToken(refreshToken);
     }
 }

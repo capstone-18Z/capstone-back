@@ -257,4 +257,12 @@ public class MemberController {
         ResponseForm responseForm = ResponseForm.builder().message("랜덤 유저를 조회합니다").state(HttpStatus.OK.value()).data(randomMember).build();
         return ResponseEntity.ok().body(responseForm);
     }
+
+    @GetMapping("/logout")
+    public ResponseEntity<ResponseForm> Logout(HttpServletRequest request){
+        String authToken= request.getHeader("login-token");
+        String refreshToken = request.getHeader("refresh-token");
+        ResponseForm responseForm=memberService.doLogout(authToken,refreshToken);
+        return ResponseEntity.ok(responseForm);
+    }
 }
