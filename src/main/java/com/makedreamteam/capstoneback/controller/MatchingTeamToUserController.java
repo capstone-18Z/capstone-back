@@ -15,7 +15,7 @@ import java.util.Map;
 import java.util.UUID;
 
 @Controller
-@CrossOrigin
+@CrossOrigin(origins = "http://localhost:3000")
 @RequestMapping("/team-to-user")
 public class MatchingTeamToUserController {
 

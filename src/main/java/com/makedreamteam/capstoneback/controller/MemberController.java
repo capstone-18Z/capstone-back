@@ -42,7 +42,7 @@ import javax.naming.AuthenticationException;
 @Slf4j
 @RequiredArgsConstructor
 @RestController
-@CrossOrigin
+@CrossOrigin(origins = "http://localhost:3000")
 @RequestMapping("/member")
 public class MemberController {
 
