@@ -16,7 +16,7 @@ import java.util.*;
 
 @RestController
 @RequiredArgsConstructor
-@CrossOrigin(origins = "http://localhost:3000")
+@CrossOrigin
 @RequestMapping(value = "/teams", produces = "application/json;charset=UTF-8")
 public class TeamController {
     private final TeamService teamService;
